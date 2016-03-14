@@ -1,0 +1,228 @@
+package com.openodm.impl.controller;
+
+import java.util.Calendar;
+import java.util.List;
+import java.util.TimeZone;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import com.openodm.impl.entity.CodeList;
+import com.openodm.impl.entity.EnumeratedItem;
+import com.openodm.impl.entity.MetaDataVersion;
+import com.openodm.impl.entity.ObjectStatus;
+import com.openodm.impl.repository.CodeListRepository;
+import com.openodm.impl.repository.EnumeratedItemRepository;
+import com.openodm.impl.repository.MetaDataVersionRepository;
+
+@RestController
+public class CodeListController {
+	@Autowired
+	private MetaDataVersionRepository metaDataVersionRepository;
+	@Autowired
+	private CodeListRepository codeListRepository;
+	@Autowired
+	private EnumeratedItemRepository enumeratedItemRepository;
+
+	@RequestMapping(value = "/odm/v1/metaDataVersion", method = RequestMethod.GET)
+	public List<MetaDataVersion> listMetaDataVersion() {
+		return metaDataVersionRepository.findAll();
+	}
+
+	@RequestMapping(value = "/odm/v1/codeList", method = RequestMethod.GET)
+	public List<CodeList> listCodeList(
+			@RequestParam("metaDataVersionId") Long metaDataVersionId) {
+		return codeListRepository.findByMetaDataVersionId(metaDataVersionId);
+	}
+
+	@RequestMapping(value = "/odm/v1/enumeratedItem", method = RequestMethod.GET)
+	public List<EnumeratedItem> listEnumeratedItem(
+			@RequestParam("codeListId") Long codeListId) {
+		return enumeratedItemRepository.findByCodeListId(codeListId);
+	}
+
+	@RequestMapping(value = "/odm/v1/import", method = RequestMethod.POST)
+	public void upload(@RequestParam("file") MultipartFile file)
+			throws Exception {
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		dbf.setNamespaceAware(false);
+		DocumentBuilder db = dbf.newDocumentBuilder();
+		Document doc = db.parse(file.getInputStream());
+		XPath xPath = XPathFactory.newInstance().newXPath();
+		NodeList nodes = (NodeList) xPath.evaluate("//MetaDataVersion",
+				doc.getDocumentElement(), XPathConstants.NODESET);
+		for (int i = 0; i < nodes.getLength(); i++) {
+			Node item = nodes.item(i);
+			NamedNodeMap attributes = item.getAttributes();
+			String oid = attributes.getNamedItem("OID").getNodeValue();
+			List<MetaDataVersion> mdvs = metaDataVersionRepository
+					.findByOid(oid);
+			MetaDataVersion mdv;
+			if (CollectionUtils.isEmpty(mdvs)) {
+				mdv = new MetaDataVersion();
+				mdv.setCreator("admin");
+				mdv.setUpdatedBy("admin");
+
+				mdv.setOid(oid);
+				mdv.setName(attributes.getNamedItem("Name").getNodeValue());
+				mdv.setDescription(attributes.getNamedItem("Description")
+						.getNodeValue());
+				mdv = metaDataVersionRepository.save(mdv);
+			} else {
+				mdv = mdvs.get(0);
+			}
+			System.out.println(mdv.getId());
+
+			NodeList codeListNodes = (NodeList) xPath.evaluate("CodeList",
+					item, XPathConstants.NODESET);
+			saveCodeList(xPath, mdv, codeListNodes);
+		}
+
+	}
+
+	private void saveCodeList(XPath xPath, MetaDataVersion mdv,
+			NodeList codeListNodes) throws XPathExpressionException {
+		for (int j = 0; j < codeListNodes.getLength(); j++) {
+			Node codeListNode = codeListNodes.item(j);
+			NamedNodeMap codeListAttributes = codeListNode.getAttributes();
+			String oid = codeListAttributes.getNamedItem("OID").getNodeValue();
+			List<CodeList> codeLists = codeListRepository
+					.findByMetaDataVersionIdAndOid(mdv.getId(), oid);
+			CodeList codeList;
+			boolean needToSave = false;
+			if (CollectionUtils.isEmpty(codeLists)) {
+				codeList = new CodeList();
+				codeList.setCreator("admin");
+				needToSave = true;
+			} else {
+				codeList = codeLists.get(0);
+				if (codeList.getStatus().equals(ObjectStatus.deleted)) {
+					needToSave = true;
+					codeList.setStatus(ObjectStatus.active);
+					codeList.setDateLastModified(Calendar.getInstance(TimeZone
+							.getTimeZone("UTC")));
+				}
+			}
+			if (needToSave) {
+				codeList.setUpdatedBy("admin");
+				codeList.setMetaDataVersion(mdv);
+				codeList.setOid(oid);
+				codeList.setName(codeListAttributes.getNamedItem("Name")
+						.getNodeValue());
+				codeList.setDataType(codeListAttributes
+						.getNamedItem("DataType").getNodeValue());
+				codeList.setExtCodeId(codeListAttributes.getNamedItem(
+						"nciodm:ExtCodeID").getNodeValue());
+				codeList.setCodeListExtensible(codeListAttributes.getNamedItem(
+						"nciodm:CodeListExtensible").getNodeValue());
+
+				Node descNode = (Node) xPath.evaluate(
+						"Description/TranslatedText", codeListNode,
+						XPathConstants.NODE);
+				if (descNode != null) {
+					codeList.setDescription(descNode.getTextContent());
+				}
+				descNode = (Node) xPath.evaluate("CDISCSubmissionValue",
+						codeListNode, XPathConstants.NODE);
+				if (descNode != null) {
+					codeList.setCDISCSubmissionValue(descNode.getTextContent());
+				}
+				descNode = (Node) xPath.evaluate("CDISCSynonym", codeListNode,
+						XPathConstants.NODE);
+				if (descNode != null) {
+					codeList.setCDISCSynonym(descNode.getTextContent());
+				}
+				descNode = (Node) xPath.evaluate("PreferredTerm", codeListNode,
+						XPathConstants.NODE);
+				if (descNode != null) {
+					codeList.setPreferredTerm(descNode.getTextContent());
+				}
+				// System.out.println(codeList);
+
+				codeList = codeListRepository.save(codeList);
+
+			}
+			saveEnumeratedItem(xPath, codeListNode, codeList);
+		}
+	}
+
+	private void saveEnumeratedItem(XPath xPath, Node codeListNode,
+			CodeList codeList) throws XPathExpressionException {
+		NodeList eiNodes = (NodeList) xPath.evaluate("EnumeratedItem",
+				codeListNode, XPathConstants.NODESET);
+		for (int k = 0; k < eiNodes.getLength(); k++) {
+			Node eiNode = eiNodes.item(k);
+
+			NamedNodeMap eiAttributes = eiNode.getAttributes();
+			String codedValue = eiAttributes.getNamedItem("CodedValue")
+					.getNodeValue();
+			List<EnumeratedItem> eis = enumeratedItemRepository
+					.findByCodeListIdAndCodeValue(codeList.getId(), codedValue);
+			boolean needToSave = false;
+			EnumeratedItem ei;
+			if (CollectionUtils.isEmpty(eis)) {
+				ei = new EnumeratedItem();
+				ei.setCreator("admin");
+				needToSave = true;
+			} else {
+				ei = eis.get(0);
+				if (ei.getStatus().equals(ObjectStatus.deleted)) {
+					needToSave = true;
+					ei.setStatus(ObjectStatus.active);
+					ei.setDateLastModified(Calendar.getInstance(TimeZone
+							.getTimeZone("UTC")));
+				}
+			}
+			if (needToSave) {
+				ei.setUpdatedBy("admin");
+				ei.setCodeList(codeList);
+
+				ei.setCodedValue(codedValue);
+				ei.setExtCodeId(eiAttributes.getNamedItem("nciodm:ExtCodeID")
+						.getNodeValue());
+				NodeList subNodes = (NodeList) xPath.evaluate("CDISCSynonym",
+						eiNode, XPathConstants.NODESET);
+				StringBuilder sb = new StringBuilder();
+				for (int i = 0; i < subNodes.getLength(); i++) {
+					Node subNode = subNodes.item(i);
+					if (i > 0) {
+						sb.append(";");
+					}
+					sb.append(subNode.getTextContent());
+				}
+				ei.setCDISCSynonym(sb.toString());
+
+				Node subNode = (Node) xPath.evaluate("CDISCDefinition", eiNode,
+						XPathConstants.NODE);
+				if (subNode != null) {
+					ei.setCDISCDefinition(subNode.getTextContent());
+				}
+				subNode = (Node) xPath.evaluate("PreferredTerm", eiNode,
+						XPathConstants.NODE);
+				if (subNode != null) {
+					ei.setPreferredTerm(subNode.getTextContent());
+				}
+				// System.out.println(ei);
+				ei = enumeratedItemRepository.save(ei);
+			}
+
+		}
+	}
+
+}

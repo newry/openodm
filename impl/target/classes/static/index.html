@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en" data-ng-app="CTApp">
+<head>
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <meta charset="utf-8">
+  <title>CT APP</title>
+
+  <!-- third party -->
+    <script src="bower_components/angular/angular.min.js"></script>
+    <script src="bower_components/angular-translate/angular-translate.min.js"></script>
+    <script src="bower_components/angular-route/angular-route.min.js"></script>
+    <script src="bower_components/angular-cookies/angular-cookies.min.js"></script>
+    <script src="bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="bower_components/bootswatch/paper/bootstrap.min.css" />
+	<!-- /third party -->
+
+    <script type="text/javascript" src="src/js/app.js"></script>
+    <script type="text/javascript" src="src/js/directives/directives.js"></script>
+    <script type="text/javascript" src="src/js/entities/item.js"></script>
+    <script type="text/javascript" src="src/js/filters/filters.js"></script>
+    <script type="text/javascript" src="src/js/providers/config.js"></script>
+<!-- 
+    <script type="text/javascript" src="src/js/services/filenavigator.js"></script>
+ -->
+    <script type="text/javascript" src="src/js/services/fileuploader.js"></script>
+    <script type="text/javascript" src="src/js/controllers/main.js"></script>
+    <link href="src/css/animations.css" rel="stylesheet">
+    <link href="src/css/dialogs.css" rel="stylesheet">
+    <link href="src/css/main.css" rel="stylesheet">
+
+  <script type="text/javascript">
+    angular.module('CTApp').config(['ctConfigProvider', function (config) {
+      var defaults = config.$get();
+      config.set({
+        appName: 'CTApp'
+      });
+    }]);
+  </script>
+</head>
+
+<body class="ng-cloak">
+  <ct-app></ct-app>
+</body>
+</html>
