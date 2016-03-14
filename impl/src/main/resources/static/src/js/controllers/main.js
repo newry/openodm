@@ -6,7 +6,8 @@
       function($scope, $cookies, ctConfig, $http, fileUploader, $q, Item) {
         $scope.config = ctConfig;
         $scope.reverse = false;
-        $scope.predicate = ['model.type', 'model.name'];        
+        $scope.predicate = ['model.type', 'model.name'];
+        $scope.showMDV = false;
         $scope.order = function(predicate) {
             $scope.reverse = ($scope.predicate[1] === predicate) ? !$scope.reverse : false;
             $scope.predicate[1] = predicate;
@@ -41,19 +42,26 @@
         };
 
 	    $scope.getAllMDVs = function() {
-	        var deferred = $q.defer();
-	    	$http.get("/odm/v1/metaDataVersion").success(function(data) {
-                deferredHandler(data, deferred);
-            }).error(function(data, status) {
-            	deferredHandler(data, deferred, 'Error during get folders');
-            })['finally'](function() {
-            	$scope.requesting = false;
-            });
-	    	deferred.promise.then(function(data){
-	    		$scope.mdvList = (data || []).map(function(file) {
-                    return new Item(file);
-                });
-	    	})
+	    	if($scope.showMDV){
+	    		$scope.showMDV = false;
+	    	}else{
+	    		$scope.showMDV = true;
+	    	}
+	    	if($scope.showMDV){
+		        var deferred = $q.defer();
+		    	$http.get("/odm/v1/metaDataVersion").success(function(data) {
+	                deferredHandler(data, deferred);
+	            }).error(function(data, status) {
+	            	deferredHandler(data, deferred, 'Error during get folders');
+	            })['finally'](function() {
+	            	$scope.requesting = false;
+	            });
+		    	deferred.promise.then(function(data){
+		    		$scope.mdvList = (data || []).map(function(file) {
+	                    return new Item(file);
+	                });
+		    	})
+	    	}
 	    };
 	    
 	    $scope.getAllCodeLists = function(id) {
