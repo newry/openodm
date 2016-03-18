@@ -2,6 +2,7 @@ package com.openodm.impl.controller;
 
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -11,8 +12,14 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,22 +30,29 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.openodm.impl.controller.response.OperationResponse;
+import com.openodm.impl.controller.response.OperationResult;
 import com.openodm.impl.entity.CodeList;
+import com.openodm.impl.entity.ControlTerminology;
 import com.openodm.impl.entity.EnumeratedItem;
 import com.openodm.impl.entity.MetaDataVersion;
 import com.openodm.impl.entity.ObjectStatus;
 import com.openodm.impl.repository.CodeListRepository;
+import com.openodm.impl.repository.ControlTerminologyRepository;
 import com.openodm.impl.repository.EnumeratedItemRepository;
 import com.openodm.impl.repository.MetaDataVersionRepository;
 
 @RestController
 public class CodeListController {
+	private static final Logger LOG = LoggerFactory.getLogger(CodeListController.class);
 	@Autowired
 	private MetaDataVersionRepository metaDataVersionRepository;
 	@Autowired
 	private CodeListRepository codeListRepository;
 	@Autowired
 	private EnumeratedItemRepository enumeratedItemRepository;
+	@Autowired
+	private ControlTerminologyRepository controlTerminologyRepository;
 
 	@RequestMapping(value = "/odm/v1/metaDataVersion", method = RequestMethod.GET)
 	public List<MetaDataVersion> listMetaDataVersion() {
@@ -46,33 +60,94 @@ public class CodeListController {
 	}
 
 	@RequestMapping(value = "/odm/v1/codeList", method = RequestMethod.GET)
-	public List<CodeList> listCodeList(
-			@RequestParam("metaDataVersionId") Long metaDataVersionId) {
+	public List<CodeList> listCodeList(@RequestParam("metaDataVersionId") Long metaDataVersionId) {
 		return codeListRepository.findByMetaDataVersionId(metaDataVersionId);
 	}
+	
+	@RequestMapping(value = "/odm/v1/codeListForCT", method = RequestMethod.GET)
+	public List<CodeList> listCodeListForCT(@RequestParam("ctId") Long ctId) {
+		return controlTerminologyRepository.findOne(ctId).getCodeLists();
+	}
+
 
 	@RequestMapping(value = "/odm/v1/enumeratedItem", method = RequestMethod.GET)
-	public List<EnumeratedItem> listEnumeratedItem(
-			@RequestParam("codeListId") Long codeListId) {
+	public List<EnumeratedItem> listEnumeratedItem(@RequestParam("codeListId") Long codeListId) {
 		return enumeratedItemRepository.findByCodeListId(codeListId);
 	}
 
+	@RequestMapping(value = "/odm/v1/controlTerminology", method = RequestMethod.GET)
+	public List<ControlTerminology> listControlTerminology() {
+		return controlTerminologyRepository.findAll();
+	}
+
+	@RequestMapping(value = "/odm/v1/controlTerminology", method = RequestMethod.POST)
+	public ResponseEntity<OperationResponse> createControlTerminology(@RequestBody Map<String, String> request) {
+		String name = StringUtils.trim(request.get("name"));
+		String desc = StringUtils.trim(request.get("description"));
+		ControlTerminology ct = new ControlTerminology();
+		ct.setCreator("admin");
+		ct.setUpdatedBy("admin");
+		if (StringUtils.isEmpty(name)) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("Name is required");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		} else {
+			List<ControlTerminology> existingCts = controlTerminologyRepository.findByName(name);
+			if (!CollectionUtils.isEmpty(existingCts)) {
+				ControlTerminology existingCt = existingCts.get(0);
+				if (existingCt.getStatus().equals(ObjectStatus.active)) {
+					OperationResponse or = new OperationResponse();
+					OperationResult result = new OperationResult();
+					result.setSuccess(false);
+					result.setError("CT with same name existed!");
+					or.setResult(result);
+					return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+				} else {
+					ct = existingCt;
+					ct.setStatus(ObjectStatus.active);
+					ct.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+					ct.setUpdatedBy("admin");
+				}
+			}
+		}
+
+		ct.setName(name);
+		ct.setDescription(desc);
+		try {
+			controlTerminologyRepository.save(ct);
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(true);
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.CREATED);
+		} catch (Exception e) {
+			LOG.error("Error during creating the CT", e);
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("Error during creating the CT");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
 	@RequestMapping(value = "/odm/v1/import", method = RequestMethod.POST)
-	public void upload(@RequestParam("file") MultipartFile file)
-			throws Exception {
+	public void upload(@RequestParam("file") MultipartFile file) throws Exception {
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		dbf.setNamespaceAware(false);
 		DocumentBuilder db = dbf.newDocumentBuilder();
 		Document doc = db.parse(file.getInputStream());
 		XPath xPath = XPathFactory.newInstance().newXPath();
-		NodeList nodes = (NodeList) xPath.evaluate("//MetaDataVersion",
-				doc.getDocumentElement(), XPathConstants.NODESET);
+		NodeList nodes = (NodeList) xPath.evaluate("//MetaDataVersion", doc.getDocumentElement(),
+				XPathConstants.NODESET);
 		for (int i = 0; i < nodes.getLength(); i++) {
 			Node item = nodes.item(i);
 			NamedNodeMap attributes = item.getAttributes();
 			String oid = attributes.getNamedItem("OID").getNodeValue();
-			List<MetaDataVersion> mdvs = metaDataVersionRepository
-					.findByOid(oid);
+			List<MetaDataVersion> mdvs = metaDataVersionRepository.findByOid(oid);
 			MetaDataVersion mdv;
 			if (CollectionUtils.isEmpty(mdvs)) {
 				mdv = new MetaDataVersion();
@@ -81,29 +156,24 @@ public class CodeListController {
 
 				mdv.setOid(oid);
 				mdv.setName(attributes.getNamedItem("Name").getNodeValue());
-				mdv.setDescription(attributes.getNamedItem("Description")
-						.getNodeValue());
+				mdv.setDescription(attributes.getNamedItem("Description").getNodeValue());
 				mdv = metaDataVersionRepository.save(mdv);
 			} else {
 				mdv = mdvs.get(0);
 			}
-			System.out.println(mdv.getId());
 
-			NodeList codeListNodes = (NodeList) xPath.evaluate("CodeList",
-					item, XPathConstants.NODESET);
+			NodeList codeListNodes = (NodeList) xPath.evaluate("CodeList", item, XPathConstants.NODESET);
 			saveCodeList(xPath, mdv, codeListNodes);
 		}
 
 	}
 
-	private void saveCodeList(XPath xPath, MetaDataVersion mdv,
-			NodeList codeListNodes) throws XPathExpressionException {
+	private void saveCodeList(XPath xPath, MetaDataVersion mdv, NodeList codeListNodes) throws XPathExpressionException {
 		for (int j = 0; j < codeListNodes.getLength(); j++) {
 			Node codeListNode = codeListNodes.item(j);
 			NamedNodeMap codeListAttributes = codeListNode.getAttributes();
 			String oid = codeListAttributes.getNamedItem("OID").getNodeValue();
-			List<CodeList> codeLists = codeListRepository
-					.findByMetaDataVersionIdAndOid(mdv.getId(), oid);
+			List<CodeList> codeLists = codeListRepository.findByMetaDataVersionIdAndOid(mdv.getId(), oid);
 			CodeList codeList;
 			boolean needToSave = false;
 			if (CollectionUtils.isEmpty(codeLists)) {
@@ -115,46 +185,35 @@ public class CodeListController {
 				if (codeList.getStatus().equals(ObjectStatus.deleted)) {
 					needToSave = true;
 					codeList.setStatus(ObjectStatus.active);
-					codeList.setDateLastModified(Calendar.getInstance(TimeZone
-							.getTimeZone("UTC")));
+					codeList.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
 				}
 			}
 			if (needToSave) {
 				codeList.setUpdatedBy("admin");
 				codeList.setMetaDataVersion(mdv);
 				codeList.setOid(oid);
-				codeList.setName(codeListAttributes.getNamedItem("Name")
+				codeList.setName(codeListAttributes.getNamedItem("Name").getNodeValue());
+				codeList.setDataType(codeListAttributes.getNamedItem("DataType").getNodeValue());
+				codeList.setExtCodeId(codeListAttributes.getNamedItem("nciodm:ExtCodeID").getNodeValue());
+				codeList.setCodeListExtensible(codeListAttributes.getNamedItem("nciodm:CodeListExtensible")
 						.getNodeValue());
-				codeList.setDataType(codeListAttributes
-						.getNamedItem("DataType").getNodeValue());
-				codeList.setExtCodeId(codeListAttributes.getNamedItem(
-						"nciodm:ExtCodeID").getNodeValue());
-				codeList.setCodeListExtensible(codeListAttributes.getNamedItem(
-						"nciodm:CodeListExtensible").getNodeValue());
 
-				Node descNode = (Node) xPath.evaluate(
-						"Description/TranslatedText", codeListNode,
-						XPathConstants.NODE);
+				Node descNode = (Node) xPath.evaluate("Description/TranslatedText", codeListNode, XPathConstants.NODE);
 				if (descNode != null) {
 					codeList.setDescription(descNode.getTextContent());
 				}
-				descNode = (Node) xPath.evaluate("CDISCSubmissionValue",
-						codeListNode, XPathConstants.NODE);
+				descNode = (Node) xPath.evaluate("CDISCSubmissionValue", codeListNode, XPathConstants.NODE);
 				if (descNode != null) {
 					codeList.setCDISCSubmissionValue(descNode.getTextContent());
 				}
-				descNode = (Node) xPath.evaluate("CDISCSynonym", codeListNode,
-						XPathConstants.NODE);
+				descNode = (Node) xPath.evaluate("CDISCSynonym", codeListNode, XPathConstants.NODE);
 				if (descNode != null) {
 					codeList.setCDISCSynonym(descNode.getTextContent());
 				}
-				descNode = (Node) xPath.evaluate("PreferredTerm", codeListNode,
-						XPathConstants.NODE);
+				descNode = (Node) xPath.evaluate("PreferredTerm", codeListNode, XPathConstants.NODE);
 				if (descNode != null) {
 					codeList.setPreferredTerm(descNode.getTextContent());
 				}
-				// System.out.println(codeList);
-
 				codeList = codeListRepository.save(codeList);
 
 			}
@@ -162,18 +221,15 @@ public class CodeListController {
 		}
 	}
 
-	private void saveEnumeratedItem(XPath xPath, Node codeListNode,
-			CodeList codeList) throws XPathExpressionException {
-		NodeList eiNodes = (NodeList) xPath.evaluate("EnumeratedItem",
-				codeListNode, XPathConstants.NODESET);
+	private void saveEnumeratedItem(XPath xPath, Node codeListNode, CodeList codeList) throws XPathExpressionException {
+		NodeList eiNodes = (NodeList) xPath.evaluate("EnumeratedItem", codeListNode, XPathConstants.NODESET);
 		for (int k = 0; k < eiNodes.getLength(); k++) {
 			Node eiNode = eiNodes.item(k);
 
 			NamedNodeMap eiAttributes = eiNode.getAttributes();
-			String codedValue = eiAttributes.getNamedItem("CodedValue")
-					.getNodeValue();
-			List<EnumeratedItem> eis = enumeratedItemRepository
-					.findByCodeListIdAndCodeValue(codeList.getId(), codedValue);
+			String codedValue = eiAttributes.getNamedItem("CodedValue").getNodeValue();
+			List<EnumeratedItem> eis = enumeratedItemRepository.findByCodeListIdAndCodeValue(codeList.getId(),
+					codedValue);
 			boolean needToSave = false;
 			EnumeratedItem ei;
 			if (CollectionUtils.isEmpty(eis)) {
@@ -185,8 +241,7 @@ public class CodeListController {
 				if (ei.getStatus().equals(ObjectStatus.deleted)) {
 					needToSave = true;
 					ei.setStatus(ObjectStatus.active);
-					ei.setDateLastModified(Calendar.getInstance(TimeZone
-							.getTimeZone("UTC")));
+					ei.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
 				}
 			}
 			if (needToSave) {
@@ -194,10 +249,8 @@ public class CodeListController {
 				ei.setCodeList(codeList);
 
 				ei.setCodedValue(codedValue);
-				ei.setExtCodeId(eiAttributes.getNamedItem("nciodm:ExtCodeID")
-						.getNodeValue());
-				NodeList subNodes = (NodeList) xPath.evaluate("CDISCSynonym",
-						eiNode, XPathConstants.NODESET);
+				ei.setExtCodeId(eiAttributes.getNamedItem("nciodm:ExtCodeID").getNodeValue());
+				NodeList subNodes = (NodeList) xPath.evaluate("CDISCSynonym", eiNode, XPathConstants.NODESET);
 				StringBuilder sb = new StringBuilder();
 				for (int i = 0; i < subNodes.getLength(); i++) {
 					Node subNode = subNodes.item(i);
@@ -208,13 +261,11 @@ public class CodeListController {
 				}
 				ei.setCDISCSynonym(sb.toString());
 
-				Node subNode = (Node) xPath.evaluate("CDISCDefinition", eiNode,
-						XPathConstants.NODE);
+				Node subNode = (Node) xPath.evaluate("CDISCDefinition", eiNode, XPathConstants.NODE);
 				if (subNode != null) {
 					ei.setCDISCDefinition(subNode.getTextContent());
 				}
-				subNode = (Node) xPath.evaluate("PreferredTerm", eiNode,
-						XPathConstants.NODE);
+				subNode = (Node) xPath.evaluate("PreferredTerm", eiNode, XPathConstants.NODE);
 				if (subNode != null) {
 					ei.setPreferredTerm(subNode.getTextContent());
 				}
