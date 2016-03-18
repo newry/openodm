@@ -49,7 +49,7 @@ public class CodeList extends PersistentObject {
 	private String CDISCSynonym;
 
 	@Column(name = "Preferred_Term", nullable = false, length = 255)
-	private String PreferredTerm;
+	private String preferredTerm;
 
 	@ManyToOne(targetEntity = MetaDataVersion.class, optional = false)
 	@JoinColumn(name = "META_DATA_VERSION_ID", nullable = false)
@@ -124,11 +124,11 @@ public class CodeList extends PersistentObject {
 	}
 
 	public String getPreferredTerm() {
-		return PreferredTerm;
+		return preferredTerm;
 	}
 
 	public void setPreferredTerm(String preferredTerm) {
-		PreferredTerm = preferredTerm;
+		this.preferredTerm = preferredTerm;
 	}
 
 	public MetaDataVersion getMetaDataVersion() {
@@ -146,7 +146,7 @@ public class CodeList extends PersistentObject {
 				+ ", extCodeId=" + extCodeId + ", codeListExtensible="
 				+ codeListExtensible + ", CDISCSubmissionValue="
 				+ CDISCSubmissionValue + ", CDISCSynonym=" + CDISCSynonym
-				+ ", PreferredTerm=" + PreferredTerm + ", metaDataVersion="
+				+ ", PreferredTerm=" + preferredTerm + ", metaDataVersion="
 				+ metaDataVersion + "]";
 	}
 
