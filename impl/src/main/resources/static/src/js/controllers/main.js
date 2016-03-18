@@ -14,8 +14,11 @@
             $scope.predicate[1] = predicate;
         };
         $scope.query = '';
+        $scope.codeListQuery = '';
         $scope.requesting = false;
+        $scope.modalRequesting = false;
         $scope.temp = new Item();
+        $scope.tempCT = new Item();
         $scope.viewTemplate = 'main-table.html';
         $scope.config = ctConfig;
         $scope.fileNavigator = {"history": [$scope.item]};
@@ -92,6 +95,7 @@
 	    };
 
 	    $scope.getAllCodeLists = function(id) {
+	    	$scope.tempCT = new Item();
         	$scope.requesting = true;
 	        var deferred = $q.defer();
 	    	$http.get("/odm/v1/codeList?metaDataVersionId="+id).success(function(data) {
@@ -108,10 +112,11 @@
 	    	})
 	    };
 	    
-	    $scope.getAllCodeListsForCT = function(id) {
+	    $scope.getAllCodeListsForCT = function(ct) {
+	    	$scope.tempCT.tempModel = ct;
         	$scope.requesting = true;
 	        var deferred = $q.defer();
-	    	$http.get("/odm/v1/codeListForCT?ctId="+id).success(function(data) {
+	    	$http.get("/odm/v1/codeListForCT?ctId="+ct.id).success(function(data) {
                 deferredHandler(data, deferred);
             }).error(function(data, status) {
             	deferredHandler(data, deferred, 'Error during get code Lists');
@@ -125,27 +130,85 @@
 	    	})
 	    };
 
-	    
+	    $scope.queryCodeListsForCT = function(q) {
+        	$scope.modalRequesting = true;
+	        var deferred = $q.defer();
+	    	$http.get("/odm/v1/codeListQuery?q="+q+"&ctId="+$scope.tempCT.tempModel.id).success(function(data) {
+                deferredHandler(data, deferred);
+            }).error(function(data, status) {
+            	deferredHandler(data, deferred, 'Error during get code Lists');
+            })['finally'](function() {
+            	$scope.modalRequesting = false;
+            });
+	    	deferred.promise.then(function(data){
+	    		$scope.modalItemList = (data || []).map(function(file) {
+                    return new Item(file);
+                });
+	    	})
+	    };
+
+	    $scope.addCodeListForCT = function(codeList) {
+        	$scope.modalRequesting = true;
+	        var deferred = $q.defer();
+	    	$http.post("/odm/v1/controlTerminology/"+$scope.tempCT.tempModel.id+"/codeList/"+codeList.id).success(function(data) {
+	    		codeList.added=true;
+                deferredHandler(data, deferred);
+            }).error(function(data, status) {
+            	deferredHandler(data, deferred, 'Error during get code Lists');
+            })['finally'](function() {
+            	$scope.modalRequesting = false;
+            });
+	    	deferred.promise.then(function(data){
+	    		$scope.modalItemList = (data || []).map(function(file) {
+                    return new Item(file);
+                });
+	    	})
+	    };
+
 	    $scope.createCT = function() {
-        	$scope.requesting = true;
+        	$scope.modalRequesting = true;
 		     var deferred = $q.defer();
 	         var data = {
-	        	name:$scope.temp.tempModel.name,
-	        	desc:$scope.temp.tempModel.desc
+	        	name:$scope.tempCT.tempModel.name,
+	        	desc:$scope.tempCT.tempModel.desc
 	         };
 		     $http.post("/odm/v1/controlTerminology", data).success(function(data) {
 	             deferredHandler(data, deferred);
 	             $scope.modal('newCT', true)
 	         }).error(function(data, status) {
-	             deferredHandler(data, deferred, 'Error during get controlTerminology');
+	             deferredHandler(data, deferred, 'Error during create CT');
 	         })['finally'](function() {
-	             $scope.requesting = false;
+	             $scope.modalRequesting = false;
+	         });
+	    };
+	    
+	    $scope.updateCT = function() {
+        	$scope.modalRequesting = true;
+		     var deferred = $q.defer();
+	         var data = {
+	        	id:$scope.tempCT.tempModel.id,
+	        	name:$scope.tempCT.tempModel.name,
+	        	desc:$scope.tempCT.tempModel.desc
+	         };
+		     $http.put("/odm/v1/controlTerminology", data).success(function(data) {
+	             deferredHandler(data, deferred);
+	             $scope.modal('editCT', true)
+	         }).error(function(data, status) {
+	             deferredHandler(data, deferred, 'Error during update CT');
+	         })['finally'](function() {
+	             $scope.modalRequesting = false;
 	         });
 	    };
 
-        $scope.newItem = function() {
-            $scope.temp = new Item();
+
+        $scope.newCT = function() {
+            $scope.tempCT = new Item();
+            $scope.temp.error = '';
         };
+	    $scope.cleanCodeListQuery = function() {
+	    	$scope.codeListQuery= '';
+            $scope.temp.error = '';
+	    }
 
         $scope.touch = function(item) {
             item = item instanceof Item ? item : new Item();

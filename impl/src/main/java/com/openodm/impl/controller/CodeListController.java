@@ -1,6 +1,7 @@
 package com.openodm.impl.controller;
 
 import java.util.Calendar;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -63,12 +65,36 @@ public class CodeListController {
 	public List<CodeList> listCodeList(@RequestParam("metaDataVersionId") Long metaDataVersionId) {
 		return codeListRepository.findByMetaDataVersionId(metaDataVersionId);
 	}
-	
+
+	@RequestMapping(value = "/odm/v1/codeListQuery", method = RequestMethod.GET)
+	public List<CodeList> queryCodeList(@RequestParam("q") String q, @RequestParam("ctId") Long ctId) {
+		List<CodeList> codeLists = codeListRepository.query(q);
+		ControlTerminology ct = controlTerminologyRepository.findOne(ctId);
+		Iterator<CodeList> it = codeLists.iterator();
+		List<CodeList> codeLists2 = ct.getCodeLists();
+		while (it.hasNext()) {
+			CodeList cl = it.next();
+			boolean has = contains(codeLists2, cl);
+			if (has) {
+				it.remove();
+			}
+		}
+		return codeLists;
+	}
+
+	protected boolean contains(List<CodeList> codeLists2, CodeList cl) {
+		for (CodeList cl2 : codeLists2) {
+			if (cl.getId().equals(cl2.getId())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	@RequestMapping(value = "/odm/v1/codeListForCT", method = RequestMethod.GET)
 	public List<CodeList> listCodeListForCT(@RequestParam("ctId") Long ctId) {
 		return controlTerminologyRepository.findOne(ctId).getCodeLists();
 	}
-
 
 	@RequestMapping(value = "/odm/v1/enumeratedItem", method = RequestMethod.GET)
 	public List<EnumeratedItem> listEnumeratedItem(@RequestParam("codeListId") Long codeListId) {
@@ -116,6 +142,80 @@ public class CodeListController {
 
 		ct.setName(name);
 		ct.setDescription(desc);
+		return saveCT(ct);
+	}
+
+	@RequestMapping(value = "/odm/v1/controlTerminology", method = RequestMethod.PUT)
+	public ResponseEntity<OperationResponse> updateControlTerminology(@RequestBody Map<String, String> request) {
+		String idStr = StringUtils.trim(request.get("id"));
+		String name = StringUtils.trim(request.get("name"));
+		String desc = StringUtils.trim(request.get("description"));
+		ControlTerminology ct = null;
+		if (StringUtils.isEmpty(name)) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("Name is required");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		}
+		if (StringUtils.isEmpty(idStr) || !StringUtils.isNumeric(idStr)) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("id is invalid");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		} else {
+			Long id = Long.valueOf(idStr);
+			ct = controlTerminologyRepository.findOne(id);
+			if (ct == null) {
+				OperationResponse or = new OperationResponse();
+				OperationResult result = new OperationResult();
+				result.setSuccess(false);
+				result.setError("id is invalid");
+				or.setResult(result);
+				return new ResponseEntity<OperationResponse>(or, HttpStatus.NOT_FOUND);
+			}
+		}
+
+		ct.setName(name);
+		ct.setDescription(desc);
+		ct.setStatus(ObjectStatus.active);
+		ct.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+		ct.setUpdatedBy("admin");
+		return saveCT(ct);
+	}
+
+	@RequestMapping(value = "/odm/v1/controlTerminology/{id}/codeList/{codeListId}", method = RequestMethod.POST)
+	public ResponseEntity<OperationResponse> addCodeList(@PathVariable("id") Long id,
+			@PathVariable("codeListId") Long codeListId) {
+		ControlTerminology ct = controlTerminologyRepository.findOne(id);
+		if (ct == null) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("id is invalid");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		} else {
+			CodeList codeList = codeListRepository.findOne(codeListId);
+			if (codeList == null) {
+				OperationResponse or = new OperationResponse();
+				OperationResult result = new OperationResult();
+				result.setSuccess(false);
+				result.setError("codeListId is invalid");
+				or.setResult(result);
+				return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+			} else {
+				ct.getCodeLists().add(codeList);
+				return saveCT(ct);
+			}
+		}
+
+	}
+
+	protected ResponseEntity<OperationResponse> saveCT(ControlTerminology ct) {
 		try {
 			controlTerminologyRepository.save(ct);
 			OperationResponse or = new OperationResponse();

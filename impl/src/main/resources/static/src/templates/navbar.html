@@ -10,7 +10,13 @@
     </div>
     <div id="navbar" class="navbar-collapse collapse">
       <div class="navbar-form navbar-right">
-        <button class="btn btn-default btn-sm" data-toggle="modal" data-target="#newCT" ng-click="newItem()">
+        <button class="btn btn-default btn-sm" data-toggle="modal" data-target="#editCT" ng-show="tempCT.tempModel.id" ng-click="cleanCodeListQuery()">
+            <i class="glyphicon glyphicon-plus"></i> Update current CT
+        </button>
+        <button class="btn btn-default btn-sm" data-toggle="modal" data-target="#addCodeList" ng-show="tempCT.tempModel.id" ng-click="cleanCodeListQuery()">
+            <i class="glyphicon glyphicon-plus"></i> Add Code List
+        </button>
+        <button class="btn btn-default btn-sm" data-toggle="modal" data-target="#newCT" ng-click="newCT()">
             <i class="glyphicon glyphicon-plus"></i> Create new CT
         </button>
       </div>

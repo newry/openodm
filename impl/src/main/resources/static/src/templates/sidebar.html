@@ -4,7 +4,7 @@
 	</a></li>
 	<ul>
 	<li ng-show="showCT" ng-repeat="item in ctList" ng-class="'active'"><a href=""
-		ng-click="getAllCodeListsForCT(item.model.id)"> <i class="glyphicon"></i>
+		ng-click="getAllCodeListsForCT(item.model)"> <i class="glyphicon"></i>
 			{{item.model.name | strLimit : 64}}
 	</a></li>
 	</ul>

@@ -38,24 +38,100 @@
 					<h4 class="modal-title">Create a new CT</h4>
 				</div>
 				<div class="modal-body">
-					Name: <input type="text" ng-model="temp.tempModel.name" autofocus="autofocus" ng-required="true"/><br/>
-					Description: <input type="text" ng-model="temp.tempModel.desc"/>
+					Name: <input type="text" ng-model="tempCT.tempModel.name" autofocus="autofocus" ng-required="true"/><br/>
+					Description: <input type="text" ng-model="tempCT.tempModel.desc"/>
 					<div ng-include data-src="'error-bar'" class="clearfix"></div>
 				</div>
 				<div class="modal-footer">
-					<div ng-show="!requesting">
+					<div ng-show="!modalRequesting">
 						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 						<button type="submit" class="btn btn-primary">Confirm</button>
 					</div>
-					<div ng-show="requesting">
-						<span class="label label-warning">Creating ...</span>
+					<div ng-show="modalRequesting">
+						<span class="label label-warning">Requesting ...</span>
 					</div>
 				</div>
 			</form>
 		</div>
 	</div>
 </div>
-
+<div class="modal animated fadeIn" id="editCT">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<form ng-submit="updateCT()">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">
+						<span aria-hidden="true">&times;</span> <span class="sr-only">close</span>
+					</button>
+					<h4 class="modal-title">Update CT</h4>
+				</div>
+				<div class="modal-body">
+					Name: <input type="text" ng-model="tempCT.tempModel.name" autofocus="autofocus" ng-required="true"/><br/>
+					Description: <input type="text" ng-model="tempCT.tempModel.desc"/>
+					<div ng-include data-src="'error-bar'" class="clearfix"></div>
+				</div>
+				<div class="modal-footer">
+					<div ng-show="!modalRequesting">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+						<button type="submit" class="btn btn-primary">Confirm</button>
+					</div>
+					<div ng-show="modalRequesting">
+						<span class="label label-warning">Requesting ...</span>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+<div class="modal animated fadeIn" id="addCodeList">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<form>
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">
+						<span aria-hidden="true">&times;</span> <span class="sr-only">close</span>
+					</button>
+					<h4 class="modal-title">Add Code List</h4>
+				</div>
+				<div class="modal-body">
+					{{tempCT.tempModel.name}}<br/>
+					Code List Name: <input type="text" ng-model="codeListQuery" autofocus="autofocus" ng-required="true"/>
+					<a href="" ng-click="queryCodeListsForCT(codeListQuery)"> <i class="glyphicon"></i>Query</a>
+					<table class="table mb0 table-files">
+						<thead>
+							<tr>
+								<th>Code List Name</th>
+								<th>Submission Value</th>
+								<th>Code Id</th>
+								<th>Extensible</th>
+								<th></th>
+							</tr>
+							<tr
+								ng-repeat="item in modalItemList | orderBy:extCodeId"
+								ng-show="!modalRequesting">
+								<td class="hidden-xs">{{item.model.name}}</td>
+								<td class="hidden-xs">{{item.model.cdiscsubmissionValue}}</td>
+								<td class="hidden-xs">{{item.model.extCodeId}}</td>
+								<td class="hidden-xs">{{item.model.codeListExtensible}}</td>
+								<td class="hidden-xs" ng-show="!item.model.added"><a href="" ng-click="addCodeListForCT(item.model)">Add</a></td>
+							</tr>
+						</thead>
+					</table>
+					
+					<div ng-include data-src="'error-bar'" class="clearfix"></div>
+				</div>
+				<div class="modal-footer">
+					<div ng-show="!modalRequesting">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+					</div>
+					<div ng-show="modalRequesting">
+						<span class="label label-warning">Requesting ...</span>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
 <div class="modal animated fadeIn" id="enumeratedItemList">
 	<div class="modal-dialog modal-lg">
 		<div class="modal-content">
@@ -77,7 +153,7 @@
 						</tr>
 						<tr
 							ng-repeat="item in temp.model.enumeratedItemList | orderBy:extCodeId"
-							ng-show="!requesting">
+							ng-show="!modalRequesting">
 							<td class="hidden-xs">{{item.extCodeId}}</td>
 							<td class="hidden-xs">{{item.codedValue}}</td>
 							<td class="hidden-xs">{{item.cdiscsynonym}}</td>
