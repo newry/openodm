@@ -27,6 +27,66 @@
 		</div>
 	</div>
 </div>
+<div class="modal animated fadeIn" id="newCustCodeList">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<form ng-submit="createCustCodeList()">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">
+						<span aria-hidden="true">&times;</span> <span class="sr-only">close</span>
+					</button>
+					<h4 class="modal-title">Create a new Code List for CT</h4>
+				</div>
+				<div class="modal-body">
+					{{tempCT.tempModel.name}}<br/>
+					Name: <input type="text" ng-model="tempCustCodeList.tempModel.name" autofocus="autofocus" ng-required="true"/><br/>
+					Description: <input type="text" ng-model="tempCustCodeList.tempModel.description"/><br/>
+					Submission Value: <input type="text" ng-model="tempCustCodeList.tempModel.cdiscsubmissionValue"/>
+					<div ng-include data-src="'error-bar'" class="clearfix"></div>
+				</div>
+				<div class="modal-footer">
+					<div ng-show="!modalRequesting">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+						<button type="submit" class="btn btn-primary">Confirm</button>
+					</div>
+					<div ng-show="modalRequesting">
+						<span class="label label-warning">Requesting ...</span>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+<div class="modal animated fadeIn" id="editCustCodeList">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<form ng-submit="updateCustCodeList()">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">
+						<span aria-hidden="true">&times;</span> <span class="sr-only">close</span>
+					</button>
+					<h4 class="modal-title">Update Code List for CT</h4>
+				</div>
+				<div class="modal-body">
+					{{tempCT.tempModel.name}}<br/>
+					Name: <input type="text" ng-model="tempCustCodeList.tempModel.name" autofocus="autofocus" ng-required="true"/><br/>
+					Description: <input type="text" ng-model="tempCustCodeList.tempModel.description"/><br/>
+					Submission Value: <input type="text" ng-model="tempCustCodeList.tempModel.cdiscsubmissionValue"/>
+					<div ng-include data-src="'error-bar'" class="clearfix"></div>
+				</div>
+				<div class="modal-footer">
+					<div ng-show="!modalRequesting">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+						<button type="submit" class="btn btn-primary">Confirm</button>
+					</div>
+					<div ng-show="modalRequesting">
+						<span class="label label-warning">Requesting ...</span>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
 <div class="modal animated fadeIn" id="newCT">
 	<div class="modal-dialog">
 		<div class="modal-content">
@@ -55,6 +115,7 @@
 		</div>
 	</div>
 </div>
+
 <div class="modal animated fadeIn" id="editCT">
 	<div class="modal-dialog">
 		<div class="modal-content">
@@ -132,6 +193,35 @@
 		</div>
 	</div>
 </div>
+<div class="modal animated fadeIn" id="addMetadataVersion">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<form ng-submit="addMDVtoCT(selectedModalMdv)">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">
+						<span aria-hidden="true">&times;</span> <span class="sr-only">close</span>
+					</button>
+					<h4 class="modal-title">Add Code List</h4>
+				</div>
+				<div class="modal-body">
+					{{tempCT.tempModel.name}}<br/>
+					Dictionary Name: <select ng-options="mdv.name for mdv in modalMdvList" ng-model="selectedModalMdv" ng-required="true"></select>
+					<div ng-include data-src="'error-bar'" class="clearfix"></div>
+				</div>
+				<div class="modal-footer">
+					<div ng-show="!modalRequesting">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+						<button type="submit" class="btn btn-primary">Confirm</button>
+ 					</div>
+ 					<div ng-show="modalRequesting">
+						<span class="label label-warning">Requesting ...</span>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
 <div class="modal animated fadeIn" id="enumeratedItemList">
 	<div class="modal-dialog modal-lg">
 		<div class="modal-content">
@@ -139,12 +229,13 @@
 				<button type="button" class="close" data-dismiss="modal">
 					<span aria-hidden="true">&times;</span> <span class="sr-only">Close</span>
 				</button>
-				<h4 class="modal-title">{{temp.model.name}}</h4>
+				<h4 class="modal-title">{{temp.tempModel.name}}</h4>
 			</div>
 			<div class="modal-body">
 				<table class="table mb0 table-files">
 					<thead>
 						<tr>
+							<th></th>
 							<th>Code</th>
 							<th>CDISC Submission Value</th>
 							<th>CDISC Synonyms</th>
@@ -152,20 +243,26 @@
 							<th>NCI Preferred Term</th>
 						</tr>
 						<tr
-							ng-repeat="item in temp.model.enumeratedItemList | orderBy:extCodeId"
+							ng-repeat="item in temp.tempModel.enumeratedItemList | orderBy:extCodeId"
 							ng-show="!modalRequesting">
-							<td class="hidden-xs">{{item.extCodeId}}</td>
-							<td class="hidden-xs">{{item.codedValue}}</td>
-							<td class="hidden-xs">{{item.cdiscsynonym}}</td>
-							<td class="hidden-xs">{{item.cdiscdefinition}}</td>
-							<td class="hidden-xs">{{item.preferredTerm}}</td>
+							<td class="hidden-xs" ng-show="item.new"><a href="" ng-click="remove(temp.tempModel.enumeratedItemList, item)">-</a></td>
+							<td class="hidden-xs" ng-show="!item.new">{{item.extCodeId}}</td>
+							<td class="hidden-xs" ng-show="item.new"><input type="text" ng-model="item.extCodeId" autofocus="autofocus" ng-required="true"/></td>
+							<td class="hidden-xs" ng-show="!item.new">{{item.codedValue}}</td>
+							<td class="hidden-xs" ng-show="item.new"><input type="text" ng-model="item.codedValue" ng-required="true"/></td>
+							<td class="hidden-xs" ng-show="!item.new">{{item.cdiscsynonym}}</td>
+							<td class="hidden-xs" ng-show="!item.new">{{item.cdiscdefinition}}</td>
+							<td class="hidden-xs" ng-show="!item.new">{{item.preferredTerm}}</td>
 						</tr>
 					</thead>
 				</table>
 			</div>
 			<div class="modal-footer">
+				<button type="button" class="btn btn-default"
+					ng-disabled="temp.inprocess" ng-show="temp.tempModel.customized" ng-click="addNewEnumeratedItem(temp.tempModel.enumeratedItemList)">Add</button>
 				<button type="button" class="btn btn-default" data-dismiss="modal"
 					ng-disabled="temp.inprocess">Close</button>
+				<button type="submit" class="btn btn-primary">Confirm</button>
 			</div>
 		</div>
 	</div>

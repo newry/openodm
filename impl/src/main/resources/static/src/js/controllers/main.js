@@ -17,6 +17,7 @@
         $scope.codeListQuery = '';
         $scope.requesting = false;
         $scope.modalRequesting = false;
+        $scope.modalMDVlist = [];
         $scope.temp = new Item();
         $scope.tempCT = new Item();
         $scope.viewTemplate = 'main-table.html';
@@ -46,13 +47,15 @@
             return deferred.resolve(data);
         };
 
-	    $scope.getAllMDVs = function() {
-	    	if($scope.showMDV){
-	    		$scope.showMDV = false;
-	    	}else{
-	    		$scope.showMDV = true;
+	    $scope.getAllMDVs = function(isModal) {
+	    	if(!isModal){
+		    	if($scope.showMDV){
+		    		$scope.showMDV = false;
+		    	}else{
+		    		$scope.showMDV = true;
+		    	}
 	    	}
-	    	if($scope.showMDV){
+	    	if($scope.showMDV || isModal){
             	$scope.requesting = true;
 		        var deferred = $q.defer();
 		    	$http.get("/odm/v1/metaDataVersion").success(function(data) {
@@ -63,9 +66,18 @@
 	            	$scope.requesting = false;
 	            });
 		    	deferred.promise.then(function(data){
-		    		$scope.mdvList = (data || []).map(function(file) {
-	                    return new Item(file);
-	                });
+			    	if(!isModal){
+			    		$scope.mdvList = (data || []).map(function(file) {
+		                    return new Item(file);
+		                });
+			    	}else{
+			    		$scope.modalMdvList = (data || []).map(function(file) {
+		                    return file;
+		                });
+			    		if($scope.modalMdvList.length > 0){
+//			    			$scope.selectedModalMdv = $scope.modalMdvList[0];
+			    		}
+			    	}
 		    	})
 	    	}
 	    };
@@ -158,11 +170,24 @@
             })['finally'](function() {
             	$scope.modalRequesting = false;
             });
-	    	deferred.promise.then(function(data){
-	    		$scope.modalItemList = (data || []).map(function(file) {
-                    return new Item(file);
-                });
-	    	})
+	    	return deferred.promise;
+	    };
+
+	    $scope.addMDVtoCT = function(selectedModalMdv) {
+	    	if(selectedModalMdv){
+	        	$scope.modalRequesting = true;
+		        var deferred = $q.defer();
+		    	$http.post("/odm/v1/controlTerminology/"+$scope.tempCT.tempModel.id+"/metaDataVersion/"+selectedModalMdv.id).success(function(data) {
+	                deferredHandler(data, deferred);
+	                $scope.getAllCodeListsForCT($scope.tempCT.tempModel);
+		            $scope.modal('addMetadataVersion', true);
+	            }).error(function(data, status) {
+	            	deferredHandler(data, deferred, 'Error during get code Lists');
+	            })['finally'](function() {
+	            	$scope.modalRequesting = false;
+	            });
+		    	return deferred.promise;
+	    	}
 	    };
 
 	    $scope.createCT = function() {
@@ -186,12 +211,12 @@
         	$scope.modalRequesting = true;
 		     var deferred = $q.defer();
 	         var data = {
-	        	id:$scope.tempCT.tempModel.id,
 	        	name:$scope.tempCT.tempModel.name,
 	        	desc:$scope.tempCT.tempModel.desc
 	         };
-		     $http.put("/odm/v1/controlTerminology", data).success(function(data) {
+		     $http.put("/odm/v1/controlTerminology/"+$scope.tempCT.tempModel.id, data).success(function(data) {
 	             deferredHandler(data, deferred);
+	             $scope.getAllCodeListsForCT($scope.tempCT.tempModel);
 	             $scope.modal('editCT', true)
 	         }).error(function(data, status) {
 	             deferredHandler(data, deferred, 'Error during update CT');
@@ -200,12 +225,56 @@
 	         });
 	    };
 
+	    $scope.createCustCodeList = function() {
+        	$scope.modalRequesting = true;
+		     var deferred = $q.defer();
+	         var data = {
+	        	ctId:$scope.tempCT.tempModel.id,
+	        	name:$scope.tempCustCodeList.tempModel.name,
+	        	submissionValue:$scope.tempCustCodeList.tempModel.cdiscsubmissionValue,
+	        	description:$scope.tempCustCodeList.tempModel.description
+	         };
+		     $http.post("/odm/v1/customizedCodeList", data).success(function(data) {
+	             deferredHandler(data, deferred);
+	             $scope.getAllCodeListsForCT($scope.tempCT.tempModel);
+	             $scope.modal('newCustCodeList', true)
+	         }).error(function(data, status) {
+	             deferredHandler(data, deferred, 'Error during create CT');
+	         })['finally'](function() {
+	             $scope.modalRequesting = false;
+	         });
+	    };
+
+	    $scope.updateCustCodeList = function() {
+        	$scope.modalRequesting = true;
+		     var deferred = $q.defer();
+	         var data = {
+	        	name:$scope.tempCustCodeList.tempModel.name,
+	        	submissionValue:$scope.tempCustCodeList.tempModel.cdiscsubmissionValue,
+	        	description:$scope.tempCustCodeList.tempModel.description
+	         };
+		     $http.put("/odm/v1/customizedCodeList/"+$scope.tempCustCodeList.tempModel.id, data).success(function(data) {
+	             deferredHandler(data, deferred);
+	             $scope.getAllCodeListsForCT($scope.tempCT.tempModel);
+	             $scope.modal('editCustCodeList', true)
+	         }).error(function(data, status) {
+	             deferredHandler(data, deferred, 'Error during create CT');
+	         })['finally'](function() {
+	             $scope.modalRequesting = false;
+	         });
+	    };
 
         $scope.newCT = function() {
             $scope.tempCT = new Item();
             $scope.temp.error = '';
         };
-	    $scope.cleanCodeListQuery = function() {
+        
+        $scope.newCustCodeList = function() {
+            $scope.tempCustCodeList = new Item();
+            $scope.temp.error = '';
+        };
+
+        $scope.cleanCodeListQuery = function() {
 	    	$scope.codeListQuery= '';
             $scope.temp.error = '';
 	    }
@@ -216,6 +285,22 @@
             $scope.temp = item;
         };
 
+        $scope.touchCustCodeList= function(item) {
+            item = item instanceof Item ? item : new Item();
+            $scope.tempCustCodeList = item;
+            $scope.modal('editCustCodeList');;
+        };
+        
+        $scope.addNewEnumeratedItem = function(list){
+        	var newItem = {"new":true};
+        	list.push(newItem);
+        }
+        $scope.remove = function(list, item){
+        	var index = list.indexOf(item);
+        	if (index > -1) {
+        		list.splice(index, 1);
+        	}
+        }
         $scope.click = function(item) {
             item.getEnumerateItemList();
             $scope.modal('enumeratedItemList');

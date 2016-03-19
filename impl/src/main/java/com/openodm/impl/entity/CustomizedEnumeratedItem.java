@@ -16,11 +16,12 @@ import org.hibernate.annotations.GenericGenerator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
-@Table(name = "ENUMERATED_ITEM")
+@Table(name = "CUSTOMIZED_ENUMERATED_ITEM")
 @DynamicUpdate
-public class EnumeratedItem extends PersistentObject {
+public class CustomizedEnumeratedItem extends PersistentObject {
 
-	private static final long serialVersionUID = 2872152713034624883L;
+	private static final long serialVersionUID = -2798346117093927001L;
+
 	@Id
 	@GeneratedValue(generator = "identity", strategy = GenerationType.IDENTITY)
 	@GenericGenerator(name = "identity", strategy = "identity")
@@ -42,10 +43,10 @@ public class EnumeratedItem extends PersistentObject {
 	@Column(name = "Preferred_Term", nullable = true, length = 255)
 	private String PreferredTerm;
 
-	@ManyToOne(targetEntity = CodeList.class, optional = false, fetch = FetchType.LAZY)
-	@JoinColumn(name = "CODE_LIST_ID", nullable = false)
+	@ManyToOne(targetEntity = CustomizedCodeList.class, optional = false, fetch = FetchType.LAZY)
+	@JoinColumn(name = "CUSTOMIZED_CODE_LIST_ID", nullable = false)
 	@JsonIgnore
-	private CodeList codeList;
+	private CustomizedCodeList customizedCodeList;
 
 	public Long getId() {
 		return id;
@@ -91,21 +92,11 @@ public class EnumeratedItem extends PersistentObject {
 		PreferredTerm = preferredTerm;
 	}
 
-	public CodeList getCodeList() {
-		return codeList;
+	public CustomizedCodeList getCustomizedCodeList() {
+		return customizedCodeList;
 	}
 
-	public void setCodeList(CodeList codeList) {
-		this.codeList = codeList;
+	public void setCustomizedCodeList(CustomizedCodeList customizedCodeList) {
+		this.customizedCodeList = customizedCodeList;
 	}
-
-	@Override
-	public String toString() {
-		return "EnumeratedItem [id=" + id + ", extCodeId=" + extCodeId
-				+ ", codedValue=" + codedValue + ", CDISCSynonym="
-				+ CDISCSynonym + ", CDISCDefinition=" + CDISCDefinition
-				+ ", PreferredTerm=" + PreferredTerm + ", codeList=" + codeList
-				+ "]";
-	}
-
 }

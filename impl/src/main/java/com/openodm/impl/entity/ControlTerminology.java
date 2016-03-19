@@ -37,6 +37,10 @@ public class ControlTerminology extends PersistentObject {
 	@JoinTable(name = "CONTROL_TERMINOLOGY_CODE_LIST_XREF", joinColumns = { @JoinColumn(name = "CONTROL_TERMINOLOGY_ID") }, inverseJoinColumns = { @JoinColumn(name = "CODE_LIST_ID") })
 	private List<CodeList> codeLists;
 
+	@ManyToMany(targetEntity = CustomizedCodeList.class)
+	@JoinTable(name = "CONTROL_TERMINOLOGY_CUST_CODE_LIST_XREF", joinColumns = { @JoinColumn(name = "CONTROL_TERMINOLOGY_ID") }, inverseJoinColumns = { @JoinColumn(name = "CUSTOMIZED_CODE_LIST_ID") })
+	private List<CustomizedCodeList> customizedCodeLists;
+
 	/**
 	 * @return the id
 	 */
@@ -95,6 +99,14 @@ public class ControlTerminology extends PersistentObject {
 	 */
 	public void setCodeLists(List<CodeList> codeLists) {
 		this.codeLists = codeLists;
+	}
+
+	public List<CustomizedCodeList> getCustomizedCodeLists() {
+		return customizedCodeLists;
+	}
+
+	public void setCustomizedCodeLists(List<CustomizedCodeList> customizedCodeLists) {
+		this.customizedCodeLists = customizedCodeLists;
 	}
 
 }

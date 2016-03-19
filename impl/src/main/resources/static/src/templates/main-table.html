@@ -25,6 +25,12 @@
                     <span class="sortorder" ng-show="predicate[1] === 'model.codeListExtensible'" ng-class="{reverse:reverse}"></span>
                 </a>
             </th>
+            <th>
+                <a href="" ng-click="order('model.customized')">
+	               Customized
+                    <span class="sortorder" ng-show="predicate[1] === 'model.customized'" ng-class="{reverse:reverse}"></span>
+                </a>
+            </th>
             <th class="text-right"></th>
         </tr>
     </thead>
@@ -34,7 +40,7 @@
                 <div ng-include="config.tplPath + '/spinner.html'"></div>
             </td>
         </tr>
-        <tr ng-repeat="item in itemList | filter: {model:{name: query}} | orderBy:predicate:reverse" ng-show="!requesting">
+        <tr ng-repeat="item in itemList | filter: {model:{name: query}} | orderBy:model.customized:reverse" ng-show="!requesting">
             <td ng-right-click="touch(item)">
                 <a href="" ng-click="click(item)" title="{{item.model.name}}" ng-mouseover="item.hoverIn()" ng-mouseleave="item.hoverOut()">
                     {{item.model.name | strLimit : 32}}
@@ -51,6 +57,9 @@
             </td>
             <td>
    				{{item.model.codeListExtensible}}
+            </td>
+            <td>
+   				{{item.model.customized?'Yes':'No'}}
             </td>
         </tr>
     </tbody>

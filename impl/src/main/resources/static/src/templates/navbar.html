@@ -14,6 +14,12 @@
             <i class="glyphicon glyphicon-plus"></i> Update current CT
         </button>
         <button class="btn btn-default btn-sm" data-toggle="modal" data-target="#addCodeList" ng-show="tempCT.tempModel.id" ng-click="cleanCodeListQuery()">
+            <i class="glyphicon glyphicon-plus"></i> Select Code List
+        </button>
+        <button class="btn btn-default btn-sm" data-toggle="modal" data-target="#addMetadataVersion" ng-show="tempCT.tempModel.id" ng-click="getAllMDVs(true)">
+            <i class="glyphicon glyphicon-plus"></i> Select Dictionary
+        </button>
+        <button class="btn btn-default btn-sm" data-toggle="modal" data-target="#newCustCodeList" ng-show="tempCT.tempModel.id" ng-click="newCustCodeList()">
             <i class="glyphicon glyphicon-plus"></i> Add Code List
         </button>
         <button class="btn btn-default btn-sm" data-toggle="modal" data-target="#newCT" ng-click="newCT()">

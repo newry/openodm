@@ -49,19 +49,35 @@
 
         Item.prototype.getEnumerateItemList = function() {
             var self = this;
-            self.inprocess = true;
-            self.error = '';
-	        var deferred = $q.defer();
-            $http.get("/odm/v1/enumeratedItem?codeListId="+this.model.id).success(function(data) {
-                self.deferredHandler(data, deferred);
-            }).error(function(data, status) {
-                self.deferredHandler(data, deferred, 'Error during get enumeratedItemList');
-            })['finally'](function() {
-                self.inprocess = false;
-            });
-            deferred.promise.then(function(data){
-                self.tempModel.enumeratedItemList = self.model.enumeratedItemList = data;
-            });
+	        if(!this.model.customized){
+	            self.inprocess = true;
+	            self.error = '';
+		        var deferred = $q.defer();
+	            $http.get("/odm/v1/enumeratedItem?codeListId="+this.model.id).success(function(data) {
+	                self.deferredHandler(data, deferred);
+	            }).error(function(data, status) {
+	                self.deferredHandler(data, deferred, 'Error during get enumeratedItemList');
+	            })['finally'](function() {
+	                self.inprocess = false;
+	            });
+	            deferred.promise.then(function(data){
+	                self.tempModel.enumeratedItemList = self.model.enumeratedItemList = data;
+	            });
+        	}else{
+	            self.inprocess = true;
+	            self.error = '';
+		        var deferred = $q.defer();
+	            $http.get("/odm/v1/customizedEnumeratedItem?codeListId="+this.model.id).success(function(data) {
+	                self.deferredHandler(data, deferred);
+	            }).error(function(data, status) {
+	                self.deferredHandler(data, deferred, 'Error during get enumeratedItemList');
+	            })['finally'](function() {
+	                self.inprocess = false;
+	            });
+	            deferred.promise.then(function(data){
+	                self.tempModel.enumeratedItemList = self.model.enumeratedItemList = data;
+	            });
+        	}
         };
 
         return Item;
