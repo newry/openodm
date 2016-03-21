@@ -35,6 +35,7 @@ import org.w3c.dom.NodeList;
 
 import com.openodm.impl.controller.response.OperationResponse;
 import com.openodm.impl.controller.response.OperationResult;
+import com.openodm.impl.entity.AbstractCodeList;
 import com.openodm.impl.entity.AbstractEnumeratedItem;
 import com.openodm.impl.entity.CodeList;
 import com.openodm.impl.entity.ControlTerminology;
@@ -102,23 +103,13 @@ public class CodeListController {
 	}
 
 	@RequestMapping(value = "/odm/v1/codeListForCT", method = RequestMethod.GET)
-	public List<CodeList> listCodeListForCT(@RequestParam("ctId") Long ctId) {
+	public List<AbstractCodeList> listCodeListForCT(@RequestParam("ctId") Long ctId) {
 		ControlTerminology ct = controlTerminologyRepository.findOne(ctId);
 		List<CodeList> codeLists = ct.getCodeLists();
 		List<CustomizedCodeList> customizedCodeLists = ct
 				.getCustomizedCodeLists();
-		List<CodeList> list = new ArrayList<CodeList>();
-		for (CustomizedCodeList ccl : customizedCodeLists) {
-			CodeList cl = new CodeList();
-			cl.setId(ccl.getId());
-			cl.setName(ccl.getName());
-			cl.setDescription(ccl.getDescription());
-			cl.setCDISCSubmissionValue(ccl.getCDISCSubmissionValue());
-			cl.setCustomized(true);
-			cl.setCodeListExtensible(ccl.getCodeListExtensible());
-			cl.setExtCodeId(ccl.getExtCodeId());
-			list.add(cl);
-		}
+		List<AbstractCodeList> list = new ArrayList<AbstractCodeList>();
+		list.addAll(customizedCodeLists);
 		list.addAll(codeLists);
 		return list;
 	}

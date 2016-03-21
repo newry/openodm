@@ -12,7 +12,7 @@ public interface ExtendedEnumeratedItemRepository extends
 		CrudRepository<ExtendedEnumeratedItem, Long> {
 
 	@Query("SELECT d FROM ExtendedEnumeratedItem d WHERE d.controlTerminology.id=:controlTerminologyId and d.codeList.id=:codeListId and d.codedValue=:codedValue")
-	public List<ExtendedEnumeratedItem> findByCodeListIdAndCodeValue(
+	public List<ExtendedEnumeratedItem> findByCtIdAndCodeListIdAndCodeValue(
 			@Param("controlTerminologyId") Long controlTerminologyId,
 			@Param("codeListId") Long codeListId,
 			@Param("codedValue") String codedValue);

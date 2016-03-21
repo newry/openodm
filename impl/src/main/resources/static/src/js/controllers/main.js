@@ -272,27 +272,50 @@
 	    			if(ei.customized){
 		    			if(ei.id){
 		    				if(ei.deleted){
-			                    return {
-			                    	id:ei.id,
-			                    	deleted:true,
-			                    	extCodeId:ei.extCodeId,
-			                    	codedValue:ei.codedValue,
-			                    	codeListId:item.tempModel.id
-			    		         };
+		    					if(ei.extended){
+				                    return {
+				                    	id:ei.id,
+				                    	deleted:true,
+				                    	extCodeId:ei.extCodeId,
+				                    	codedValue:ei.codedValue,
+				                    	extended:ei.extended,
+				                    	ctId:$scope.tempCT.tempModel.id,
+				                    	codeListId:item.tempModel.id
+				    		         };
+		    					}else{
+				                    return {
+				                    	id:ei.id,
+				                    	deleted:true,
+				                    	extCodeId:ei.extCodeId,
+				                    	codedValue:ei.codedValue,
+				                    	codeListId:item.tempModel.id
+				    		         };
+		    					}
 		    				}else{
-			                    return {
-			                    	id:ei.id,
-			                    	extCodeId:ei.extCodeId,
-			                    	codedValue:ei.codedValue,
-			                    	extended: ei.extended,
-			                    	codeListId:item.tempModel.id
-			    		         };
+		    					if(ei.extended){
+				                    return {
+				                    	id:ei.id,
+				                    	extCodeId:ei.extCodeId,
+				                    	codedValue:ei.codedValue,
+				                    	extended:ei.extended,
+				                    	ctId:$scope.tempCT.tempModel.id,
+				                    	codeListId:item.tempModel.id
+				    		         };
+		    					}else{
+				                    return {
+				                    	id:ei.id,
+				                    	extCodeId:ei.extCodeId,
+				                    	codedValue:ei.codedValue,
+				                    	codeListId:item.tempModel.id
+				    		         };
+		    					}
 		    				}
 		    			}else{
 		                    return {
 		                    	extCodeId:ei.extCodeId,
 		                    	codedValue:ei.codedValue,
 		                    	extended: ei.extended,
+		                    	ctId:$scope.tempCT.tempModel.id,
 		                    	codeListId:item.tempModel.id
 		    		         };
 		    			}
@@ -302,7 +325,7 @@
 			     var deferred = $q.defer();
 			     $http.post("/odm/v1/customizedEnumeratedItem", list).success(function(data) {
 		             deferredHandler(data, deferred);
-		             item.getEnumerateItemList();
+		             item.getEnumerateItemList($scope.tempCT.tempModel);
 		         }).error(function(data, status) {
 		             deferredHandler(data, deferred, 'Error during create CT');
 		         })['finally'](function() {

@@ -12,7 +12,7 @@
             </a>
         </li>
         <li>
-            <a href="" tabindex="-1" data-toggle="modal" data-target="#editEnumeratedItemList" ng-click="temp.getEnumerateItemList()" ng-show="temp.model.customized || tempCT.tempModel.id">
+            <a href="" tabindex="-1" data-toggle="modal" data-target="#editEnumeratedItemList" ng-click="temp.getEnumerateItemList()" ng-show="temp.model.customized || (tempCT.tempModel.id && temp.model.codeListExtensible==='Yes')">
                 <i class="glyphicon glyphicon-folder-open"></i>Edit Enumerated Items
             </a>
         </li>

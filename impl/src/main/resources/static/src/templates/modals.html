@@ -262,10 +262,10 @@
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-default"
-						ng-disabled="temp.inprocess" ng-click="addNewEnumeratedItem(temp.tempModel.enumeratedItemList, temp.tempModel.customized)">Add</button>
+						ng-disabled="temp.inprocess" ng-show="temp.tempModel.codeListExtensible==='Yes'" ng-click="addNewEnumeratedItem(temp.tempModel.enumeratedItemList, temp.tempModel.customized)">Add</button>
 					<button type="button" class="btn btn-default" data-dismiss="modal"
 						ng-disabled="temp.inprocess">Close</button>
-					<button ng-disabled="temp.inprocess" type="button" class="btn btn-default" ng-click="saveEumeratedItems(temp)">Save</button>
+					<button ng-disabled="temp.inprocess"  ng-show="temp.tempModel.codeListExtensible==='Yes'" type="button" class="btn btn-default" ng-click="saveEumeratedItems(temp)">Save</button>
 				</div>
 			</form>
 		</div>
