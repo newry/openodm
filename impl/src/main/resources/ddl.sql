@@ -104,6 +104,22 @@
         primary key (ID)
     );
     
+    create table EXTENDED_ENUMERATED_ITEM (
+        ID  bigserial not null,
+        CREATOR varchar(255) not null,
+        DATE_ADDED timestamp not null,
+        DATE_LAST_MODIFIED timestamp not null,
+        STATUS varchar(32) not null,
+        UPDATED_BY varchar(255) not null,
+        CDISC_Definition varchar(4096),
+        CDISC_Synonym varchar(4096),
+        Preferred_Term varchar(255),
+        coded_value varchar(255) not null,
+        ext_code_id varchar(255) not null,
+        CODE_LIST_ID int8 not null,
+        Control_Terminology_ID int8 not null,
+        primary key (ID)
+    );
 
     alter table CONTROL_TERMINOLOGY 
         add constraint UK_mfmqnu7x1ulpadxqop7evj8up unique (name);
@@ -149,8 +165,21 @@
         foreign key (CUSTOMIZED_CODE_LIST_ID) 
         references CUSTOMIZED_CODE_LIST;
         
+     alter table EXTENDED_ENUMERATED_ITEM 
+        add constraint FK_pcgdckbj5xm7l7pylisk352mc 
+        foreign key (CODE_LIST_ID) 
+        references CODE_LIST;
+
+    alter table EXTENDED_ENUMERATED_ITEM 
+        add constraint FK_fwn703o440fprfwmnh1uhur3r 
+        foreign key (Control_Terminology_ID) 
+        references CONTROL_TERMINOLOGY;
+        
     CREATE UNIQUE INDEX code_list_oid_idx ON CODE_LIST (oid, META_DATA_VERSION_ID);
 
 	CREATE UNIQUE INDEX enumerated_item_coded_value_idx ON ENUMERATED_ITEM (coded_value, CODE_LIST_ID);
 
 	CREATE UNIQUE INDEX customized_enumerated_item_coded_value_idx ON CUSTOMIZED_ENUMERATED_ITEM (coded_value, CUSTOMIZED_CODE_LIST_ID);
+
+	CREATE UNIQUE INDEX extended_enumerated_item_coded_value_idx ON EXTENDED_ENUMERATED_ITEM (coded_value, CODE_LIST_ID,Control_Terminology_ID);
+	

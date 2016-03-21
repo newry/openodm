@@ -1,6 +1,7 @@
 package com.openodm.impl.controller;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
@@ -22,13 +23,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.openodm.impl.controller.response.OperationResponse;
 import com.openodm.impl.controller.response.OperationResult;
+import com.openodm.impl.entity.AbstractEnumeratedItem;
 import com.openodm.impl.entity.ControlTerminology;
 import com.openodm.impl.entity.CustomizedCodeList;
 import com.openodm.impl.entity.CustomizedEnumeratedItem;
+import com.openodm.impl.entity.ObjectStatus;
 import com.openodm.impl.repository.CodeListRepository;
 import com.openodm.impl.repository.ControlTerminologyRepository;
 import com.openodm.impl.repository.CustomizedCodeListRepository;
 import com.openodm.impl.repository.CustomizedEnumeratedItemRepository;
+import com.openodm.impl.repository.ExtendedEnumeratedItemRepository;
 
 @RestController
 public class CustomizedCodeListController {
@@ -42,6 +46,8 @@ public class CustomizedCodeListController {
 	private CustomizedCodeListRepository customizedCodeListRepository;
 	@Autowired
 	private CustomizedEnumeratedItemRepository customizedEnumeratedItemRepository;
+	@Autowired
+	private ExtendedEnumeratedItemRepository extendedEnumeratedItemRepository;
 
 	@RequestMapping(value = "/odm/v1/customizedCodeList", method = RequestMethod.POST)
 	public ResponseEntity<OperationResponse> createCustomizedCodeList(
@@ -180,26 +186,101 @@ public class CustomizedCodeListController {
 	}
 
 	@RequestMapping(value = "/odm/v1/customizedEnumeratedItem", method = RequestMethod.GET)
-	public List<CustomizedEnumeratedItem> listEnumeratedItem(
+	public List<? extends AbstractEnumeratedItem> listEnumeratedItem(
 			@RequestParam("codeListId") Long codeListId) {
-		return customizedEnumeratedItemRepository.findByCodeListId(codeListId);
+		List<CustomizedEnumeratedItem> list = customizedEnumeratedItemRepository
+				.findByCodeListId(codeListId);
+		return list;
 	}
 
 	@RequestMapping(value = "/odm/v1/customizedEnumeratedItem", method = RequestMethod.POST)
 	public ResponseEntity<OperationResponse> createEnumeratedItem(
-			@RequestBody Map<String, String> request) {
-		String extCodeId = StringUtils.trim(request.get("extCodeId"));
-		String codedValue = StringUtils.trim(request.get("codedValue"));
-		String codeListId = StringUtils.trim(request.get("codeListId"));
-		CustomizedEnumeratedItem cei = new CustomizedEnumeratedItem();
-		try {
-			cei.setExtCodeId(extCodeId);
-			cei.setCodedValue(codedValue);
-			cei.setCustomizedCodeList(this.customizedCodeListRepository
-					.findOne(Long.valueOf(codeListId)));
+			@RequestBody List<Map<String, String>> requests) {
+		List<CustomizedEnumeratedItem> list = new ArrayList<CustomizedEnumeratedItem>();
+		if (!CollectionUtils.isEmpty(requests)) {
+			CustomizedCodeList codeList = null;
+			for (Map<String, String> request : requests) {
+				if (request == null) {
+					continue;
+				}
+				String deleted = StringUtils.trim(request.get("deleted"));
+				String idStr = StringUtils.trim(request.get("id"));
+				String extCodeId = StringUtils.trim(request.get("extCodeId"));
+				String codedValue = StringUtils.trim(request.get("codedValue"));
+				String codeListId = StringUtils.trim(request.get("codeListId"));
+				if (StringUtils.isAnyEmpty(extCodeId, codedValue)) {
+					continue;
+				}
+				if (!StringUtils.isNumeric(codeListId)) {
+					OperationResponse or = new OperationResponse();
+					OperationResult result = new OperationResult();
+					result.setSuccess(false);
+					result.setError("invalid codeListId");
+					or.setResult(result);
+					return new ResponseEntity<OperationResponse>(or,
+							HttpStatus.BAD_REQUEST);
 
-			cei.setUpdatedBy("admin");
-			customizedEnumeratedItemRepository.save(cei);
+				} else {
+					Long id = Long.valueOf(codeListId);
+					if (codeList == null) {
+						codeList = customizedCodeListRepository.findOne(id);
+						if (codeList == null) {
+							OperationResponse or = new OperationResponse();
+							OperationResult result = new OperationResult();
+							result.setSuccess(false);
+							result.setError("invalid codeListId");
+							or.setResult(result);
+							return new ResponseEntity<OperationResponse>(or,
+									HttpStatus.BAD_REQUEST);
+						}
+					}
+
+				}
+				CustomizedEnumeratedItem cei = new CustomizedEnumeratedItem();
+				if (StringUtils.isNotBlank(idStr)) {
+					cei = customizedEnumeratedItemRepository.findOne(Long
+							.valueOf(idStr));
+					if (StringUtils.isNotEmpty(deleted)) {
+						cei.setExtCodeId(extCodeId);
+						cei.setCodedValue(codedValue);
+						cei.setStatus(ObjectStatus.deleted);
+						cei.setCustomizedCodeList(codeList);
+						cei.setUpdatedBy("admin");
+					} else {
+						cei.setExtCodeId(extCodeId);
+						cei.setCodedValue(codedValue);
+						cei.setCustomizedCodeList(codeList);
+						cei.setUpdatedBy("admin");
+					}
+				} else {
+					List<CustomizedEnumeratedItem> ceis = customizedEnumeratedItemRepository
+							.findByCodeListIdAndCodeValue(
+									Long.valueOf(codeListId), codedValue);
+					if (!CollectionUtils.isEmpty(ceis)) {
+						cei = ceis.get(0);
+						cei.setExtCodeId(extCodeId);
+						cei.setCodedValue(codedValue);
+						cei.setCustomizedCodeList(codeList);
+						cei.setStatus(ObjectStatus.active);
+						cei.setUpdatedBy("admin");
+						cei.setDateLastModified(Calendar.getInstance(TimeZone
+								.getTimeZone("UTC")));
+					} else {
+						cei.setExtCodeId(extCodeId);
+						cei.setCodedValue(codedValue);
+						cei.setCustomizedCodeList(codeList);
+						cei.setCreator("admin");
+						cei.setUpdatedBy("admin");
+						cei.setDateLastModified(Calendar.getInstance(TimeZone
+								.getTimeZone("UTC")));
+					}
+				}
+				list.add(cei);
+			}
+
+		}
+		try {
+			customizedEnumeratedItemRepository.save(list);
 			OperationResponse or = new OperationResponse();
 			OperationResult result = new OperationResult();
 			result.setSuccess(true);

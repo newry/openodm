@@ -264,6 +264,53 @@
 	         });
 	    };
 
+	    $scope.saveEumeratedItems = function(item) {
+	    	console.log(item);
+	    	var eis = item.tempModel.enumeratedItemList;
+	    	if(eis && eis.length >0){
+	    		var list = eis.map(function(ei) {
+	    			if(ei.customized){
+		    			if(ei.id){
+		    				if(ei.deleted){
+			                    return {
+			                    	id:ei.id,
+			                    	deleted:true,
+			                    	extCodeId:ei.extCodeId,
+			                    	codedValue:ei.codedValue,
+			                    	codeListId:item.tempModel.id
+			    		         };
+		    				}else{
+			                    return {
+			                    	id:ei.id,
+			                    	extCodeId:ei.extCodeId,
+			                    	codedValue:ei.codedValue,
+			                    	extended: ei.extended,
+			                    	codeListId:item.tempModel.id
+			    		         };
+		    				}
+		    			}else{
+		                    return {
+		                    	extCodeId:ei.extCodeId,
+		                    	codedValue:ei.codedValue,
+		                    	extended: ei.extended,
+		                    	codeListId:item.tempModel.id
+		    		         };
+		    			}
+	    			}
+                });
+	        	$scope.modalRequesting = true;
+			     var deferred = $q.defer();
+			     $http.post("/odm/v1/customizedEnumeratedItem", list).success(function(data) {
+		             deferredHandler(data, deferred);
+		             item.getEnumerateItemList();
+		         }).error(function(data, status) {
+		             deferredHandler(data, deferred, 'Error during create CT');
+		         })['finally'](function() {
+		             $scope.modalRequesting = false;
+		         });
+	    	}
+	    };
+
         $scope.newCT = function() {
             $scope.tempCT = new Item();
             $scope.temp.error = '';
@@ -291,18 +338,25 @@
             $scope.modal('editCustCodeList');;
         };
         
-        $scope.addNewEnumeratedItem = function(list){
-        	var newItem = {"new":true};
+        $scope.addNewEnumeratedItem = function(list, customized){
+        	var newItem = {"new":true, 'customized':true};
+        	if(!customized){
+        		newItem = {"new":true, 'customized':true, 'extended': true};
+        	}
         	list.push(newItem);
         }
         $scope.remove = function(list, item){
         	var index = list.indexOf(item);
         	if (index > -1) {
-        		list.splice(index, 1);
+        		if(item.new){
+            		list.splice(index, 1);
+        		}else{
+        			item.deleted = true;
+        		}
         	}
         }
         $scope.click = function(item) {
-            item.getEnumerateItemList();
+            item.getEnumerateItemList($scope.tempCT.tempModel);
             $scope.modal('enumeratedItemList');
             return $scope.touch(item);
         };

@@ -35,15 +35,18 @@ import org.w3c.dom.NodeList;
 
 import com.openodm.impl.controller.response.OperationResponse;
 import com.openodm.impl.controller.response.OperationResult;
+import com.openodm.impl.entity.AbstractEnumeratedItem;
 import com.openodm.impl.entity.CodeList;
 import com.openodm.impl.entity.ControlTerminology;
 import com.openodm.impl.entity.CustomizedCodeList;
 import com.openodm.impl.entity.EnumeratedItem;
+import com.openodm.impl.entity.ExtendedEnumeratedItem;
 import com.openodm.impl.entity.MetaDataVersion;
 import com.openodm.impl.entity.ObjectStatus;
 import com.openodm.impl.repository.CodeListRepository;
 import com.openodm.impl.repository.ControlTerminologyRepository;
 import com.openodm.impl.repository.EnumeratedItemRepository;
+import com.openodm.impl.repository.ExtendedEnumeratedItemRepository;
 import com.openodm.impl.repository.MetaDataVersionRepository;
 
 @RestController
@@ -58,6 +61,8 @@ public class CodeListController {
 	private EnumeratedItemRepository enumeratedItemRepository;
 	@Autowired
 	private ControlTerminologyRepository controlTerminologyRepository;
+	@Autowired
+	private ExtendedEnumeratedItemRepository extendedEnumeratedItemRepository;
 
 	@RequestMapping(value = "/odm/v1/metaDataVersion", method = RequestMethod.GET)
 	public List<MetaDataVersion> listMetaDataVersion() {
@@ -119,9 +124,19 @@ public class CodeListController {
 	}
 
 	@RequestMapping(value = "/odm/v1/enumeratedItem", method = RequestMethod.GET)
-	public List<EnumeratedItem> listEnumeratedItem(
+	public List<AbstractEnumeratedItem> listEnumeratedItem(
+			@RequestParam(value = "ctId", required = false) Long ctId,
 			@RequestParam("codeListId") Long codeListId) {
-		return enumeratedItemRepository.findByCodeListId(codeListId);
+		List<EnumeratedItem> list = enumeratedItemRepository
+				.findByCodeListId(codeListId);
+		List<AbstractEnumeratedItem> result = new ArrayList<>();
+		if (ctId != null) {
+			List<ExtendedEnumeratedItem> extendedList = this.extendedEnumeratedItemRepository
+					.findByCodeListId(ctId, codeListId);
+			result.addAll(extendedList);
+		}
+		result.addAll(list);
+		return result;
 	}
 
 	@RequestMapping(value = "/odm/v1/controlTerminology", method = RequestMethod.GET)
@@ -175,7 +190,8 @@ public class CodeListController {
 
 	@RequestMapping(value = "/odm/v1/controlTerminology/{id}", method = RequestMethod.PUT)
 	public ResponseEntity<OperationResponse> updateControlTerminology(
-			@PathVariable("id") Long id, @RequestBody Map<String, String> request) {
+			@PathVariable("id") Long id,
+			@RequestBody Map<String, String> request) {
 		String name = StringUtils.trim(request.get("name"));
 		String desc = StringUtils.trim(request.get("description"));
 		ControlTerminology ct = null;

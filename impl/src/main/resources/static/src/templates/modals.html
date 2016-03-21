@@ -222,10 +222,10 @@
 	</div>
 </div>
 
-<div class="modal animated fadeIn" id="enumeratedItemList">
+<div class="modal animated fadeIn" id="editEnumeratedItemList">
 	<div class="modal-dialog modal-lg">
 		<div class="modal-content">
-			<form ng-submit="addMDVtoCT(selectedModalMdv)">
+			<form>
 				<div class="modal-header">
 					<button type="button" class="close" data-dismiss="modal">
 						<span aria-hidden="true">&times;</span> <span class="sr-only">Close</span>
@@ -236,7 +236,55 @@
 					<table class="table mb0 table-files">
 						<thead>
 							<tr>
-								<th ng-show="temp.tempModel.customized"></th>
+								<th></th>
+								<th>Code</th>
+								<th>CDISC Submission Value</th>
+								<th>CDISC Synonyms</th>
+								<th>CDISC Definition</th>
+								<th>NCI Preferred Term</th>
+							</tr>
+							<tr
+								ng-repeat="item in temp.tempModel.enumeratedItemList | orderBy:extCodeId"
+								ng-show="!modalRequesting && !item.deleted">
+								<td class="hidden-xs" ng-show="item.customized"><a href="" ng-click="remove(temp.tempModel.enumeratedItemList, item)"><b>-</b></a></td>
+								<td class="hidden-xs" ng-show="!item.customized"></td>
+								<td class="hidden-xs" ng-show="!item.customized">{{item.extCodeId}}</td>
+								<td class="hidden-xs" ng-show="item.customized"><input type="text" ng-model="item.extCodeId" autofocus="autofocus" ng-required="true"/></td>
+								<td class="hidden-xs" ng-show="!item.customized">{{item.codedValue}}</td>
+								<td class="hidden-xs" ng-show="item.customized"><input type="text" ng-model="item.codedValue" ng-required="true"/></td>
+								<td class="hidden-xs">{{item.cdiscsynonym}}</td>
+								<td class="hidden-xs">{{item.cdiscdefinition}}</td>
+								<td class="hidden-xs">{{item.preferredTerm}}</td>
+							</tr>
+						</thead>
+					</table>
+					<div ng-include data-src="'error-bar'" class="clearfix"></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default"
+						ng-disabled="temp.inprocess" ng-click="addNewEnumeratedItem(temp.tempModel.enumeratedItemList, temp.tempModel.customized)">Add</button>
+					<button type="button" class="btn btn-default" data-dismiss="modal"
+						ng-disabled="temp.inprocess">Close</button>
+					<button ng-disabled="temp.inprocess" type="button" class="btn btn-default" ng-click="saveEumeratedItems(temp)">Save</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+<div class="modal animated fadeIn" id="enumeratedItemList">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<form>
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">
+						<span aria-hidden="true">&times;</span> <span class="sr-only">Close</span>
+					</button>
+					<h4 class="modal-title">{{temp.tempModel.name}}</h4>
+				</div>
+				<div class="modal-body">
+					<table class="table mb0 table-files">
+						<thead>
+							<tr>
 								<th>Code</th>
 								<th>CDISC Submission Value</th>
 								<th>CDISC Synonyms</th>
@@ -246,24 +294,18 @@
 							<tr
 								ng-repeat="item in temp.tempModel.enumeratedItemList | orderBy:extCodeId"
 								ng-show="!modalRequesting">
-								<td class="hidden-xs" ng-show="item.new"><a href="" ng-click="remove(temp.tempModel.enumeratedItemList, item)"><b>-</b></a></td>
-								<td class="hidden-xs" ng-show="!item.new">{{item.extCodeId}}</td>
-								<td class="hidden-xs" ng-show="item.new"><input type="text" ng-model="item.extCodeId" autofocus="autofocus" ng-required="true"/></td>
-								<td class="hidden-xs" ng-show="!item.new">{{item.codedValue}}</td>
-								<td class="hidden-xs" ng-show="item.new"><input type="text" ng-model="item.codedValue" ng-required="true"/></td>
-								<td class="hidden-xs" ng-show="!item.new">{{item.cdiscsynonym}}</td>
-								<td class="hidden-xs" ng-show="!item.new">{{item.cdiscdefinition}}</td>
-								<td class="hidden-xs" ng-show="!item.new">{{item.preferredTerm}}</td>
+								<td class="hidden-xs">{{item.extCodeId}}</td>
+								<td class="hidden-xs">{{item.codedValue}}</td>
+								<td class="hidden-xs">{{item.cdiscsynonym}}</td>
+								<td class="hidden-xs">{{item.cdiscdefinition}}</td>
+								<td class="hidden-xs">{{item.preferredTerm}}</td>
 							</tr>
 						</thead>
 					</table>
 				</div>
 				<div class="modal-footer">
-					<button type="button" class="btn btn-default"
-						ng-disabled="temp.inprocess" ng-show="temp.tempModel.customized" ng-click="addNewEnumeratedItem(temp.tempModel.enumeratedItemList)">Add</button>
 					<button type="button" class="btn btn-default" data-dismiss="modal"
 						ng-disabled="temp.inprocess">Close</button>
-					<button type="submit" class="btn btn-primary" ng-show="temp.tempModel.customized">Confirm</button>
 				</div>
 			</form>
 		</div>

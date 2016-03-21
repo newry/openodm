@@ -12,6 +12,7 @@ import com.openodm.impl.entity.ControlTerminology;
 import com.openodm.impl.entity.CustomizedCodeList;
 import com.openodm.impl.entity.CustomizedEnumeratedItem;
 import com.openodm.impl.entity.EnumeratedItem;
+import com.openodm.impl.entity.ExtendedEnumeratedItem;
 import com.openodm.impl.entity.MetaDataVersion;
 
 public class GenerateDDL {
@@ -31,6 +32,7 @@ public class GenerateDDL {
 			cfg.addAnnotatedClass(CodeList.class);
 			cfg.addAnnotatedClass(EnumeratedItem.class);
 			cfg.addAnnotatedClass(CustomizedEnumeratedItem.class);
+			cfg.addAnnotatedClass(ExtendedEnumeratedItem.class);
 			cfg.addAnnotatedClass(ControlTerminology.class);
 			SchemaExport export = new SchemaExport(cfg);
 			export.setFormat(true);

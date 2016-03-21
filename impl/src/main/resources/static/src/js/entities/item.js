@@ -47,13 +47,17 @@
             return deferred.resolve(data);
         };
 
-        Item.prototype.getEnumerateItemList = function() {
+        Item.prototype.getEnumerateItemList = function(ctModel) {
             var self = this;
 	        if(!this.model.customized){
 	            self.inprocess = true;
 	            self.error = '';
 		        var deferred = $q.defer();
-	            $http.get("/odm/v1/enumeratedItem?codeListId="+this.model.id).success(function(data) {
+		        var url = "/odm/v1/enumeratedItem?codeListId="+this.model.id;
+		        if(ctModel){
+		        	url += "&ctId="+ctModel.id;
+		        }
+	            $http.get(url).success(function(data) {
 	                self.deferredHandler(data, deferred);
 	            }).error(function(data, status) {
 	                self.deferredHandler(data, deferred, 'Error during get enumeratedItemList');
