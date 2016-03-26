@@ -14,6 +14,7 @@
         name varchar(255) not null,
         oid varchar(255) not null,
         Preferred_Term varchar(255) not null,
+        Search_Term varchar(4096) not null,
         META_DATA_VERSION_ID int8 not null,
         primary key (ID)
     );

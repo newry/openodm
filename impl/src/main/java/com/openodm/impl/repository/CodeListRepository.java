@@ -17,7 +17,7 @@ public interface CodeListRepository extends CrudRepository<CodeList, Long> {
 	@Query("SELECT d FROM CodeList d WHERE d.metaDataVersion.id=:metaDataVersionId and d.status='active'")
 	public List<CodeList> findByMetaDataVersionId(@Param("metaDataVersionId") Long metaDataVersionId);
 
-	@Query("SELECT d FROM CodeList d WHERE d.name like %:q% and d.status='active'")
+	@Query("SELECT d FROM CodeList d WHERE d.searchTerm like %:q% and d.status='active'")
 	public List<CodeList> query(@Param("q") String q);
 
 }

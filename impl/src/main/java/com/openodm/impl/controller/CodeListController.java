@@ -79,7 +79,7 @@ public class CodeListController {
 	@RequestMapping(value = "/odm/v1/codeListQuery", method = RequestMethod.GET)
 	public List<CodeList> queryCodeList(@RequestParam("q") String q,
 			@RequestParam("ctId") Long ctId) {
-		List<CodeList> codeLists = codeListRepository.query(q);
+		List<CodeList> codeLists = codeListRepository.query(q.toLowerCase());
 		ControlTerminology ct = controlTerminologyRepository.findOne(ctId);
 		Iterator<CodeList> it = codeLists.iterator();
 		List<CodeList> codeLists2 = ct.getCodeLists();
@@ -103,7 +103,8 @@ public class CodeListController {
 	}
 
 	@RequestMapping(value = "/odm/v1/codeListForCT", method = RequestMethod.GET)
-	public List<AbstractCodeList> listCodeListForCT(@RequestParam("ctId") Long ctId) {
+	public List<AbstractCodeList> listCodeListForCT(
+			@RequestParam("ctId") Long ctId) {
 		ControlTerminology ct = controlTerminologyRepository.findOne(ctId);
 		List<CodeList> codeLists = ct.getCodeLists();
 		List<CustomizedCodeList> customizedCodeLists = ct
@@ -366,6 +367,8 @@ public class CodeListController {
 					codeList.setStatus(ObjectStatus.active);
 					codeList.setDateLastModified(Calendar.getInstance(TimeZone
 							.getTimeZone("UTC")));
+				} else if (StringUtils.isEmpty(codeList.getSearchTerm())) {
+					needToSave = true;
 				}
 			}
 			if (needToSave) {
@@ -402,8 +405,10 @@ public class CodeListController {
 				if (descNode != null) {
 					codeList.setPreferredTerm(descNode.getTextContent());
 				}
-				codeList = codeListRepository.save(codeList);
+				codeList.setSearchTerm(StringUtils.lowerCase(codeList.getName()
+						+ " " + codeList.getCDISCSubmissionValue()));
 
+				codeList = codeListRepository.save(codeList);
 			}
 			saveEnumeratedItem(xPath, codeListNode, codeList);
 		}

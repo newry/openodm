@@ -1,5 +1,6 @@
 package com.openodm.impl.entity;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -23,6 +24,9 @@ public class CodeList extends AbstractCodeList {
 	@JsonIgnore
 	private MetaDataVersion metaDataVersion;
 
+	@Column(name = "Search_Term", nullable = false, length = 4096)
+	private String searchTerm;
+
 	@Transient
 	private boolean customized;
 
@@ -36,6 +40,14 @@ public class CodeList extends AbstractCodeList {
 
 	public void setMetaDataVersion(MetaDataVersion metaDataVersion) {
 		this.metaDataVersion = metaDataVersion;
+	}
+
+	public String getSearchTerm() {
+		return searchTerm;
+	}
+
+	public void setSearchTerm(String searchTerm) {
+		this.searchTerm = searchTerm;
 	}
 
 }
