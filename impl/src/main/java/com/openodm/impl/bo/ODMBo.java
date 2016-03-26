@@ -26,22 +26,62 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import com.openodm.impl.entity.CodeList;
-import com.openodm.impl.entity.EnumeratedItem;
-import com.openodm.impl.entity.MetaDataVersion;
 import com.openodm.impl.entity.ObjectStatus;
-import com.openodm.impl.repository.CodeListRepository;
-import com.openodm.impl.repository.EnumeratedItemRepository;
-import com.openodm.impl.repository.MetaDataVersionRepository;
+import com.openodm.impl.entity.ct.CodeList;
+import com.openodm.impl.entity.ct.EnumeratedItem;
+import com.openodm.impl.entity.ct.CTVersion;
+import com.openodm.impl.repository.ct.CTVersionRepository;
+import com.openodm.impl.repository.ct.CodeListRepository;
+import com.openodm.impl.repository.ct.EnumeratedItemRepository;
 
 @Component
+@SuppressWarnings("rawtypes")
 public class ODMBo {
 	@Autowired
-	private MetaDataVersionRepository metaDataVersionRepository;
+	private CTVersionRepository metaDataVersionRepository;
 	@Autowired
 	private CodeListRepository codeListRepository;
 	@Autowired
 	private EnumeratedItemRepository enumeratedItemRepository;
+
+	private static class ODMNamespaceContext implements NamespaceContext {
+		final private Map<String, String> namespaceMap = new HashMap<String, String>();
+
+		public ODMNamespaceContext() {
+			namespaceMap.put("odm", "http://www.cdisc.org/ns/odm/v1.3");
+			namespaceMap.put("nciodm",
+					"http://ncicb.nci.nih.gov/xml/odm/EVS/CDISC");
+			namespaceMap.put("def", "http://www.cdisc.org/ns/def/v2.0");
+		}
+
+		@Override
+		public String getNamespaceURI(String prefix) {
+			return namespaceMap.get(prefix);
+		}
+
+		@Override
+		public String getPrefix(String namespaceURI) {
+			for (Map.Entry<String, String> entry : namespaceMap.entrySet()) {
+				if (entry.getValue().equals(namespaceURI)) {
+					return entry.getKey();
+				}
+
+			}
+			return null;
+		}
+
+		@Override
+		public Iterator getPrefixes(String namespaceURI) {
+			for (Map.Entry<String, String> entry : namespaceMap.entrySet()) {
+				if (entry.getValue().equals(namespaceURI)) {
+					return Arrays.asList(entry.getKey()).iterator();
+				}
+
+			}
+			return null;
+		}
+
+	}
 
 	public void importMedatDataVersion(InputStream in) throws Exception {
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -49,52 +89,18 @@ public class ODMBo {
 		DocumentBuilder db = dbf.newDocumentBuilder();
 		Document doc = db.parse(in);
 		XPath xPath = XPathFactory.newInstance().newXPath();
-		final Map<String, String> namespaceMap = new HashMap<String, String>();
-		namespaceMap.put("odm", "http://www.cdisc.org/ns/odm/v1.3");
-		namespaceMap
-				.put("nciodm", "http://ncicb.nci.nih.gov/xml/odm/EVS/CDISC");
-		NamespaceContext nsContext = new NamespaceContext() {
-
-			@Override
-			public String getNamespaceURI(String prefix) {
-				return namespaceMap.get(prefix);
-			}
-
-			@Override
-			public String getPrefix(String namespaceURI) {
-				for (Map.Entry<String, String> entry : namespaceMap.entrySet()) {
-					if (entry.getValue().equals(namespaceURI)) {
-						return entry.getKey();
-					}
-
-				}
-				return null;
-			}
-
-			@SuppressWarnings("rawtypes")
-			@Override
-			public Iterator getPrefixes(String namespaceURI) {
-				for (Map.Entry<String, String> entry : namespaceMap.entrySet()) {
-					if (entry.getValue().equals(namespaceURI)) {
-						return Arrays.asList(entry.getKey()).iterator();
-					}
-
-				}
-				return null;
-			}
-		};
-		xPath.setNamespaceContext(nsContext);
+		xPath.setNamespaceContext(new ODMNamespaceContext());
 		NodeList nodes = (NodeList) xPath.evaluate("//odm:MetaDataVersion",
 				doc.getDocumentElement(), XPathConstants.NODESET);
 		for (int i = 0; i < nodes.getLength(); i++) {
 			Node item = nodes.item(i);
 			NamedNodeMap attributes = item.getAttributes();
 			String oid = attributes.getNamedItem("OID").getNodeValue();
-			List<MetaDataVersion> mdvs = metaDataVersionRepository
+			List<CTVersion> mdvs = metaDataVersionRepository
 					.findByOid(oid);
-			MetaDataVersion mdv;
+			CTVersion mdv;
 			if (CollectionUtils.isEmpty(mdvs)) {
-				mdv = new MetaDataVersion();
+				mdv = new CTVersion();
 				mdv.setCreator("admin");
 				mdv.setUpdatedBy("admin");
 
@@ -113,7 +119,7 @@ public class ODMBo {
 		}
 	}
 
-	private void saveCodeList(XPath xPath, MetaDataVersion mdv,
+	private void saveCodeList(XPath xPath, CTVersion mdv,
 			NodeList codeListNodes) throws XPathExpressionException {
 		for (int j = 0; j < codeListNodes.getLength(); j++) {
 			Node codeListNode = codeListNodes.item(j);
@@ -152,7 +158,7 @@ public class ODMBo {
 						"nciodm:CodeListExtensible").getNodeValue());
 
 				Node descNode = (Node) xPath.evaluate(
-						"odm:Description/odm:TranslatedText", codeListNode,
+						"odm:Description/TranslatedText", codeListNode,
 						XPathConstants.NODE);
 				if (descNode != null) {
 					codeList.setDescription(descNode.getTextContent());
@@ -162,13 +168,13 @@ public class ODMBo {
 				if (descNode != null) {
 					codeList.setCDISCSubmissionValue(descNode.getTextContent());
 				}
-				descNode = (Node) xPath.evaluate("nciodm:CDISCSynonym", codeListNode,
-						XPathConstants.NODE);
+				descNode = (Node) xPath.evaluate("nciodm:CDISCSynonym",
+						codeListNode, XPathConstants.NODE);
 				if (descNode != null) {
 					codeList.setCDISCSynonym(descNode.getTextContent());
 				}
-				descNode = (Node) xPath.evaluate("nciodm:PreferredTerm", codeListNode,
-						XPathConstants.NODE);
+				descNode = (Node) xPath.evaluate("nciodm:PreferredTerm",
+						codeListNode, XPathConstants.NODE);
 				if (descNode != null) {
 					codeList.setPreferredTerm(descNode.getTextContent());
 				}
@@ -215,8 +221,8 @@ public class ODMBo {
 				ei.setCodedValue(codedValue);
 				ei.setExtCodeId(eiAttributes.getNamedItem("nciodm:ExtCodeID")
 						.getNodeValue());
-				NodeList subNodes = (NodeList) xPath.evaluate("nciodm:CDISCSynonym",
-						eiNode, XPathConstants.NODESET);
+				NodeList subNodes = (NodeList) xPath.evaluate(
+						"nciodm:CDISCSynonym", eiNode, XPathConstants.NODESET);
 				StringBuilder sb = new StringBuilder();
 				for (int i = 0; i < subNodes.getLength(); i++) {
 					Node subNode = subNodes.item(i);
@@ -227,8 +233,8 @@ public class ODMBo {
 				}
 				ei.setCDISCSynonym(sb.toString());
 
-				Node subNode = (Node) xPath.evaluate("nciodm:CDISCDefinition", eiNode,
-						XPathConstants.NODE);
+				Node subNode = (Node) xPath.evaluate("nciodm:CDISCDefinition",
+						eiNode, XPathConstants.NODE);
 				if (subNode != null) {
 					ei.setCDISCDefinition(subNode.getTextContent());
 				}

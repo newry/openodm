@@ -25,27 +25,27 @@ import org.springframework.web.multipart.MultipartFile;
 import com.openodm.impl.bo.ODMBo;
 import com.openodm.impl.controller.response.OperationResponse;
 import com.openodm.impl.controller.response.OperationResult;
-import com.openodm.impl.entity.AbstractCodeList;
-import com.openodm.impl.entity.AbstractEnumeratedItem;
-import com.openodm.impl.entity.CodeList;
-import com.openodm.impl.entity.ControlTerminology;
-import com.openodm.impl.entity.CustomizedCodeList;
-import com.openodm.impl.entity.EnumeratedItem;
-import com.openodm.impl.entity.ExtendedEnumeratedItem;
-import com.openodm.impl.entity.MetaDataVersion;
 import com.openodm.impl.entity.ObjectStatus;
-import com.openodm.impl.repository.CodeListRepository;
-import com.openodm.impl.repository.ControlTerminologyRepository;
-import com.openodm.impl.repository.EnumeratedItemRepository;
-import com.openodm.impl.repository.ExtendedEnumeratedItemRepository;
-import com.openodm.impl.repository.MetaDataVersionRepository;
+import com.openodm.impl.entity.ct.AbstractCodeList;
+import com.openodm.impl.entity.ct.AbstractEnumeratedItem;
+import com.openodm.impl.entity.ct.CodeList;
+import com.openodm.impl.entity.ct.ControlTerminology;
+import com.openodm.impl.entity.ct.CustomizedCodeList;
+import com.openodm.impl.entity.ct.EnumeratedItem;
+import com.openodm.impl.entity.ct.ExtendedEnumeratedItem;
+import com.openodm.impl.entity.ct.CTVersion;
+import com.openodm.impl.repository.ct.CTVersionRepository;
+import com.openodm.impl.repository.ct.CodeListRepository;
+import com.openodm.impl.repository.ct.ControlTerminologyRepository;
+import com.openodm.impl.repository.ct.EnumeratedItemRepository;
+import com.openodm.impl.repository.ct.ExtendedEnumeratedItemRepository;
 
 @RestController
 public class CodeListController {
 	private static final Logger LOG = LoggerFactory
 			.getLogger(CodeListController.class);
 	@Autowired
-	private MetaDataVersionRepository metaDataVersionRepository;
+	private CTVersionRepository metaDataVersionRepository;
 	@Autowired
 	private CodeListRepository codeListRepository;
 	@Autowired
@@ -58,7 +58,7 @@ public class CodeListController {
 	private ODMBo odmBo;
 
 	@RequestMapping(value = "/odm/v1/metaDataVersion", method = RequestMethod.GET)
-	public List<MetaDataVersion> listMetaDataVersion() {
+	public List<CTVersion> listMetaDataVersion() {
 		return metaDataVersionRepository.findAll();
 	}
 

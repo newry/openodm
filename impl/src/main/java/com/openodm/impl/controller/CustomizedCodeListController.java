@@ -23,18 +23,18 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.openodm.impl.controller.response.OperationResponse;
 import com.openodm.impl.controller.response.OperationResult;
-import com.openodm.impl.entity.AbstractEnumeratedItem;
-import com.openodm.impl.entity.CodeList;
-import com.openodm.impl.entity.ControlTerminology;
-import com.openodm.impl.entity.CustomizedCodeList;
-import com.openodm.impl.entity.CustomizedEnumeratedItem;
-import com.openodm.impl.entity.ExtendedEnumeratedItem;
 import com.openodm.impl.entity.ObjectStatus;
-import com.openodm.impl.repository.CodeListRepository;
-import com.openodm.impl.repository.ControlTerminologyRepository;
-import com.openodm.impl.repository.CustomizedCodeListRepository;
-import com.openodm.impl.repository.CustomizedEnumeratedItemRepository;
-import com.openodm.impl.repository.ExtendedEnumeratedItemRepository;
+import com.openodm.impl.entity.ct.AbstractEnumeratedItem;
+import com.openodm.impl.entity.ct.CodeList;
+import com.openodm.impl.entity.ct.ControlTerminology;
+import com.openodm.impl.entity.ct.CustomizedCodeList;
+import com.openodm.impl.entity.ct.CustomizedEnumeratedItem;
+import com.openodm.impl.entity.ct.ExtendedEnumeratedItem;
+import com.openodm.impl.repository.ct.CodeListRepository;
+import com.openodm.impl.repository.ct.ControlTerminologyRepository;
+import com.openodm.impl.repository.ct.CustomizedCodeListRepository;
+import com.openodm.impl.repository.ct.CustomizedEnumeratedItemRepository;
+import com.openodm.impl.repository.ct.ExtendedEnumeratedItemRepository;
 
 @RestController
 public class CustomizedCodeListController {

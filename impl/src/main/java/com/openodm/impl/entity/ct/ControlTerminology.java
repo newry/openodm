@@ -1,4 +1,4 @@
-package com.openodm.impl.entity;
+package com.openodm.impl.entity.ct;
 
 import java.util.List;
 
@@ -14,6 +14,8 @@ import javax.persistence.Table;
 
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.GenericGenerator;
+
+import com.openodm.impl.entity.PersistentObject;
 
 @Entity
 @Table(name = "CONTROL_TERMINOLOGY")

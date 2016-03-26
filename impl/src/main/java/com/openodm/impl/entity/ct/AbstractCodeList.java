@@ -1,4 +1,4 @@
-package com.openodm.impl.entity;
+package com.openodm.impl.entity.ct;
 
 import javax.persistence.Column;
 import javax.persistence.GeneratedValue;
@@ -7,6 +7,8 @@ import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 
 import org.hibernate.annotations.GenericGenerator;
+
+import com.openodm.impl.entity.PersistentObject;
 
 @MappedSuperclass
 public abstract class AbstractCodeList extends PersistentObject {

@@ -6,17 +6,17 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-import com.openodm.impl.entity.CodeList;
-import com.openodm.impl.entity.MetaDataVersion;
-import com.openodm.impl.repository.CodeListRepository;
-import com.openodm.impl.repository.EnumeratedItemRepository;
-import com.openodm.impl.repository.MetaDataVersionRepository;
+import com.openodm.impl.entity.ct.CodeList;
+import com.openodm.impl.entity.ct.CTVersion;
+import com.openodm.impl.repository.ct.CTVersionRepository;
+import com.openodm.impl.repository.ct.CodeListRepository;
+import com.openodm.impl.repository.ct.EnumeratedItemRepository;
 
 public class ODMBoTest {
 	@InjectMocks
 	private ODMBo odmBo;
 	@Mock
-	private MetaDataVersionRepository metaDataVersionRepository;
+	private CTVersionRepository metaDataVersionRepository;
 	@Mock
 	private CodeListRepository codeListRepository;
 	@Mock
@@ -27,8 +27,8 @@ public class ODMBoTest {
 		MockitoAnnotations.initMocks(this);
 		Mockito.when(
 				metaDataVersionRepository.save(Mockito
-						.any(MetaDataVersion.class))).thenReturn(
-				new MetaDataVersion());
+						.any(CTVersion.class))).thenReturn(
+				new CTVersion());
 		Mockito.when(codeListRepository.save(Mockito.any(CodeList.class)))
 				.thenReturn(new CodeList());
 		odmBo.importMedatDataVersion(ODMBo.class.getClassLoader()

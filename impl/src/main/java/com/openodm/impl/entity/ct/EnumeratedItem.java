@@ -1,4 +1,4 @@
-package com.openodm.impl.entity;
+package com.openodm.impl.entity.ct;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;

@@ -7,13 +7,13 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 
-import com.openodm.impl.entity.CodeList;
-import com.openodm.impl.entity.ControlTerminology;
-import com.openodm.impl.entity.CustomizedCodeList;
-import com.openodm.impl.entity.CustomizedEnumeratedItem;
-import com.openodm.impl.entity.EnumeratedItem;
-import com.openodm.impl.entity.ExtendedEnumeratedItem;
-import com.openodm.impl.entity.MetaDataVersion;
+import com.openodm.impl.entity.ct.CodeList;
+import com.openodm.impl.entity.ct.ControlTerminology;
+import com.openodm.impl.entity.ct.CustomizedCodeList;
+import com.openodm.impl.entity.ct.CustomizedEnumeratedItem;
+import com.openodm.impl.entity.ct.EnumeratedItem;
+import com.openodm.impl.entity.ct.ExtendedEnumeratedItem;
+import com.openodm.impl.entity.ct.CTVersion;
 
 public class GenerateDDL {
 
@@ -27,7 +27,7 @@ public class GenerateDDL {
 					"jdbc:postgresql://localhost:5432/yoda");
 			cfg.setProperty(AvailableSettings.USER, "admin");
 			cfg.setProperty(AvailableSettings.PASS, "admin");
-			cfg.addAnnotatedClass(MetaDataVersion.class);
+			cfg.addAnnotatedClass(CTVersion.class);
 			cfg.addAnnotatedClass(CustomizedCodeList.class);
 			cfg.addAnnotatedClass(CodeList.class);
 			cfg.addAnnotatedClass(EnumeratedItem.class);

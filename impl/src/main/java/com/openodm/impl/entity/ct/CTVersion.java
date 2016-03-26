@@ -1,4 +1,4 @@
-package com.openodm.impl.entity;
+package com.openodm.impl.entity.ct;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -10,10 +10,12 @@ import javax.persistence.Table;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.GenericGenerator;
 
+import com.openodm.impl.entity.PersistentObject;
+
 @Entity
 @Table(name = "META_DATA_VERSION")
 @DynamicUpdate
-public class MetaDataVersion extends PersistentObject {
+public class CTVersion extends PersistentObject {
 	private static final long serialVersionUID = 1778786266365817934L;
 	@Id
 	@GeneratedValue(generator = "identity", strategy = GenerationType.IDENTITY)
