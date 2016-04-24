@@ -124,6 +124,60 @@
         foreign key (CODE_LIST_ID) 
         references CODE_LIST;
         
-        	CREATE UNIQUE INDEX code_list_oid_idx ON CODE_LIST (oid, META_DATA_VERSION_ID);
+    CREATE UNIQUE INDEX code_list_oid_idx ON CODE_LIST (oid, META_DATA_VERSION_ID);
 
 	CREATE UNIQUE INDEX enumerated_item_coded_value_idx ON ENUMERATED_ITEM (coded_value, CODE_LIST_ID);
+
+	
+	create table SDTM_VERSION (
+        ID  bigserial not null,
+        CREATOR varchar(255) not null,
+        DATE_ADDED timestamp not null,
+        DATE_LAST_MODIFIED timestamp not null,
+        STATUS varchar(32) not null,
+        UPDATED_BY varchar(255) not null,
+        define_version varchar(255) not null,
+        description varchar(4096),
+        name varchar(255) not null,
+        oid varchar(255) not null,
+        standard_name varchar(255) not null,
+        standard_version varchar(255) not null,
+        control_terminology_id int8 not null,
+        primary key (ID)
+    );
+    
+    alter table SDTM_VERSION 
+        add constraint UK_td8agsah4xwrpu8iew4n5n7q4 unique (oid);
+        
+    alter table SDTM_VERSION 
+        add constraint FK_ggx4a78pbuwi7sqxu3ye9qu8q 
+        foreign key (control_terminology_id) 
+        references CONTROL_TERMINOLOGY;
+        
+    
+    create table SDTM_DOMAIN (
+        ID  bigserial not null,
+        CREATOR varchar(255) not null,
+        DATE_ADDED timestamp not null,
+        DATE_LAST_MODIFIED timestamp not null,
+        STATUS varchar(32) not null,
+        UPDATED_BY varchar(255) not null,
+        def_class varchar(255) not null,
+        description varchar(4096),
+        domain varchar(255) not null,
+        name varchar(255) not null,
+        oid varchar(255) not null,
+        purpose varchar(255) not null,
+        structure varchar(255) not null,
+        SDTM_VERSION_ID int8 not null,
+        primary key (ID)
+    );
+  
+      alter table SDTM_DOMAIN 
+        add constraint UK_qvx6n707wfx7tef4fdf1wsc1m unique (oid);
+ 
+     alter table SDTM_DOMAIN 
+        add constraint FK_232fv17351d4xwgwka66jmmjv 
+        foreign key (SDTM_VERSION_ID) 
+        references SDTM_VERSION;
+ 

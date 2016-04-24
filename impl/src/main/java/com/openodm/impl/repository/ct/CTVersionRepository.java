@@ -8,8 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.openodm.impl.entity.ct.CTVersion;
 
-public interface CTVersionRepository extends
-		CrudRepository<CTVersion, Long> {
+public interface CTVersionRepository extends CrudRepository<CTVersion, Long> {
 
 	@Query("SELECT d FROM MetaDataVersion d WHERE d.oid=:oid")
 	public List<CTVersion> findByOid(@Param("oid") String oid);

@@ -7,13 +7,15 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 
+import com.openodm.impl.entity.ct.CTVersion;
 import com.openodm.impl.entity.ct.CodeList;
 import com.openodm.impl.entity.ct.ControlTerminology;
 import com.openodm.impl.entity.ct.CustomizedCodeList;
 import com.openodm.impl.entity.ct.CustomizedEnumeratedItem;
 import com.openodm.impl.entity.ct.EnumeratedItem;
 import com.openodm.impl.entity.ct.ExtendedEnumeratedItem;
-import com.openodm.impl.entity.ct.CTVersion;
+import com.openodm.impl.entity.sdtm.SDTMDomain;
+import com.openodm.impl.entity.sdtm.SDTMVersion;
 
 public class GenerateDDL {
 
@@ -34,6 +36,8 @@ public class GenerateDDL {
 			cfg.addAnnotatedClass(CustomizedEnumeratedItem.class);
 			cfg.addAnnotatedClass(ExtendedEnumeratedItem.class);
 			cfg.addAnnotatedClass(ControlTerminology.class);
+			cfg.addAnnotatedClass(SDTMVersion.class);
+			cfg.addAnnotatedClass(SDTMDomain.class);
 			SchemaExport export = new SchemaExport(cfg);
 			export.setFormat(true);
 			export.setDelimiter(";");

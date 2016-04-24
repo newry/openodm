@@ -8,18 +8,13 @@ import org.springframework.data.repository.query.Param;
 
 import com.openodm.impl.entity.ct.ExtendedEnumeratedItem;
 
-public interface ExtendedEnumeratedItemRepository extends
-		CrudRepository<ExtendedEnumeratedItem, Long> {
+public interface ExtendedEnumeratedItemRepository extends CrudRepository<ExtendedEnumeratedItem, Long> {
 
 	@Query("SELECT d FROM ExtendedEnumeratedItem d WHERE d.controlTerminology.id=:controlTerminologyId and d.codeList.id=:codeListId and d.codedValue=:codedValue")
-	public List<ExtendedEnumeratedItem> findByCtIdAndCodeListIdAndCodeValue(
-			@Param("controlTerminologyId") Long controlTerminologyId,
-			@Param("codeListId") Long codeListId,
-			@Param("codedValue") String codedValue);
+	public List<ExtendedEnumeratedItem> findByCtIdAndCodeListIdAndCodeValue(@Param("controlTerminologyId") Long controlTerminologyId,
+			@Param("codeListId") Long codeListId, @Param("codedValue") String codedValue);
 
 	@Query("SELECT d FROM ExtendedEnumeratedItem d WHERE d.controlTerminology.id=:controlTerminologyId and d.codeList.id=:codeListId and d.status='active'")
-	public List<ExtendedEnumeratedItem> findByCodeListId(
-			@Param("controlTerminologyId") Long controlTerminologyId,
-			@Param("codeListId") Long codeListId);
+	public List<ExtendedEnumeratedItem> findByCodeListId(@Param("controlTerminologyId") Long controlTerminologyId, @Param("codeListId") Long codeListId);
 
 }
