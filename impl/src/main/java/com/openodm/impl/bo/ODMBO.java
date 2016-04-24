@@ -36,7 +36,7 @@ import com.openodm.impl.repository.ct.EnumeratedItemRepository;
 
 @Component
 @SuppressWarnings("rawtypes")
-public class ODMBo {
+public class ODMBO {
 	@Autowired
 	private CTVersionRepository metaDataVersionRepository;
 	@Autowired

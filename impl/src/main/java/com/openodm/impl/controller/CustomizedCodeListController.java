@@ -38,8 +38,7 @@ import com.openodm.impl.repository.ct.ExtendedEnumeratedItemRepository;
 
 @RestController
 public class CustomizedCodeListController {
-	private static final Logger LOG = LoggerFactory
-			.getLogger(CustomizedCodeListController.class);
+	private static final Logger LOG = LoggerFactory.getLogger(CustomizedCodeListController.class);
 	@Autowired
 	private CodeListRepository codeListRepository;
 	@Autowired
@@ -52,12 +51,10 @@ public class CustomizedCodeListController {
 	private ExtendedEnumeratedItemRepository extendedEnumeratedItemRepository;
 
 	@RequestMapping(value = "/odm/v1/customizedCodeList", method = RequestMethod.POST)
-	public ResponseEntity<OperationResponse> createCustomizedCodeList(
-			@RequestBody Map<String, String> request) {
+	public ResponseEntity<OperationResponse> createCustomizedCodeList(@RequestBody Map<String, String> request) {
 		String name = StringUtils.trim(request.get("name"));
 		String desc = StringUtils.trim(request.get("description"));
-		String submissionValue = StringUtils.trim(request
-				.get("submissionValue"));
+		String submissionValue = StringUtils.trim(request.get("submissionValue"));
 		String ctId = StringUtils.trim(request.get("ctId"));
 		ControlTerminology ct = null;
 		CustomizedCodeList ccl = new CustomizedCodeList();
@@ -67,19 +64,16 @@ public class CustomizedCodeListController {
 			result.setSuccess(false);
 			result.setError("Name is required");
 			or.setResult(result);
-			return new ResponseEntity<OperationResponse>(or,
-					HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
 		} else {
-			List<CustomizedCodeList> list = customizedCodeListRepository
-					.findByName(name);
+			List<CustomizedCodeList> list = customizedCodeListRepository.findByName(name);
 			if (!CollectionUtils.isEmpty(list)) {
 				OperationResponse or = new OperationResponse();
 				OperationResult result = new OperationResult();
 				result.setSuccess(false);
 				result.setError("Code with same name existed");
 				or.setResult(result);
-				return new ResponseEntity<OperationResponse>(or,
-						HttpStatus.BAD_REQUEST);
+				return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
 			}
 		}
 
@@ -89,8 +83,7 @@ public class CustomizedCodeListController {
 			result.setSuccess(false);
 			result.setError("Invalid ctId");
 			or.setResult(result);
-			return new ResponseEntity<OperationResponse>(or,
-					HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
 
 		} else {
 			ct = controlTerminologyRepository.findOne(Long.valueOf(ctId));
@@ -100,8 +93,7 @@ public class CustomizedCodeListController {
 				result.setSuccess(false);
 				result.setError("Invalid ctId");
 				or.setResult(result);
-				return new ResponseEntity<OperationResponse>(or,
-						HttpStatus.BAD_REQUEST);
+				return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
 			}
 		}
 		try {
@@ -111,8 +103,7 @@ public class CustomizedCodeListController {
 			ccl.setCreator("admin");
 			ccl.setUpdatedBy("admin");
 			customizedCodeListRepository.save(ccl);
-			ccl.setExtCodeId("X"
-					+ new DecimalFormat("000000").format(ccl.getId()));
+			ccl.setExtCodeId("X" + new DecimalFormat("000000").format(ccl.getId()));
 			customizedCodeListRepository.save(ccl);
 			ct.getCustomizedCodeLists().add(ccl);
 			this.controlTerminologyRepository.save(ct);
@@ -128,19 +119,15 @@ public class CustomizedCodeListController {
 			result.setSuccess(false);
 			result.setError("Error during creating the CustomizedCodeList");
 			or.setResult(result);
-			return new ResponseEntity<OperationResponse>(or,
-					HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
 	@RequestMapping(value = "/odm/v1/customizedCodeList/{id}", method = RequestMethod.PUT)
-	public ResponseEntity<OperationResponse> updateCustomizedCodeList(
-			@PathVariable("id") Long id,
-			@RequestBody Map<String, String> request) {
+	public ResponseEntity<OperationResponse> updateCustomizedCodeList(@PathVariable("id") Long id, @RequestBody Map<String, String> request) {
 		String name = StringUtils.trim(request.get("name"));
 		String desc = StringUtils.trim(request.get("description"));
-		String submissionValue = StringUtils.trim(request
-				.get("submissionValue"));
+		String submissionValue = StringUtils.trim(request.get("submissionValue"));
 		CustomizedCodeList ccl = null;
 		if (StringUtils.isEmpty(name)) {
 			OperationResponse or = new OperationResponse();
@@ -148,8 +135,7 @@ public class CustomizedCodeListController {
 			result.setSuccess(false);
 			result.setError("Name is required");
 			or.setResult(result);
-			return new ResponseEntity<OperationResponse>(or,
-					HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
 		}
 		ccl = this.customizedCodeListRepository.findOne(id);
 		if (ccl == null) {
@@ -158,8 +144,7 @@ public class CustomizedCodeListController {
 			result.setSuccess(false);
 			result.setError("id is invalid");
 			or.setResult(result);
-			return new ResponseEntity<OperationResponse>(or,
-					HttpStatus.NOT_FOUND);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.NOT_FOUND);
 		}
 
 		try {
@@ -167,8 +152,7 @@ public class CustomizedCodeListController {
 			ccl.setDescription(desc);
 			ccl.setCDISCSubmissionValue(submissionValue);
 			ccl.setUpdatedBy("admin");
-			ccl.setDateLastModified(Calendar.getInstance(TimeZone
-					.getTimeZone("UTC")));
+			ccl.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
 			customizedCodeListRepository.save(ccl);
 			OperationResponse or = new OperationResponse();
 			OperationResult result = new OperationResult();
@@ -182,22 +166,18 @@ public class CustomizedCodeListController {
 			result.setSuccess(false);
 			result.setError("Error during creating the CustomizedCodeList");
 			or.setResult(result);
-			return new ResponseEntity<OperationResponse>(or,
-					HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
 	@RequestMapping(value = "/odm/v1/customizedEnumeratedItem", method = RequestMethod.GET)
-	public List<? extends AbstractEnumeratedItem> listEnumeratedItem(
-			@RequestParam("codeListId") Long codeListId) {
-		List<CustomizedEnumeratedItem> list = customizedEnumeratedItemRepository
-				.findByCodeListId(codeListId);
+	public List<? extends AbstractEnumeratedItem> listEnumeratedItem(@RequestParam("codeListId") Long codeListId) {
+		List<CustomizedEnumeratedItem> list = customizedEnumeratedItemRepository.findByCodeListId(codeListId);
 		return list;
 	}
 
 	@RequestMapping(value = "/odm/v1/customizedEnumeratedItem", method = RequestMethod.POST)
-	public ResponseEntity<OperationResponse> createEnumeratedItem(
-			@RequestBody List<Map<String, String>> requests) {
+	public ResponseEntity<OperationResponse> createEnumeratedItem(@RequestBody List<Map<String, String>> requests) {
 		List<CustomizedEnumeratedItem> list = new ArrayList<CustomizedEnumeratedItem>();
 		List<ExtendedEnumeratedItem> list2 = new ArrayList<ExtendedEnumeratedItem>();
 		if (!CollectionUtils.isEmpty(requests)) {
@@ -213,8 +193,7 @@ public class CustomizedCodeListController {
 				String extCodeId = StringUtils.trim(request.get("extCodeId"));
 				String extended = StringUtils.trim(request.get("extended"));
 				String codedValue = StringUtils.trim(request.get("codedValue"));
-				String codeListIdStr = StringUtils.trim(request
-						.get("codeListId"));
+				String codeListIdStr = StringUtils.trim(request.get("codeListId"));
 				String ctIdStr = StringUtils.trim(request.get("ctId"));
 				if (StringUtils.isAnyEmpty(extCodeId, codedValue)) {
 					continue;
@@ -225,8 +204,7 @@ public class CustomizedCodeListController {
 					result.setSuccess(false);
 					result.setError("invalid codeListId");
 					or.setResult(result);
-					return new ResponseEntity<OperationResponse>(or,
-							HttpStatus.BAD_REQUEST);
+					return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
 
 				} else {
 					if (!StringUtils.isNumeric(codeListIdStr)) {
@@ -235,8 +213,7 @@ public class CustomizedCodeListController {
 						result.setSuccess(false);
 						result.setError("invalid codeListId");
 						or.setResult(result);
-						return new ResponseEntity<OperationResponse>(or,
-								HttpStatus.BAD_REQUEST);
+						return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
 					}
 					if (Boolean.valueOf(extended)) {
 						Long id = Long.valueOf(codeListIdStr);
@@ -248,17 +225,14 @@ public class CustomizedCodeListController {
 								result.setSuccess(false);
 								result.setError("invalid codeListId");
 								or.setResult(result);
-								return new ResponseEntity<OperationResponse>(
-										or, HttpStatus.BAD_REQUEST);
-							} else if (StringUtils.endsWithIgnoreCase(
-									codeList.getCodeListExtensible(), "No")) {
+								return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+							} else if (StringUtils.endsWithIgnoreCase(codeList.getCodeListExtensible(), "No")) {
 								OperationResponse or = new OperationResponse();
 								OperationResult result = new OperationResult();
 								result.setSuccess(false);
 								result.setError("code list is not extensible");
 								or.setResult(result);
-								return new ResponseEntity<OperationResponse>(
-										or, HttpStatus.BAD_REQUEST);
+								return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
 							}
 						}
 						if (!StringUtils.isNumeric(ctIdStr)) {
@@ -267,12 +241,10 @@ public class CustomizedCodeListController {
 							result.setSuccess(false);
 							result.setError("invalid ctId");
 							or.setResult(result);
-							return new ResponseEntity<OperationResponse>(or,
-									HttpStatus.BAD_REQUEST);
+							return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
 						} else {
 							if (ct == null) {
-								ct = this.controlTerminologyRepository
-										.findOne(Long.valueOf(ctIdStr));
+								ct = this.controlTerminologyRepository.findOne(Long.valueOf(ctIdStr));
 							}
 							if (ct == null) {
 								OperationResponse or = new OperationResponse();
@@ -280,36 +252,29 @@ public class CustomizedCodeListController {
 								result.setSuccess(false);
 								result.setError("invalid ctId");
 								or.setResult(result);
-								return new ResponseEntity<OperationResponse>(
-										or, HttpStatus.BAD_REQUEST);
+								return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
 							}
 						}
 
 					} else {
 						Long id = Long.valueOf(codeListIdStr);
 						if (customizedCodeList == null) {
-							customizedCodeList = customizedCodeListRepository
-									.findOne(id);
+							customizedCodeList = customizedCodeListRepository.findOne(id);
 							if (customizedCodeList == null) {
 								OperationResponse or = new OperationResponse();
 								OperationResult result = new OperationResult();
 								result.setSuccess(false);
 								result.setError("invalid codeListId");
 								or.setResult(result);
-								return new ResponseEntity<OperationResponse>(
-										or, HttpStatus.BAD_REQUEST);
+								return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
 							}
 						}
 					}
 				}
 				if (Boolean.valueOf(extended)) {
-					handleExtenedEnumerateItem(list2, codeList, ct, idStr,
-							deleted, extCodeId, codedValue, codeListIdStr,
-							ctIdStr);
+					handleExtenedEnumerateItem(list2, codeList, ct, idStr, deleted, extCodeId, codedValue, codeListIdStr, ctIdStr);
 				} else {
-					handCustomizedEnumerateItem(list, customizedCodeList,
-							idStr, deleted, extCodeId, codedValue,
-							codeListIdStr);
+					handCustomizedEnumerateItem(list, customizedCodeList, idStr, deleted, extCodeId, codedValue, codeListIdStr);
 				}
 			}
 
@@ -329,16 +294,13 @@ public class CustomizedCodeListController {
 			result.setSuccess(false);
 			result.setError("Error during creating the CustomizedEnumeratedItem");
 			or.setResult(result);
-			return new ResponseEntity<OperationResponse>(or,
-					HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 
 	}
 
-	private void handleExtenedEnumerateItem(List<ExtendedEnumeratedItem> list2,
-			CodeList codeList, ControlTerminology ct, String idStr,
-			String deleted, String extCodeId, String codedValue,
-			String codeListIdStr, String ctIdStr) {
+	private void handleExtenedEnumerateItem(List<ExtendedEnumeratedItem> list2, CodeList codeList, ControlTerminology ct, String idStr, String deleted,
+			String extCodeId, String codedValue, String codeListIdStr, String ctIdStr) {
 		ExtendedEnumeratedItem eei = new ExtendedEnumeratedItem();
 		if (StringUtils.isNotBlank(idStr)) {
 			eei = extendedEnumeratedItemRepository.findOne(Long.valueOf(idStr));
@@ -357,9 +319,8 @@ public class CustomizedCodeListController {
 				eei.setUpdatedBy("admin");
 			}
 		} else {
-			List<ExtendedEnumeratedItem> eeis = this.extendedEnumeratedItemRepository
-					.findByCtIdAndCodeListIdAndCodeValue(Long.valueOf(ctIdStr),
-							Long.valueOf(codeListIdStr), codedValue);
+			List<ExtendedEnumeratedItem> eeis = this.extendedEnumeratedItemRepository.findByCtIdAndCodeListIdAndCodeValue(Long.valueOf(ctIdStr),
+					Long.valueOf(codeListIdStr), codedValue);
 			if (!CollectionUtils.isEmpty(eeis)) {
 				eei = eeis.get(0);
 				eei.setExtCodeId(extCodeId);
@@ -368,8 +329,7 @@ public class CustomizedCodeListController {
 				eei.setControlTerminology(ct);
 				eei.setStatus(ObjectStatus.active);
 				eei.setUpdatedBy("admin");
-				eei.setDateLastModified(Calendar.getInstance(TimeZone
-						.getTimeZone("UTC")));
+				eei.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
 			} else {
 				eei.setExtCodeId(extCodeId);
 				eei.setCodedValue(codedValue);
@@ -377,21 +337,17 @@ public class CustomizedCodeListController {
 				eei.setControlTerminology(ct);
 				eei.setCreator("admin");
 				eei.setUpdatedBy("admin");
-				eei.setDateLastModified(Calendar.getInstance(TimeZone
-						.getTimeZone("UTC")));
+				eei.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
 			}
 		}
 		list2.add(eei);
 	}
 
-	private void handCustomizedEnumerateItem(
-			List<CustomizedEnumeratedItem> list, CustomizedCodeList codeList,
-			String idStr, String deleted, String extCodeId, String codedValue,
-			String codeListId) {
+	private void handCustomizedEnumerateItem(List<CustomizedEnumeratedItem> list, CustomizedCodeList codeList, String idStr, String deleted, String extCodeId,
+			String codedValue, String codeListId) {
 		CustomizedEnumeratedItem cei = new CustomizedEnumeratedItem();
 		if (StringUtils.isNotBlank(idStr)) {
-			cei = customizedEnumeratedItemRepository.findOne(Long
-					.valueOf(idStr));
+			cei = customizedEnumeratedItemRepository.findOne(Long.valueOf(idStr));
 			if (StringUtils.isNotEmpty(deleted)) {
 				cei.setExtCodeId(extCodeId);
 				cei.setCodedValue(codedValue);
@@ -405,9 +361,7 @@ public class CustomizedCodeListController {
 				cei.setUpdatedBy("admin");
 			}
 		} else {
-			List<CustomizedEnumeratedItem> ceis = customizedEnumeratedItemRepository
-					.findByCodeListIdAndCodeValue(Long.valueOf(codeListId),
-							codedValue);
+			List<CustomizedEnumeratedItem> ceis = customizedEnumeratedItemRepository.findByCodeListIdAndCodeValue(Long.valueOf(codeListId), codedValue);
 			if (!CollectionUtils.isEmpty(ceis)) {
 				cei = ceis.get(0);
 				cei.setExtCodeId(extCodeId);
@@ -415,16 +369,14 @@ public class CustomizedCodeListController {
 				cei.setCustomizedCodeList(codeList);
 				cei.setStatus(ObjectStatus.active);
 				cei.setUpdatedBy("admin");
-				cei.setDateLastModified(Calendar.getInstance(TimeZone
-						.getTimeZone("UTC")));
+				cei.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
 			} else {
 				cei.setExtCodeId(extCodeId);
 				cei.setCodedValue(codedValue);
 				cei.setCustomizedCodeList(codeList);
 				cei.setCreator("admin");
 				cei.setUpdatedBy("admin");
-				cei.setDateLastModified(Calendar.getInstance(TimeZone
-						.getTimeZone("UTC")));
+				cei.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
 			}
 		}
 		list.add(cei);

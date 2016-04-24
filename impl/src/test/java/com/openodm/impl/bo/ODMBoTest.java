@@ -14,7 +14,7 @@ import com.openodm.impl.repository.ct.EnumeratedItemRepository;
 
 public class ODMBoTest {
 	@InjectMocks
-	private ODMBo odmBo;
+	private ODMBO odmBo;
 	@Mock
 	private CTVersionRepository metaDataVersionRepository;
 	@Mock
@@ -31,7 +31,7 @@ public class ODMBoTest {
 				new CTVersion());
 		Mockito.when(codeListRepository.save(Mockito.any(CodeList.class)))
 				.thenReturn(new CodeList());
-		odmBo.importMedatDataVersion(ODMBo.class.getClassLoader()
+		odmBo.importMedatDataVersion(ODMBO.class.getClassLoader()
 				.getResourceAsStream("SDTM Terminology.odm.xml"));
 	}
 

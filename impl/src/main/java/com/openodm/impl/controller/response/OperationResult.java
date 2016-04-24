@@ -1,12 +1,5 @@
-/**
- * Copyright 2016 StubHub, Inc.  All rights reserved.
- */
 package com.openodm.impl.controller.response;
 
-/**
- * @author runiu
- * 
- */
 public class OperationResult {
 	private boolean success = true;
 	private String error;

@@ -10,10 +10,10 @@ import com.openodm.impl.entity.ct.CTVersion;
 
 public interface CTVersionRepository extends CrudRepository<CTVersion, Long> {
 
-	@Query("SELECT d FROM MetaDataVersion d WHERE d.oid=:oid")
+	@Query("SELECT d FROM CTVersion d WHERE d.oid=:oid")
 	public List<CTVersion> findByOid(@Param("oid") String oid);
 
-	@Query("SELECT d FROM MetaDataVersion d WHERE d.status='active'")
+	@Query("SELECT d FROM CTVersion d WHERE d.status='active'")
 	public List<CTVersion> findAll();
 
 }

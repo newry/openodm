@@ -168,6 +168,7 @@
         name varchar(255) not null,
         oid varchar(255) not null,
         purpose varchar(255) not null,
+        repeating varchar(255) not null,
         structure varchar(255) not null,
         SDTM_VERSION_ID int8 not null,
         primary key (ID)

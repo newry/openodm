@@ -42,6 +42,9 @@ public class SDTMDomain extends PersistentObject {
 	@Column(name = "purpose", nullable = false, length = 255)
 	private String purpose;
 
+	@Column(name = "repeating", nullable = false, length = 255)
+	private String repeating;
+
 	@Column(name = "def_class", nullable = false, length = 255)
 	private String defClass;
 
@@ -118,6 +121,14 @@ public class SDTMDomain extends PersistentObject {
 
 	public Long getId() {
 		return id;
+	}
+
+	public String getRepeating() {
+		return repeating;
+	}
+
+	public void setRepeating(String repeating) {
+		this.repeating = repeating;
 	}
 
 }
