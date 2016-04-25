@@ -8,9 +8,12 @@ import javax.persistence.MappedSuperclass;
 
 import org.hibernate.annotations.GenericGenerator;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.openodm.impl.entity.PersistentObject;
 
 @MappedSuperclass
+@JsonInclude(Include.NON_EMPTY)
 public abstract class AbstractCodeList extends PersistentObject {
 
 	private static final long serialVersionUID = 717305204879022737L;

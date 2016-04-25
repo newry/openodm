@@ -13,12 +13,16 @@ import javax.persistence.Table;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.GenericGenerator;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.openodm.impl.entity.PersistentObject;
 import com.openodm.impl.entity.ct.ControlTerminology;
 
 @Entity
 @Table(name = "SDTM_VERSION")
 @DynamicUpdate
+@JsonInclude(Include.NON_EMPTY)
 public class SDTMVersion extends PersistentObject {
 	private static final long serialVersionUID = -3234882974006387434L;
 	@Id
@@ -47,6 +51,7 @@ public class SDTMVersion extends PersistentObject {
 
 	@ManyToOne(targetEntity = ControlTerminology.class, optional = false, fetch = FetchType.LAZY)
 	@JoinColumn(name = "control_terminology_id", nullable = false)
+	@JsonIgnore
 	private ControlTerminology controlTerminology;
 
 	public ControlTerminology getControlTerminology() {

@@ -33,6 +33,7 @@ import com.openodm.impl.entity.ct.ControlTerminology;
 import com.openodm.impl.entity.ct.EnumeratedItem;
 import com.openodm.impl.entity.sdtm.SDTMDomain;
 import com.openodm.impl.entity.sdtm.SDTMVariable;
+import com.openodm.impl.entity.sdtm.SDTMVariableRef;
 import com.openodm.impl.entity.sdtm.SDTMVersion;
 import com.openodm.impl.repository.ct.ControlTerminologyRepository;
 import com.openodm.impl.repository.ct.EnumeratedItemRepository;
@@ -244,7 +245,8 @@ public class SDTMBO {
 					String codeListOid = codeListRefNode.getAttributes().getNamedItem("CodeListOID").getNodeValue();
 					Node codeListNode = (Node) xPath.evaluate("//odm:CodeList[@OID='" + codeListOid + "']", versionNode, XPathConstants.NODE);
 					if (codeListNode != null) {
-//						String name = codeListNode.getAttributes().getNamedItem("Name").getNodeValue();
+						// String name =
+						// codeListNode.getAttributes().getNamedItem("Name").getNodeValue();
 						NodeList codeListItemNodes = (NodeList) xPath.evaluate("odm:CodeListItem", codeListNode, XPathConstants.NODESET);
 						if (codeListItemNodes != null && codeListItemNodes.getLength() > 0) {
 							for (int i = 0; i < codeListItemNodes.getLength(); i++) {
@@ -309,14 +311,31 @@ public class SDTMBO {
 								}
 							}
 						}
-//						if ("DOMAIN".equals(name) && var.getEnumeratedItems().isEmpty()) {
-//							LOG.info("domainName={}", domain.getName());
-//						}
 					}
-
 					sdtmVariableRepository.save(var);
 				}
-
+				List<SDTMVariableRef> varRefs = sdtmVariableRefRepository.findByDomainIdAndVariableId(domain.getId(), var.getId());
+				SDTMVariableRef varRef;
+				Node roleAttr = varRefAttributes.getNamedItem("Role");
+				if (CollectionUtils.isEmpty(varRefs)) {
+					varRef = new SDTMVariableRef();
+					varRef.setCreator("admin");
+					varRef.setUpdatedBy("admin");
+					varRef.setSdtmDomain(domain);
+					varRef.setSdtmVariable(var);
+					varRef.setMandatory(varRefAttributes.getNamedItem("Mandatory").getNodeValue());
+					varRef.setOrderNumber(Integer.valueOf(varRefAttributes.getNamedItem("OrderNumber").getNodeValue()));
+				} else {
+					varRef = varRefs.get(0);
+					varRef.setMandatory(varRefAttributes.getNamedItem("Mandatory").getNodeValue());
+					varRef.setOrderNumber(Integer.valueOf(varRefAttributes.getNamedItem("OrderNumber").getNodeValue()));
+					varRef.setUpdatedBy("admin");
+					varRef.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+				}
+				if (roleAttr != null) {
+					varRef.setRole(roleAttr.getNodeValue());
+				}
+				sdtmVariableRefRepository.save(varRef);
 			}
 		}
 	}

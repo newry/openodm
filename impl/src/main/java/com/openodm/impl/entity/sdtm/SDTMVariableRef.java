@@ -13,11 +13,15 @@ import javax.persistence.Table;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.GenericGenerator;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.openodm.impl.entity.PersistentObject;
 
 @Entity
 @Table(name = "SDTM_VARIABLE_REF")
 @DynamicUpdate
+@JsonInclude(Include.NON_EMPTY)
 public class SDTMVariableRef extends PersistentObject {
 	private static final long serialVersionUID = 9195706482774759770L;
 	@Id
@@ -32,14 +36,15 @@ public class SDTMVariableRef extends PersistentObject {
 	@Column(name = "order_number", nullable = false)
 	private Integer orderNumber;
 
-	@Column(name = "role", nullable = false, length = 32)
+	@Column(name = "role", nullable = true, length = 32)
 	private String role;
 
 	@ManyToOne(targetEntity = SDTMDomain.class, optional = false, fetch = FetchType.LAZY)
 	@JoinColumn(name = "SDTM_DOMAIN_ID", nullable = false)
+	@JsonIgnore
 	private SDTMDomain sdtmDomain;
 
-	@ManyToOne(targetEntity = SDTMVariable.class, optional = false)
+	@ManyToOne(targetEntity = SDTMVariable.class, optional = false, fetch = FetchType.EAGER)
 	@JoinColumn(name = "SDTM_VARIABLE_ID", nullable = false)
 	private SDTMVariable sdtmVariable;
 

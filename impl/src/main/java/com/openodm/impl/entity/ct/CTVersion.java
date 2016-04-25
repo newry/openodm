@@ -10,11 +10,14 @@ import javax.persistence.Table;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.GenericGenerator;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.openodm.impl.entity.PersistentObject;
 
 @Entity
 @Table(name = "META_DATA_VERSION")
 @DynamicUpdate
+@JsonInclude(Include.NON_EMPTY)
 public class CTVersion extends PersistentObject {
 	private static final long serialVersionUID = 1778786266365817934L;
 	@Id

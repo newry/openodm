@@ -13,11 +13,15 @@ import javax.persistence.Table;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.GenericGenerator;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.openodm.impl.entity.PersistentObject;
 
 @Entity
 @Table(name = "SDTM_DOMAIN")
 @DynamicUpdate
+@JsonInclude(Include.NON_EMPTY)
 public class SDTMDomain extends PersistentObject {
 	private static final long serialVersionUID = 1650031777258323841L;
 
@@ -53,6 +57,7 @@ public class SDTMDomain extends PersistentObject {
 
 	@ManyToOne(targetEntity = SDTMVersion.class, optional = false, fetch = FetchType.LAZY)
 	@JoinColumn(name = "SDTM_VERSION_ID", nullable = false)
+	@JsonIgnore
 	private SDTMVersion sdtmVersion;
 
 	public String getDomain() {

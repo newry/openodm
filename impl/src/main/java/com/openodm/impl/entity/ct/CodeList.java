@@ -11,10 +11,13 @@ import javax.persistence.Transient;
 import org.hibernate.annotations.DynamicUpdate;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 @Entity
 @Table(name = "CODE_LIST")
 @DynamicUpdate
+@JsonInclude(Include.NON_EMPTY)
 public class CodeList extends AbstractCodeList {
 
 	private static final long serialVersionUID = 5332668059816056373L;

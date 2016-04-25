@@ -12,4 +12,6 @@ public interface SDTMDomainRepository extends CrudRepository<SDTMDomain, Long> {
 	@Query("SELECT d FROM SDTMDomain d WHERE d.sdtmVersion.id=:versionId and d.oid=:oid")
 	public List<SDTMDomain> findByVersionIdAndOid(@Param("versionId") Long verionId, @Param("oid") String oid);
 
+	@Query("SELECT d FROM SDTMDomain d WHERE d.sdtmVersion.id=:versionId and d.status='active'")
+	public List<SDTMDomain> findByVersionId(@Param("versionId") Long verionId);
 }

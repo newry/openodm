@@ -15,11 +15,14 @@ import javax.persistence.Table;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.GenericGenerator;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.openodm.impl.entity.PersistentObject;
 
 @Entity
 @Table(name = "CONTROL_TERMINOLOGY")
 @DynamicUpdate
+@JsonInclude(Include.NON_EMPTY)
 public class ControlTerminology extends PersistentObject {
 	private static final long serialVersionUID = 2049768769970644062L;
 
