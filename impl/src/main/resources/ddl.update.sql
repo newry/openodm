@@ -182,3 +182,82 @@
         foreign key (SDTM_VERSION_ID) 
         references SDTM_VERSION;
  
+     create table SDTM_VARIABLE (
+        ID  bigserial not null,
+        CREATOR varchar(255) not null,
+        DATE_ADDED timestamp not null,
+        DATE_LAST_MODIFIED timestamp not null,
+        STATUS varchar(32) not null,
+        UPDATED_BY varchar(255) not null,
+        date_type varchar(32) not null,
+        description varchar(4096),
+        length int4,
+        name varchar(255) not null,
+        oid varchar(255) not null,
+        code_list_id int8,
+        customized_code_list_id int8,
+        SDTM_DOMAIN_ID int8 not null,
+        primary key (ID)
+    );
+
+    create table SDTM_VARIABLE_ENUM_ITEM_XREF (
+        SDTM_VARIABLE_ID int8 not null,
+        ENUMERATED_ITEM_ID int8 not null
+    );
+
+    create table SDTM_VARIABLE_REF (
+        ID  bigserial not null,
+        CREATOR varchar(255) not null,
+        DATE_ADDED timestamp not null,
+        DATE_LAST_MODIFIED timestamp not null,
+        STATUS varchar(32) not null,
+        UPDATED_BY varchar(255) not null,
+        mandatory varchar(32) not null,
+        oid varchar(255) not null,
+        order_number int4 not null,
+        role varchar(32) not null,
+        SDTM_DOMAIN_ID int8 not null,
+        SDTM_VARIABLE_ID int8 not null,
+        primary key (ID)
+    );
+
+    
+    alter table SDTM_VARIABLE 
+        add constraint FK_4lr68uya05iv6w0w93uxyj5nm 
+        foreign key (code_list_id) 
+        references CODE_LIST;
+
+    alter table SDTM_VARIABLE 
+        add constraint FK_2i9618krdkgl8db4mmojw52bt 
+        foreign key (customized_code_list_id) 
+        references CUSTOMIZED_CODE_LIST;
+
+    alter table SDTM_VARIABLE 
+        add constraint FK_80583afj8djw8mqxswwfdidp0 
+        foreign key (SDTM_DOMAIN_ID) 
+        references SDTM_DOMAIN;
+
+    alter table SDTM_VARIABLE_ENUM_ITEM_XREF 
+        add constraint FK_g6sv789vumlh3kqvvo8puxjsg 
+        foreign key (ENUMERATED_ITEM_ID) 
+        references ENUMERATED_ITEM;
+
+    alter table SDTM_VARIABLE_ENUM_ITEM_XREF 
+        add constraint FK_lcawnnlwory071a8ppnxmkl36 
+        foreign key (SDTM_VARIABLE_ID) 
+        references SDTM_VARIABLE;
+
+    alter table SDTM_VARIABLE_REF 
+        add constraint FK_9vw9b58ieph30etyfrtr87xma 
+        foreign key (SDTM_DOMAIN_ID) 
+        references SDTM_DOMAIN;
+
+    alter table SDTM_VARIABLE_REF 
+        add constraint FK_1p6u9nqfpm5gjc0980kas9f92 
+        foreign key (SDTM_VARIABLE_ID) 
+        references SDTM_VARIABLE;
+    
+    CREATE UNIQUE INDEX SDTM_VARIABLE_REF_OID_IDX ON SDTM_VARIABLE_REF (SDTM_DOMAIN_ID, SDTM_VARIABLE_ID);
+
+    CREATE UNIQUE INDEX SDTM_VARIABLE_OID_IDX ON SDTM_VARIABLE (SDTM_DOMAIN_ID, OID);
+    

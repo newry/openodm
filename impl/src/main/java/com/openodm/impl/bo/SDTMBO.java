@@ -17,6 +17,8 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -26,22 +28,37 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.openodm.impl.entity.ObjectStatus;
+import com.openodm.impl.entity.ct.CodeList;
 import com.openodm.impl.entity.ct.ControlTerminology;
+import com.openodm.impl.entity.ct.EnumeratedItem;
 import com.openodm.impl.entity.sdtm.SDTMDomain;
+import com.openodm.impl.entity.sdtm.SDTMVariable;
 import com.openodm.impl.entity.sdtm.SDTMVersion;
 import com.openodm.impl.repository.ct.ControlTerminologyRepository;
+import com.openodm.impl.repository.ct.EnumeratedItemRepository;
 import com.openodm.impl.repository.sdtm.SDTMDomainRepository;
+import com.openodm.impl.repository.sdtm.SDTMVariableRefRepository;
+import com.openodm.impl.repository.sdtm.SDTMVariableRepository;
 import com.openodm.impl.repository.sdtm.SDTMVersionRepository;
 
 @Component
 @SuppressWarnings("rawtypes")
 public class SDTMBO {
+	private static final Logger LOG = LoggerFactory.getLogger(SDTMBO.class);
+
 	@Autowired
 	private SDTMVersionRepository sdtmVersionRepository;
 	@Autowired
 	private SDTMDomainRepository sdtmDomainRepository;
 	@Autowired
+	private SDTMVariableRefRepository sdtmVariableRefRepository;
+	@Autowired
+	private SDTMVariableRepository sdtmVariableRepository;
+
+	@Autowired
 	private ControlTerminologyRepository controlTerminologyRepository;
+	@Autowired
+	private EnumeratedItemRepository enumeratedItemRepository;
 
 	private static class ODMNamespaceContext implements NamespaceContext {
 		final private Map<String, String> namespaceMap = new HashMap<String, String>();
@@ -86,6 +103,17 @@ public class SDTMBO {
 		if (ct == null || ct.getStatus().equals(ObjectStatus.deleted)) {
 			return;
 		}
+		Map<String, CodeList> codeListMap = new HashMap<String, CodeList>();
+		Map<String, EnumeratedItem> enumItemMap = new HashMap<String, EnumeratedItem>();
+		for (CodeList codeList : ct.getCodeLists()) {
+			codeListMap.put(codeList.getExtCodeId(), codeList);
+			List<EnumeratedItem> enumItems = enumeratedItemRepository.findByCodeListId(codeList.getId());
+			if (!CollectionUtils.isEmpty(enumItems)) {
+				for (EnumeratedItem enumItem : enumItems) {
+					enumItemMap.put(enumItem.getExtCodeId(), enumItem);
+				}
+			}
+		}
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		dbf.setNamespaceAware(true);
 		DocumentBuilder db = dbf.newDocumentBuilder();
@@ -97,69 +125,199 @@ public class SDTMBO {
 			Node item = nodes.item(i);
 			NamedNodeMap attributes = item.getAttributes();
 			String oid = attributes.getNamedItem("OID").getNodeValue();
-			List<SDTMVersion> mdvs = sdtmVersionRepository.findByOid(oid);
-			SDTMVersion mdv;
-			if (CollectionUtils.isEmpty(mdvs)) {
-				mdv = new SDTMVersion();
-				mdv.setCreator("admin");
-				mdv.setUpdatedBy("admin");
+			List<SDTMVersion> versions = sdtmVersionRepository.findByOid(oid);
+			SDTMVersion version;
+			if (CollectionUtils.isEmpty(versions)) {
+				version = new SDTMVersion();
+				version.setCreator("admin");
+				version.setUpdatedBy("admin");
 
-				mdv.setOid(oid);
-				mdv.setControlTerminology(ct);
-				mdv.setName(attributes.getNamedItem("Name").getNodeValue());
-				mdv.setDescription(attributes.getNamedItem("Description").getNodeValue());
-				mdv.setDefineVersion(attributes.getNamedItem("def:DefineVersion").getNodeValue());
-				mdv.setStandardName(attributes.getNamedItem("def:StandardName").getNodeValue());
-				mdv.setStandardVersion(attributes.getNamedItem("def:StandardVersion").getNodeValue());
-				mdv = sdtmVersionRepository.save(mdv);
+				version.setOid(oid);
+				version.setControlTerminology(ct);
+				version.setName(attributes.getNamedItem("Name").getNodeValue());
+				version.setDescription(attributes.getNamedItem("Description").getNodeValue());
+				version.setDefineVersion(attributes.getNamedItem("def:DefineVersion").getNodeValue());
+				version.setStandardName(attributes.getNamedItem("def:StandardName").getNodeValue());
+				version.setStandardVersion(attributes.getNamedItem("def:StandardVersion").getNodeValue());
+				version = sdtmVersionRepository.save(version);
 			} else {
-				mdv = mdvs.get(0);
+				version = versions.get(0);
 			}
 
-			NodeList codeListNodes = (NodeList) xPath.evaluate("odm:ItemGroupDef", item, XPathConstants.NODESET);
-			saveCodeList(xPath, mdv, codeListNodes);
+			NodeList domains = (NodeList) xPath.evaluate("odm:ItemGroupDef", item, XPathConstants.NODESET);
+			if (domains != null) {
+				saveDomains(xPath, version, domains, item, codeListMap, enumItemMap);
+			}
 		}
 	}
 
-	private void saveCodeList(XPath xPath, SDTMVersion mdv, NodeList codeListNodes) throws XPathExpressionException {
-		for (int j = 0; j < codeListNodes.getLength(); j++) {
-			Node codeListNode = codeListNodes.item(j);
-			NamedNodeMap codeListAttributes = codeListNode.getAttributes();
-			String oid = codeListAttributes.getNamedItem("OID").getNodeValue();
-			List<SDTMDomain> codeLists = sdtmDomainRepository.findByVersionIdAndOid(mdv.getId(), oid);
-			SDTMDomain codeList;
+	private void saveDomains(XPath xPath, SDTMVersion version, NodeList domainNodes, Node versionNode, Map<String, CodeList> codeListMap,
+			Map<String, EnumeratedItem> enumItemMap) throws XPathExpressionException {
+		for (int i = 0; i < domainNodes.getLength(); i++) {
+			Node domainNode = domainNodes.item(i);
+			NamedNodeMap domainAttributes = domainNode.getAttributes();
+			String oid = domainAttributes.getNamedItem("OID").getNodeValue();
+			List<SDTMDomain> domains = sdtmDomainRepository.findByVersionIdAndOid(version.getId(), oid);
+			SDTMDomain domain;
 			boolean needToSave = false;
-			if (CollectionUtils.isEmpty(codeLists)) {
-				codeList = new SDTMDomain();
-				codeList.setCreator("admin");
+			if (CollectionUtils.isEmpty(domains)) {
+				domain = new SDTMDomain();
+				domain.setCreator("admin");
 				needToSave = true;
 			} else {
-				codeList = codeLists.get(0);
-				if (codeList.getStatus().equals(ObjectStatus.deleted)) {
+				domain = domains.get(0);
+				if (domain.getStatus().equals(ObjectStatus.deleted)) {
 					needToSave = true;
-					codeList.setStatus(ObjectStatus.active);
-					codeList.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+					domain.setStatus(ObjectStatus.active);
+					domain.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
 				}
 			}
 			if (needToSave) {
-				codeList.setUpdatedBy("admin");
-				codeList.setSdtmVersion(mdv);
-				codeList.setOid(oid);
-				codeList.setName(codeListAttributes.getNamedItem("Name").getNodeValue());
-				codeList.setDomain(codeListAttributes.getNamedItem("Domain").getNodeValue());
-				codeList.setPurpose(codeListAttributes.getNamedItem("Purpose").getNodeValue());
-				codeList.setRepeating(codeListAttributes.getNamedItem("Repeating").getNodeValue());
+				domain.setUpdatedBy("admin");
+				domain.setSdtmVersion(version);
+				domain.setOid(oid);
+				domain.setName(domainAttributes.getNamedItem("Name").getNodeValue());
+				domain.setDomain(domainAttributes.getNamedItem("Domain").getNodeValue());
+				domain.setPurpose(domainAttributes.getNamedItem("Purpose").getNodeValue());
+				domain.setRepeating(domainAttributes.getNamedItem("Repeating").getNodeValue());
 
-				codeList.setDefClass(codeListAttributes.getNamedItem("def:Class").getNodeValue());
-				codeList.setStructure(codeListAttributes.getNamedItem("def:Structure").getNodeValue());
+				domain.setDefClass(domainAttributes.getNamedItem("def:Class").getNodeValue());
+				domain.setStructure(domainAttributes.getNamedItem("def:Structure").getNodeValue());
 
-				Node descNode = (Node) xPath.evaluate("odm:Description/TranslatedText", codeListNode, XPathConstants.NODE);
+				Node descNode = (Node) xPath.evaluate("odm:Description/TranslatedText", domainNode, XPathConstants.NODE);
 				if (descNode != null) {
-					codeList.setDescription(descNode.getTextContent());
+					domain.setDescription(descNode.getTextContent());
 				}
-				codeList = sdtmDomainRepository.save(codeList);
+				domain = sdtmDomainRepository.save(domain);
+			}
+			NodeList varRefNodes = (NodeList) xPath.evaluate("odm:ItemRef", domainNode, XPathConstants.NODESET);
+			if (varRefNodes != null) {
+				saveVars(xPath, versionNode, codeListMap, domain, varRefNodes, enumItemMap);
 			}
 		}
 	}
 
+	private void saveVars(XPath xPath, Node versionNode, Map<String, CodeList> codeListMap, SDTMDomain domain, NodeList varRefNodes,
+			Map<String, EnumeratedItem> enumItemMap) throws XPathExpressionException {
+		for (int j = 0; j < varRefNodes.getLength(); j++) {
+			Node varRefNode = varRefNodes.item(j);
+			NamedNodeMap varRefAttributes = varRefNode.getAttributes();
+			String varOid = varRefAttributes.getNamedItem("ItemOID").getNodeValue();
+			Node varNode = (Node) xPath.evaluate("//odm:ItemDef[@OID='" + varOid + "']", versionNode, XPathConstants.NODE);
+			if (varNode == null) {
+				LOG.error("Cannot find var, oid={}", varOid);
+				continue;
+			} else {
+				SDTMVariable var;
+				List<SDTMVariable> vars = sdtmVariableRepository.findByDomainIdAndOid(domain.getId(), varOid);
+				if (CollectionUtils.isEmpty(vars)) {
+					var = new SDTMVariable();
+					var.setCreator("admin");
+					var.setUpdatedBy("admin");
+					var.setSdtmDomain(domain);
+					var.setOid(varOid);
+					NamedNodeMap varNodeAttributes = varNode.getAttributes();
+					var.setName(varNodeAttributes.getNamedItem("Name").getNodeValue());
+					Node dataTypeAttr = varNodeAttributes.getNamedItem("DataType");
+					if (dataTypeAttr == null) {
+						var.setDataType("text");
+					} else {
+						var.setDataType(dataTypeAttr.getNodeValue());
+					}
+					Node lengthNode = varNodeAttributes.getNamedItem("Length");
+					if (lengthNode != null) {
+						var.setLength(Integer.valueOf(lengthNode.getNodeValue()));
+					} else {
+						var.setLength(0);
+					}
+					Node descNode = (Node) xPath.evaluate("odm:Description/TranslatedText", varNode, XPathConstants.NODE);
+					if (descNode != null) {
+						var.setDescription(descNode.getTextContent());
+					}
+
+					sdtmVariableRepository.save(var);
+				} else {
+					var = vars.get(0);
+				}
+				Node codeListRefNode = (Node) xPath.evaluate("odm:CodeListRef", varNode, XPathConstants.NODE);
+				if (codeListRefNode != null) {
+					String codeListOid = codeListRefNode.getAttributes().getNamedItem("CodeListOID").getNodeValue();
+					Node codeListNode = (Node) xPath.evaluate("//odm:CodeList[@OID='" + codeListOid + "']", versionNode, XPathConstants.NODE);
+					if (codeListNode != null) {
+//						String name = codeListNode.getAttributes().getNamedItem("Name").getNodeValue();
+						NodeList codeListItemNodes = (NodeList) xPath.evaluate("odm:CodeListItem", codeListNode, XPathConstants.NODESET);
+						if (codeListItemNodes != null && codeListItemNodes.getLength() > 0) {
+							for (int i = 0; i < codeListItemNodes.getLength(); i++) {
+								Node codeListItemNode = codeListItemNodes.item(i);
+								// ref for enumerated items
+								Node aliasNode = (Node) xPath.evaluate("odm:Alias", codeListItemNode, XPathConstants.NODE);
+								if (aliasNode != null) {
+									String extCodeId = aliasNode.getAttributes().getNamedItem("Name").getNodeValue();
+									EnumeratedItem enumItem = enumItemMap.get(extCodeId);
+									if (enumItem != null) {
+										List<EnumeratedItem> enumItems = var.getEnumeratedItems();
+										if (!enumItems.contains(enumItem)) {
+											enumItems.add(enumItem);
+											var.setUpdatedBy("admin");
+											var.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+										}
+									} else {
+										LOG.error("Cannot find EnumeratedItem, extCodeId={}", extCodeId);
+									}
+								}
+							}
+						} else {
+							NodeList enumItemNodes = (NodeList) xPath.evaluate("odm:EnumeratedItem", codeListNode, XPathConstants.NODESET);
+							if (enumItemNodes != null && enumItemNodes.getLength() > 0) {
+								// ref for enumerated items
+								for (int i = 0; i < enumItemNodes.getLength(); i++) {
+									Node enumItemNode = enumItemNodes.item(i);
+									Node aliasNode = (Node) xPath.evaluate("odm:Alias", enumItemNode, XPathConstants.NODE);
+									if (aliasNode != null) {
+										String extCodeId = aliasNode.getAttributes().getNamedItem("Name").getNodeValue();
+										// LOG.info("CodedValue={}",
+										// enumItemNode.getAttributes().getNamedItem("CodedValue").getNodeValue());
+										EnumeratedItem enumItem = enumItemMap.get(extCodeId);
+										if (enumItem != null) {
+											List<EnumeratedItem> enumItems = var.getEnumeratedItems();
+											if (!enumItems.contains(enumItem)) {
+												var.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+												enumItems.add(enumItem);
+												var.setUpdatedBy("admin");
+												var.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+											}
+										} else {
+											LOG.error("Cannot find EnumeratedItem, extCodeId={}", extCodeId);
+										}
+									}
+								}
+							} else {
+								// ref for codeList
+								Node aliasNode = (Node) xPath.evaluate("odm:Alias", codeListNode, XPathConstants.NODE);
+								if (aliasNode != null) {
+									String extCodeId = aliasNode.getAttributes().getNamedItem("Name").getNodeValue();
+									CodeList codeList = codeListMap.get(extCodeId);
+									if (codeList != null) {
+										if (var.getCodeList() == null || !var.getCodeList().getId().equals(codeList.getId())) {
+											var.setUpdatedBy("admin");
+											var.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+											var.setCodeList(codeList);
+										}
+									} else {
+										LOG.error("Cannot find CodeList, extCodeId={}", extCodeId);
+									}
+								}
+							}
+						}
+//						if ("DOMAIN".equals(name) && var.getEnumeratedItems().isEmpty()) {
+//							LOG.info("domainName={}", domain.getName());
+//						}
+					}
+
+					sdtmVariableRepository.save(var);
+				}
+
+			}
+		}
+	}
 }

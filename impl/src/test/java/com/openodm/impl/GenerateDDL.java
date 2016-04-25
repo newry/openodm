@@ -15,6 +15,8 @@ import com.openodm.impl.entity.ct.CustomizedEnumeratedItem;
 import com.openodm.impl.entity.ct.EnumeratedItem;
 import com.openodm.impl.entity.ct.ExtendedEnumeratedItem;
 import com.openodm.impl.entity.sdtm.SDTMDomain;
+import com.openodm.impl.entity.sdtm.SDTMVariable;
+import com.openodm.impl.entity.sdtm.SDTMVariableRef;
 import com.openodm.impl.entity.sdtm.SDTMVersion;
 
 public class GenerateDDL {
@@ -22,11 +24,9 @@ public class GenerateDDL {
 	public static void main(String[] args) {
 		try {
 			Configuration cfg = new Configuration();
-			cfg.setProperty(AvailableSettings.DIALECT,
-					"org.hibernate.dialect.PostgreSQL9Dialect");
+			cfg.setProperty(AvailableSettings.DIALECT, "org.hibernate.dialect.PostgreSQL9Dialect");
 			cfg.setProperty(AvailableSettings.DRIVER, "org.postgresql.Driver");
-			cfg.setProperty(AvailableSettings.URL,
-					"jdbc:postgresql://localhost:5432/yoda");
+			cfg.setProperty(AvailableSettings.URL, "jdbc:postgresql://localhost:5432/yoda");
 			cfg.setProperty(AvailableSettings.USER, "admin");
 			cfg.setProperty(AvailableSettings.PASS, "admin");
 			cfg.addAnnotatedClass(CTVersion.class);
@@ -38,11 +38,12 @@ public class GenerateDDL {
 			cfg.addAnnotatedClass(ControlTerminology.class);
 			cfg.addAnnotatedClass(SDTMVersion.class);
 			cfg.addAnnotatedClass(SDTMDomain.class);
+			cfg.addAnnotatedClass(SDTMVariableRef.class);
+			cfg.addAnnotatedClass(SDTMVariable.class);
 			SchemaExport export = new SchemaExport(cfg);
 			export.setFormat(true);
 			export.setDelimiter(";");
-			URL url = GenerateDDL.class.getClassLoader().getResource(
-					"ddl.update.sql");
+			URL url = GenerateDDL.class.getClassLoader().getResource("ddl.update.sql");
 			export.setOutputFile(new File(url.getFile()).getAbsolutePath());
 			export.create(true, false);
 		} finally {
