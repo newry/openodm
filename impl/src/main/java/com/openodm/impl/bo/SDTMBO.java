@@ -264,7 +264,7 @@ public class SDTMBO {
 				domain.setDefClass(domainAttributes.getNamedItem("def:Class").getNodeValue());
 				domain.setStructure(domainAttributes.getNamedItem("def:Structure").getNodeValue());
 
-				Node descNode = (Node) xPath.evaluate("odm:Description/TranslatedText", domainNode, XPathConstants.NODE);
+				Node descNode = (Node) xPath.evaluate("odm:Description/odm:TranslatedText", domainNode, XPathConstants.NODE);
 				if (descNode != null) {
 					domain.setDescription(descNode.getTextContent());
 				}
@@ -280,16 +280,6 @@ public class SDTMBO {
 	private void saveVars(XPath xPath, Node versionNode, Map<String, CodeList> codeListMap, SDTMDomain domain, NodeList varRefNodes,
 			Map<String, EnumeratedItem> enumItemMap, Map<String, SDTMVariableRef> varMap, Map<String, List<SDTMVariableRef>> varRefMap)
 			throws XPathExpressionException {
-		List<SDTMVariableRef> allClassesList = varRefMap.get("ALL CLASSES");
-		if (!CollectionUtils.isEmpty(allClassesList)) {
-			createGenericVarRef(domain, allClassesList, 1000);
-		}
-		List<SDTMVariableRef> genericList = varRefMap.get(StringUtils.upperCase(domain.getDefClass()) + "-GENERAL");
-		if (!CollectionUtils.isEmpty(genericList)) {
-			LOG.info("domain.getDefClass()={}", domain.getDefClass());
-			createGenericVarRef(domain, genericList, 500);
-		}
-
 		for (int j = 0; j < varRefNodes.getLength(); j++) {
 			Node varRefNode = varRefNodes.item(j);
 			NamedNodeMap varRefAttributes = varRefNode.getAttributes();
@@ -321,7 +311,7 @@ public class SDTMBO {
 					} else {
 						var.setLength(0);
 					}
-					Node descNode = (Node) xPath.evaluate("odm:Description/TranslatedText", varNode, XPathConstants.NODE);
+					Node descNode = (Node) xPath.evaluate("odm:Description/odm:TranslatedText", varNode, XPathConstants.NODE);
 					if (descNode != null) {
 						var.setLabel(descNode.getTextContent());
 					}
@@ -355,6 +345,10 @@ public class SDTMBO {
 									EnumeratedItem enumItem = enumItemMap.get(extCodeId);
 									if (enumItem != null) {
 										List<EnumeratedItem> enumItems = var.getEnumeratedItems();
+										if (enumItems == null) {
+											enumItems = new ArrayList<EnumeratedItem>();
+											var.setEnumeratedItems(enumItems);
+										}
 										if (!enumItems.contains(enumItem)) {
 											enumItems.add(enumItem);
 											var.setUpdatedBy("admin");
@@ -379,6 +373,10 @@ public class SDTMBO {
 										EnumeratedItem enumItem = enumItemMap.get(extCodeId);
 										if (enumItem != null) {
 											List<EnumeratedItem> enumItems = var.getEnumeratedItems();
+											if (enumItems == null) {
+												enumItems = new ArrayList<EnumeratedItem>();
+												var.setEnumeratedItems(enumItems);
+											}
 											if (!enumItems.contains(enumItem)) {
 												var.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
 												enumItems.add(enumItem);
@@ -438,6 +436,15 @@ public class SDTMBO {
 				sdtmVariableRefRepository.save(varRef);
 			}
 		}
+		List<SDTMVariableRef> allClassesList = varRefMap.get("ALL CLASSES");
+		if (!CollectionUtils.isEmpty(allClassesList)) {
+			createGenericVarRef(domain, allClassesList, 1000);
+		}
+		List<SDTMVariableRef> genericList = varRefMap.get(StringUtils.upperCase(domain.getDefClass()) + "-GENERAL");
+		if (!CollectionUtils.isEmpty(genericList)) {
+			LOG.info("domain.getDefClass()={}", domain.getDefClass());
+			createGenericVarRef(domain, genericList, 500);
+		}
 	}
 
 	private void createGenericVarRef(SDTMDomain domain, List<SDTMVariableRef> allClassesList, int gap) {
@@ -448,7 +455,7 @@ public class SDTMBO {
 				name = StringUtils.replace(name, "--", domain.getDomain());
 				LOG.debug("changed name, value={}", name);
 			}
-			List<SDTMVariable> vars = sdtmVariableRepository.findByDomainIdAndOid(domain.getId(), name);
+			List<SDTMVariable> vars = sdtmVariableRepository.findByDomainIdAndName(domain.getId(), name);
 			SDTMVariable var;
 			if (CollectionUtils.isEmpty(vars)) {
 				var = new SDTMVariable();

@@ -158,7 +158,7 @@ public class ODMBO {
 						"nciodm:CodeListExtensible").getNodeValue());
 
 				Node descNode = (Node) xPath.evaluate(
-						"odm:Description/TranslatedText", codeListNode,
+						"odm:Description/odm:TranslatedText", codeListNode,
 						XPathConstants.NODE);
 				if (descNode != null) {
 					codeList.setDescription(descNode.getTextContent());
