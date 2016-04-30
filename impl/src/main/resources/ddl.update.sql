@@ -189,7 +189,9 @@
         DATE_LAST_MODIFIED timestamp not null,
         STATUS varchar(32) not null,
         UPDATED_BY varchar(255) not null,
-        date_type varchar(32) not null,
+        data_type varchar(32),
+        sas_data_type varchar(32) not null,
+        label varchar(255) not null,
         description varchar(4096),
         length int4,
         name varchar(255) not null,
@@ -213,9 +215,9 @@
         STATUS varchar(32) not null,
         UPDATED_BY varchar(255) not null,
         mandatory varchar(32) not null,
-        oid varchar(255) not null,
+        core varchar(32),
         order_number int4 not null,
-        role varchar(32) not null,
+        role varchar(255),
         SDTM_DOMAIN_ID int8 not null,
         SDTM_VARIABLE_ID int8 not null,
         primary key (ID)
@@ -259,5 +261,5 @@
     
     CREATE UNIQUE INDEX SDTM_VARIABLE_REF_OID_IDX ON SDTM_VARIABLE_REF (SDTM_DOMAIN_ID, SDTM_VARIABLE_ID);
 
-    CREATE UNIQUE INDEX SDTM_VARIABLE_OID_IDX ON SDTM_VARIABLE (SDTM_DOMAIN_ID, OID);
+    CREATE UNIQUE INDEX SDTM_VARIABLE_OID_IDX ON SDTM_VARIABLE (SDTM_DOMAIN_ID, oid);
     

@@ -1,6 +1,8 @@
 package com.openodm.impl.bo;
 
 import java.io.InputStream;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -17,6 +19,12 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,6 +112,75 @@ public class SDTMBO {
 		if (ct == null || ct.getStatus().equals(ObjectStatus.deleted)) {
 			return;
 		}
+		Map<String, SDTMVariableRef> varMap = new HashMap<String, SDTMVariableRef>();
+		Map<String, List<SDTMVariableRef>> varRefMap = new HashMap<String, List<SDTMVariableRef>>();
+		try (InputStream excelInput = SDTMBO.class.getClassLoader().getResourceAsStream("sdtm-3-2-excel.xls")) {
+			try (Workbook workbook = new HSSFWorkbook(excelInput)) {
+				Sheet sheet = workbook.getSheetAt(0);
+				Iterator<Row> iterator = sheet.rowIterator();
+				if (iterator.hasNext()) {
+					iterator.next();
+					// ignore first row
+				}
+				while (iterator.hasNext()) {
+					Row nextRow = iterator.next();
+					Iterator<Cell> cellIterator = nextRow.cellIterator();
+					Cell cell = cellIterator.next();
+					if (cell.getCellType() != Cell.CELL_TYPE_NUMERIC) {
+						continue;
+					}
+					int order = new BigDecimal(cell.getNumericCellValue()).intValue();
+					cell = cellIterator.next();
+					String defClass = cell.getStringCellValue();
+					cell = cellIterator.next();
+					String domainName = cell.getStringCellValue();
+					cell = cellIterator.next();
+					cell = cellIterator.next();
+					String varName = cell.getStringCellValue();
+					cell = cellIterator.next();
+					String label = cell.getStringCellValue();
+					cell = cellIterator.next();
+					String sasDataType = cell.getStringCellValue();
+					cell = cellIterator.next();
+					cell = cellIterator.next();
+					String role = cell.getStringCellValue();
+					cell = cellIterator.next();
+					String desc = cell.getStringCellValue();
+					cell = cellIterator.next();
+					String core = cell.getStringCellValue();
+					if (StringUtils.isNoneBlank(domainName)) {
+						SDTMVariable var = new SDTMVariable();
+						var.setDescription(desc);
+						var.setSasDataType(sasDataType);
+						var.setLabel(label);
+						SDTMVariableRef varRef = new SDTMVariableRef();
+						varRef.setCore(core);
+						varRef.setSdtmVariable(var);
+						varMap.put(domainName + "-" + varName, varRef);
+					} else {
+						String defClassUpperCase = StringUtils.upperCase(defClass);
+						List<SDTMVariableRef> list = varRefMap.get(defClassUpperCase);
+						if (list == null) {
+							list = new ArrayList<SDTMVariableRef>();
+							varRefMap.put(defClassUpperCase, list);
+						}
+						SDTMVariableRef varRef = new SDTMVariableRef();
+						varRef.setOrderNumber(order);
+						varRef.setRole(role);
+						varRef.setCore(core);
+
+						SDTMVariable var = new SDTMVariable();
+						var.setDescription(desc);
+						var.setSasDataType(sasDataType);
+						var.setLabel(label);
+						var.setName(varName);
+						varRef.setSdtmVariable(var);
+						list.add(varRef);
+					}
+				}
+
+			}
+		}
 		Map<String, CodeList> codeListMap = new HashMap<String, CodeList>();
 		Map<String, EnumeratedItem> enumItemMap = new HashMap<String, EnumeratedItem>();
 		for (CodeList codeList : ct.getCodeLists()) {
@@ -115,6 +192,7 @@ public class SDTMBO {
 				}
 			}
 		}
+
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		dbf.setNamespaceAware(true);
 		DocumentBuilder db = dbf.newDocumentBuilder();
@@ -147,13 +225,14 @@ public class SDTMBO {
 
 			NodeList domains = (NodeList) xPath.evaluate("odm:ItemGroupDef", item, XPathConstants.NODESET);
 			if (domains != null) {
-				saveDomains(xPath, version, domains, item, codeListMap, enumItemMap);
+				saveDomains(xPath, version, domains, item, codeListMap, enumItemMap, varMap, varRefMap);
 			}
 		}
 	}
 
 	private void saveDomains(XPath xPath, SDTMVersion version, NodeList domainNodes, Node versionNode, Map<String, CodeList> codeListMap,
-			Map<String, EnumeratedItem> enumItemMap) throws XPathExpressionException {
+			Map<String, EnumeratedItem> enumItemMap, Map<String, SDTMVariableRef> varMap, Map<String, List<SDTMVariableRef>> varRefMap)
+			throws XPathExpressionException {
 		for (int i = 0; i < domainNodes.getLength(); i++) {
 			Node domainNode = domainNodes.item(i);
 			NamedNodeMap domainAttributes = domainNode.getAttributes();
@@ -193,13 +272,24 @@ public class SDTMBO {
 			}
 			NodeList varRefNodes = (NodeList) xPath.evaluate("odm:ItemRef", domainNode, XPathConstants.NODESET);
 			if (varRefNodes != null) {
-				saveVars(xPath, versionNode, codeListMap, domain, varRefNodes, enumItemMap);
+				saveVars(xPath, versionNode, codeListMap, domain, varRefNodes, enumItemMap, varMap, varRefMap);
 			}
 		}
 	}
 
 	private void saveVars(XPath xPath, Node versionNode, Map<String, CodeList> codeListMap, SDTMDomain domain, NodeList varRefNodes,
-			Map<String, EnumeratedItem> enumItemMap) throws XPathExpressionException {
+			Map<String, EnumeratedItem> enumItemMap, Map<String, SDTMVariableRef> varMap, Map<String, List<SDTMVariableRef>> varRefMap)
+			throws XPathExpressionException {
+		List<SDTMVariableRef> allClassesList = varRefMap.get("ALL CLASSES");
+		if (!CollectionUtils.isEmpty(allClassesList)) {
+			createGenericVarRef(domain, allClassesList, 1000);
+		}
+		List<SDTMVariableRef> genericList = varRefMap.get(StringUtils.upperCase(domain.getDefClass()) + "-GENERAL");
+		if (!CollectionUtils.isEmpty(genericList)) {
+			LOG.info("domain.getDefClass()={}", domain.getDefClass());
+			createGenericVarRef(domain, genericList, 500);
+		}
+
 		for (int j = 0; j < varRefNodes.getLength(); j++) {
 			Node varRefNode = varRefNodes.item(j);
 			NamedNodeMap varRefAttributes = varRefNode.getAttributes();
@@ -233,13 +323,20 @@ public class SDTMBO {
 					}
 					Node descNode = (Node) xPath.evaluate("odm:Description/TranslatedText", varNode, XPathConstants.NODE);
 					if (descNode != null) {
-						var.setDescription(descNode.getTextContent());
+						var.setLabel(descNode.getTextContent());
 					}
-
-					sdtmVariableRepository.save(var);
 				} else {
 					var = vars.get(0);
+					var.setUpdatedBy("admin");
+					var.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
 				}
+				SDTMVariableRef mappedVar = varMap.get(domain.getDomain() + "-" + var.getName());
+				if (mappedVar != null) {
+					var.setDescription(mappedVar.getSdtmVariable().getDescription());
+					var.setSasDataType(mappedVar.getSdtmVariable().getSasDataType());
+				}
+				sdtmVariableRepository.save(var);
+
 				Node codeListRefNode = (Node) xPath.evaluate("odm:CodeListRef", varNode, XPathConstants.NODE);
 				if (codeListRefNode != null) {
 					String codeListOid = codeListRefNode.getAttributes().getNamedItem("CodeListOID").getNodeValue();
@@ -332,6 +429,9 @@ public class SDTMBO {
 					varRef.setUpdatedBy("admin");
 					varRef.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
 				}
+				if (mappedVar != null) {
+					varRef.setCore(mappedVar.getCore());
+				}
 				if (roleAttr != null) {
 					varRef.setRole(roleAttr.getNodeValue());
 				}
@@ -339,4 +439,51 @@ public class SDTMBO {
 			}
 		}
 	}
+
+	private void createGenericVarRef(SDTMDomain domain, List<SDTMVariableRef> allClassesList, int gap) {
+		for (SDTMVariableRef varRef : allClassesList) {
+			SDTMVariable sdtmVariable = varRef.getSdtmVariable();
+			String name = sdtmVariable.getName();
+			if (StringUtils.startsWith(name, "--")) {
+				name = StringUtils.replace(name, "--", domain.getDomain());
+				LOG.debug("changed name, value={}", name);
+			}
+			List<SDTMVariable> vars = sdtmVariableRepository.findByDomainIdAndOid(domain.getId(), name);
+			SDTMVariable var;
+			if (CollectionUtils.isEmpty(vars)) {
+				var = new SDTMVariable();
+				var.setCreator("admin");
+				var.setUpdatedBy("admin");
+				var.setSdtmDomain(domain);
+				var.setOid(name);
+				var.setName(name);
+				var.setSasDataType(sdtmVariable.getSasDataType());
+				var.setLabel(sdtmVariable.getLabel());
+				var.setDescription(sdtmVariable.getDescription());
+				var.setLength(0);
+				sdtmVariableRepository.save(var);
+			} else {
+				var = vars.get(0);
+			}
+			List<SDTMVariableRef> varRefs = sdtmVariableRefRepository.findByDomainIdAndVariableId(domain.getId(), var.getId());
+			SDTMVariableRef newVarRef;
+			if (CollectionUtils.isEmpty(varRefs)) {
+				newVarRef = new SDTMVariableRef();
+				newVarRef.setCreator("admin");
+				newVarRef.setUpdatedBy("admin");
+				newVarRef.setSdtmDomain(domain);
+				newVarRef.setSdtmVariable(var);
+			} else {
+				newVarRef = varRefs.get(0);
+				newVarRef.setUpdatedBy("admin");
+				newVarRef.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+			}
+			newVarRef.setMandatory(varRef.getCore().equalsIgnoreCase("Req") || varRef.getCore().equalsIgnoreCase("Exp") ? "Yes" : "No");
+			newVarRef.setCore(varRef.getCore());
+			newVarRef.setRole(varRef.getRole());
+			newVarRef.setOrderNumber(gap + varRef.getOrderNumber());
+			sdtmVariableRefRepository.save(newVarRef);
+		}
+	}
+
 }

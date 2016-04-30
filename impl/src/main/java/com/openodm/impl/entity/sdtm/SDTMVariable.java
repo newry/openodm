@@ -45,11 +45,17 @@ public class SDTMVariable extends PersistentObject {
 	@Column(name = "name", nullable = false, length = 255)
 	private String name;
 
+	@Column(name = "label", nullable = false, length = 255)
+	private String label;
+
 	@Column(name = "description", nullable = true, length = 4096)
 	private String description;
 
-	@Column(name = "data_type", nullable = false, length = 32)
+	@Column(name = "data_type", nullable = true, length = 32)
 	private String dataType;
+
+	@Column(name = "sas_data_type", nullable = false, length = 32)
+	private String sasDataType;
 
 	@Column(name = "length", nullable = true)
 	private Integer length;
@@ -159,6 +165,22 @@ public class SDTMVariable extends PersistentObject {
 
 	public void setPossibleValues(List<EnumeratedItem> possibleValues) {
 		this.possibleValues = possibleValues;
+	}
+
+	public String getLabel() {
+		return label;
+	}
+
+	public void setLabel(String label) {
+		this.label = label;
+	}
+
+	public String getSasDataType() {
+		return sasDataType;
+	}
+
+	public void setSasDataType(String sasDataType) {
+		this.sasDataType = sasDataType;
 	}
 
 }

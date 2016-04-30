@@ -33,10 +33,13 @@ public class SDTMVariableRef extends PersistentObject {
 	@Column(name = "mandatory", nullable = false, length = 32)
 	private String mandatory;
 
+	@Column(name = "core", nullable = true, length = 32)
+	private String core;
+
 	@Column(name = "order_number", nullable = false)
 	private Integer orderNumber;
 
-	@Column(name = "role", nullable = true, length = 32)
+	@Column(name = "role", nullable = true, length = 255)
 	private String role;
 
 	@ManyToOne(targetEntity = SDTMDomain.class, optional = false, fetch = FetchType.LAZY)
@@ -90,6 +93,14 @@ public class SDTMVariableRef extends PersistentObject {
 
 	public void setSdtmVariable(SDTMVariable sdtmVariable) {
 		this.sdtmVariable = sdtmVariable;
+	}
+
+	public String getCore() {
+		return core;
+	}
+
+	public void setCore(String core) {
+		this.core = core;
 	}
 
 }
