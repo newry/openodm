@@ -53,6 +53,9 @@ public class SDTMProjectVariableRef extends PersistentObject {
 	@Transient
 	private SDTMDomain sdtmDomain;
 
+	@Transient
+	private boolean excluded;
+
 	public String getCore() {
 		return core;
 	}
@@ -103,6 +106,14 @@ public class SDTMProjectVariableRef extends PersistentObject {
 
 	public void setSdtmDomain(SDTMDomain sdtmDomain) {
 		this.sdtmDomain = sdtmDomain;
+	}
+
+	public boolean isExcluded() {
+		return excluded;
+	}
+
+	public void setExcluded(boolean excluded) {
+		this.excluded = excluded;
 	}
 
 }

@@ -377,7 +377,7 @@
 					<button type="button" class="close" data-dismiss="modal">
 						<span aria-hidden="true">&times;</span> <span class="sr-only">close</span>
 					</button>
-					<h4 class="modal-title">Add Domain</h4>
+					<h4 class="modal-title">Add/Remove Domain</h4>
 				</div>
 				<div class="modal-body">
 					{{tempProject.tempModel.name}}<br/>
@@ -401,7 +401,53 @@
 				</div>
 				<div class="modal-footer">
 					<div ng-show="!modalRequesting">
-						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					</div>
+					<div ng-show="modalRequesting">
+						<span class="label label-warning">Requesting ...</span>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
+<div class="modal animated fadeIn" id="editProjectDomainVariables">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<form>
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">
+						<span aria-hidden="true">&times;</span> <span class="sr-only">close</span>
+					</button>
+					<h4 class="modal-title">Add/Remove Variable</h4>
+				</div>
+				<div class="modal-body">
+					Project: {{tempProject.tempModel.name}}<br/>
+					Domain: {{tempDomain.tempModel.name}}<br/>
+					<table class="table mb0 table-files">
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Label</th>
+								<th></th>
+							</tr>
+							<tr
+								ng-repeat="item in modalVariableList"
+								ng-show="!modalRequesting">
+								<td class="hidden-xs">{{item.model.sdtmVariable.name}}</td>
+								<td class="hidden-xs">{{item.model.sdtmVariable.label}}</td>
+								<td class="hidden-xs" ng-show="item.model.excluded"><a href="" ng-click="removeVariableForProject(tempProject.tempModel,tempDomain.tempModel,item.model.sdtmVariable)">Add</a></td>
+								<td class="hidden-xs" ng-show="!item.model.excluded"><a href="" ng-click="addVariableForProject(tempProject.tempModel,tempDomain.tempModel,item.model.sdtmVariable)">Remove</a></td>
+							</tr>
+						</thead>
+					</table>
+					
+					<div ng-include data-src="'error-bar'" class="clearfix"></div>
+				</div>
+				<div class="modal-footer">
+					<div ng-show="!modalRequesting">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 					</div>
 					<div ng-show="modalRequesting">
 						<span class="label label-warning">Requesting ...</span>
