@@ -12,4 +12,6 @@ public interface SDTMVersionRepository extends CrudRepository<SDTMVersion, Long>
 	@Query("SELECT d FROM SDTMVersion d WHERE d.oid=:oid")
 	public List<SDTMVersion> findByOid(@Param("oid") String oid);
 
+	@Query("SELECT d FROM SDTMVersion d WHERE d.status='active'")
+	public List<SDTMVersion> findAll();
 }

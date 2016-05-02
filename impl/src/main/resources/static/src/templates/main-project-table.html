@@ -1,0 +1,71 @@
+<table class="table mb0 table-files">
+    <thead>
+        <tr>
+             <th>
+                <a href="" ng-click="order('model.sdtmDomain.name')">
+					Domain Name
+                    <span class="sortorder" ng-show="predicate[1] === 'model.sdtmDomain.name'" ng-class="{reverse:reverse}"></span>
+                </a>
+            </th>
+            <th>
+                <a href="" ng-click="order('model.sdtmVariable.name')">
+					Name
+                    <span class="sortorder" ng-show="predicate[1] === 'model.sdtmVariable.name'" ng-class="{reverse:reverse}"></span>
+                </a>
+            </th>
+            <th>
+                <a href="" ng-click="order('model.sdtmVariable.label')">
+					Label
+                    <span class="sortorder" ng-show="predicate[1] === 'model.sdtmVariable.label'" ng-class="{reverse:reverse}"></span>
+                </a>
+            </th>
+            <th>
+                <a href="" ng-click="order('model.sdtmVariable.sasDataTypel')">
+					Data Type
+                    <span class="sortorder" ng-show="predicate[1] === 'model.sdtmVariable.sasDataTypel'" ng-class="{reverse:reverse}"></span>
+                </a>
+            </th>
+            <th>
+                <a href="" ng-click="order('model.role')">
+					Role
+                    <span class="sortorder" ng-show="predicate[1] === 'model.role'" ng-class="{reverse:reverse}"></span>
+                </a>
+            </th>
+            <th>
+                <a href="" ng-click="order('model.core')">
+					Core
+                    <span class="sortorder" ng-show="predicate[1] === 'model.core'" ng-class="{reverse:reverse}"></span>
+                </a>
+            </th>
+            <th class="text-right"></th>
+        </tr>
+    </thead>
+    <tbody class="file-item">
+        <tr ng-show="requesting">
+            <td colspan="5">
+                <div ng-include="config.tplPath + '/spinner.html'"></div>
+            </td>
+        </tr>
+        <tr ng-repeat="item in varList" ng-show="!requesting">
+            <td>
+	           {{item.model.sdtmDomain.name}}
+            </td>
+            <td>
+	            <div>{{item.model.sdtmVariable.name}}
+	            </div>
+            </td>
+             <td>
+	           {{item.model.sdtmVariable.label}}
+            </td>
+            <td>
+	           {{item.model.sdtmVariable.sasDataType}}
+            </td>
+            <td>
+	           {{item.model.role}}
+            </td>
+            <td>
+	           {{item.model.core}}
+            </td>
+        </tr>
+    </tbody>
+</table>

@@ -18,10 +18,10 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EntityScan(basePackages = { "com.openodm" })
 @EnableJpaRepositories(basePackages = { "com.openodm" })
 @EnableTransactionManagement
-public class App {
+public class Application {
 
 	public static void main(String[] args) throws Exception {
-		SpringApplication.run(App.class, args);
+		SpringApplication.run(Application.class, args);
 	}
 
 }

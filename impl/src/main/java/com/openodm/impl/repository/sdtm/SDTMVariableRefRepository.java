@@ -12,6 +12,6 @@ public interface SDTMVariableRefRepository extends CrudRepository<SDTMVariableRe
 	@Query("SELECT d FROM SDTMVariableRef d WHERE d.sdtmDomain.id=:domainId and d.sdtmVariable.id=:variableId")
 	public List<SDTMVariableRef> findByDomainIdAndVariableId(@Param("domainId") Long domainId, @Param("variableId") Long oid);
 
-	@Query("SELECT d FROM SDTMVariableRef d WHERE d.sdtmDomain.id=:domainId")
+	@Query("SELECT d FROM SDTMVariableRef d WHERE d.sdtmDomain.id=:domainId and d.status='active'")
 	public List<SDTMVariableRef> findByDomainId(@Param("domainId") Long domainId);
 }

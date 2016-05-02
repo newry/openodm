@@ -223,7 +223,33 @@
         primary key (ID)
     );
 
-    
+    create table SDTM_PROJECT (
+        ID  bigserial not null,
+        CREATOR varchar(255) not null,
+        DATE_ADDED timestamp not null,
+        DATE_LAST_MODIFIED timestamp not null,
+        STATUS varchar(32) not null,
+        UPDATED_BY varchar(255) not null,
+        description varchar(4096),
+        name varchar(255) not null,
+        SDTM_VERSION_ID int8 not null,
+        primary key (ID)
+    );
+
+    create table SDTM_PROJECT_VARIABLE_REF (
+        ID  bigserial not null,
+        CREATOR varchar(255) not null,
+        DATE_ADDED timestamp not null,
+        DATE_LAST_MODIFIED timestamp not null,
+        STATUS varchar(32) not null,
+        UPDATED_BY varchar(255) not null,
+        core varchar(32),
+        order_number int4 not null,
+        role varchar(255),
+        SDTM_PROJECT_ID int8 not null,
+        SDTM_VARIABLE_ID int8 not null,
+        primary key (ID)
+    );    
     alter table SDTM_VARIABLE 
         add constraint FK_4lr68uya05iv6w0w93uxyj5nm 
         foreign key (code_list_id) 
@@ -264,4 +290,37 @@
     CREATE UNIQUE INDEX SDTM_VARIABLE_OID_IDX ON SDTM_VARIABLE (SDTM_DOMAIN_ID, oid);
     
     CREATE UNIQUE INDEX SDTM_VARIABLE_NAME_IDX ON SDTM_VARIABLE (SDTM_DOMAIN_ID, name);
+
+    CREATE UNIQUE INDEX SDTM_PROJECT_VARIABLE_REF_IDX ON SDTM_PROJECT_VARIABLE_REF (SDTM_PROJECT_ID, SDTM_VARIABLE_ID);
+    
+    
+    create table SDTM_PROJECT_DOMAIN_XREF (
+        SDTM_PROJECT_ID int8 not null,
+        SDTM_DOMAIN_ID int8 not null
+    );
+    
+    alter table SDTM_PROJECT 
+        add constraint FK_bm3rww03plnrpy13inpn7kcv 
+        foreign key (SDTM_VERSION_ID) 
+        references SDTM_VERSION;
+
+    alter table SDTM_PROJECT_DOMAIN_XREF 
+        add constraint FK_egjw4fypx4but6dd58cw1eykr 
+        foreign key (SDTM_DOMAIN_ID) 
+        references SDTM_DOMAIN;
+
+    alter table SDTM_PROJECT_DOMAIN_XREF 
+        add constraint FK_8f9abk9rd3wnkcjk4tfrsmgs7 
+        foreign key (SDTM_PROJECT_ID) 
+        references SDTM_PROJECT;
+    
+    alter table SDTM_PROJECT_VARIABLE_REF 
+        add constraint FK_8c80nhuocnc9klcohohxjorn3 
+        foreign key (SDTM_PROJECT_ID) 
+        references SDTM_PROJECT;
+
+    alter table SDTM_PROJECT_VARIABLE_REF 
+        add constraint FK_r3tsmdmls9j81xw1g3ffw9a1y 
+        foreign key (SDTM_VARIABLE_ID) 
+        references SDTM_VARIABLE;
     

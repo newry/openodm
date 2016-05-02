@@ -25,6 +25,15 @@
         <button class="btn btn-default btn-sm" data-toggle="modal" data-target="#newCT" ng-click="newCT()">
             <i class="glyphicon glyphicon-plus"></i> Create new CT
         </button>
+        <button class="btn btn-default btn-sm" data-toggle="modal" data-target="#newProject" ng-click="newProject()">
+            <i class="glyphicon glyphicon-plus"></i> New Project
+        </button>
+        <button class="btn btn-default btn-sm" data-toggle="modal" data-target="#editProject" ng-show="tempProject.tempModel.id">
+            <i class="glyphicon glyphicon-plus"></i> Edit Project
+        </button>
+        <button class="btn btn-default btn-sm" data-toggle="modal" data-target="#addProjectDomain" ng-show="tempProject.tempModel.id" ng-click="getAllDomains(tempProject.tempModel)">
+            <i class="glyphicon glyphicon-plus"></i> Add/Remove Domain
+        </button>
       </div>
     </div>
   </div>
