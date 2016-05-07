@@ -429,6 +429,9 @@ public class SDTMBO {
 				}
 				if (mappedVar != null) {
 					varRef.setCore(mappedVar.getCore());
+					// System.out.println(domain.getName() + "." +
+					// varRef.getSdtmVariable().getName() + ":" +
+					// mappedVar.getCore());
 				}
 				if (roleAttr != null) {
 					varRef.setRole(roleAttr.getNodeValue());
@@ -442,7 +445,7 @@ public class SDTMBO {
 		}
 		List<SDTMVariableRef> genericList = varRefMap.get(StringUtils.upperCase(domain.getDefClass()) + "-GENERAL");
 		if (!CollectionUtils.isEmpty(genericList)) {
-			LOG.info("domain.getDefClass()={}", domain.getDefClass());
+			// LOG.info("domain.getDefClass()={}", domain.getDefClass());
 			createGenericVarRef(domain, genericList, 500);
 		}
 	}
@@ -473,23 +476,18 @@ public class SDTMBO {
 				var = vars.get(0);
 			}
 			List<SDTMVariableRef> varRefs = sdtmVariableRefRepository.findByDomainIdAndVariableId(domain.getId(), var.getId());
-			SDTMVariableRef newVarRef;
 			if (CollectionUtils.isEmpty(varRefs)) {
-				newVarRef = new SDTMVariableRef();
+				SDTMVariableRef newVarRef = new SDTMVariableRef();
 				newVarRef.setCreator("admin");
 				newVarRef.setUpdatedBy("admin");
 				newVarRef.setSdtmDomain(domain);
 				newVarRef.setSdtmVariable(var);
-			} else {
-				newVarRef = varRefs.get(0);
-				newVarRef.setUpdatedBy("admin");
-				newVarRef.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+				newVarRef.setMandatory(varRef.getCore().equalsIgnoreCase("Req") || varRef.getCore().equalsIgnoreCase("Exp") ? "Yes" : "No");
+				newVarRef.setCore(varRef.getCore());
+				newVarRef.setRole(varRef.getRole());
+				newVarRef.setOrderNumber(gap + varRef.getOrderNumber());
+				sdtmVariableRefRepository.save(newVarRef);
 			}
-			newVarRef.setMandatory(varRef.getCore().equalsIgnoreCase("Req") || varRef.getCore().equalsIgnoreCase("Exp") ? "Yes" : "No");
-			newVarRef.setCore(varRef.getCore());
-			newVarRef.setRole(varRef.getRole());
-			newVarRef.setOrderNumber(gap + varRef.getOrderNumber());
-			sdtmVariableRefRepository.save(newVarRef);
 		}
 	}
 

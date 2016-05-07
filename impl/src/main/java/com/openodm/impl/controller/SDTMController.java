@@ -33,14 +33,19 @@ import com.openodm.impl.entity.ct.ControlTerminology;
 import com.openodm.impl.entity.ct.EnumeratedItem;
 import com.openodm.impl.entity.sdtm.SDTMDomain;
 import com.openodm.impl.entity.sdtm.SDTMProject;
-import com.openodm.impl.entity.sdtm.SDTMProjectVariableRef;
+import com.openodm.impl.entity.sdtm.SDTMProjectDomainXref;
+import com.openodm.impl.entity.sdtm.SDTMProjectLibrary;
+import com.openodm.impl.entity.sdtm.SDTMProjectVariableXref;
 import com.openodm.impl.entity.sdtm.SDTMVariable;
 import com.openodm.impl.entity.sdtm.SDTMVariableRef;
 import com.openodm.impl.entity.sdtm.SDTMVersion;
+import com.openodm.impl.repository.ct.ControlTerminologyRepository;
 import com.openodm.impl.repository.ct.EnumeratedItemRepository;
 import com.openodm.impl.repository.sdtm.SDTMDomainRepository;
+import com.openodm.impl.repository.sdtm.SDTMProjectDomainXrefRepository;
+import com.openodm.impl.repository.sdtm.SDTMProjectLibraryRepository;
 import com.openodm.impl.repository.sdtm.SDTMProjectRepository;
-import com.openodm.impl.repository.sdtm.SDTMProjectVariableRefRepository;
+import com.openodm.impl.repository.sdtm.SDTMProjectVariableXrefRepository;
 import com.openodm.impl.repository.sdtm.SDTMVariableRefRepository;
 import com.openodm.impl.repository.sdtm.SDTMVariableRepository;
 import com.openodm.impl.repository.sdtm.SDTMVersionRepository;
@@ -63,7 +68,13 @@ public class SDTMController {
 	@Autowired
 	private SDTMProjectRepository sdtmProjectRepository;
 	@Autowired
-	private SDTMProjectVariableRefRepository sdtmProjectVariableRefRepository;
+	private SDTMProjectVariableXrefRepository sdtmProjectVariableXrefRepository;
+	@Autowired
+	private SDTMProjectDomainXrefRepository sdtmProjectDomainXrefRepository;
+	@Autowired
+	private ControlTerminologyRepository controlTerminologyRepository;
+	@Autowired
+	private SDTMProjectLibraryRepository sdtmProjectLibraryRepository;
 
 	@RequestMapping(value = "/sdtm/v1/controlTerminology/{id}/import", method = RequestMethod.POST)
 	public void upload(@PathVariable("id") Long id, @RequestParam("file") MultipartFile file) throws Exception {
@@ -138,10 +149,13 @@ public class SDTMController {
 	}
 
 	@RequestMapping(value = "/sdtm/v1/project", method = RequestMethod.POST)
-	public ResponseEntity<OperationResponse> createProject(@RequestBody Map<String, String> request) {
-		String name = StringUtils.trim(request.get("name"));
-		String desc = StringUtils.trim(request.get("description"));
-		String versionId = StringUtils.trim(request.get("versionId"));
+	public ResponseEntity<OperationResponse> createProject(@RequestBody Map<String, Object> request) {
+		String name = StringUtils.trim((String) request.get("name"));
+		String desc = StringUtils.trim((String) request.get("description"));
+		Object versionIdObj = request.get("versionId");
+		Object ctIdObj = request.get("ctId");
+		List<Map<String, String>> libraryList = (List<Map<String, String>>) request.get("libraryList");
+
 		SDTMProject project = new SDTMProject();
 		project.setCreator("admin");
 		project.setUpdatedBy("admin");
@@ -153,7 +167,8 @@ public class SDTMController {
 			or.setResult(result);
 			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
 		}
-		if (!StringUtils.isNumeric(versionId)) {
+		SDTMVersion sdtmVersion;
+		if (versionIdObj == null) {
 			OperationResponse or = new OperationResponse();
 			OperationResult result = new OperationResult();
 			result.setSuccess(false);
@@ -161,7 +176,7 @@ public class SDTMController {
 			or.setResult(result);
 			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
 		} else {
-			SDTMVersion sdtmVersion = sdtmVersionRepository.findOne(Long.valueOf(versionId));
+			sdtmVersion = sdtmVersionRepository.findOne(Long.valueOf(versionIdObj.toString()));
 			if (sdtmVersion == null) {
 				OperationResponse or = new OperationResponse();
 				OperationResult result = new OperationResult();
@@ -169,15 +184,108 @@ public class SDTMController {
 				result.setError("version is required");
 				or.setResult(result);
 				return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
-			} else {
-				project.setSdtmVersion(sdtmVersion);
+			}
+		}
+		if (!CollectionUtils.isEmpty(libraryList)) {
+			for (Map<String, String> library : libraryList) {
+				String libName = library.get("name");
+				String libPath = library.get("path");
+				if (StringUtils.isEmpty(libName)) {
+					OperationResponse or = new OperationResponse();
+					OperationResult result = new OperationResult();
+					result.setSuccess(false);
+					result.setError("lib name is required");
+					or.setResult(result);
+					return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+				} else {
+					if (!libName.matches("[a-zA-Z][a-zA-Z0-9]{1,7}")) {
+						OperationResponse or = new OperationResponse();
+						OperationResult result = new OperationResult();
+						result.setSuccess(false);
+						result.setError("lib name is invalid");
+						or.setResult(result);
+						return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+					}
+				}
+				if (StringUtils.isEmpty(libPath)) {
+					OperationResponse or = new OperationResponse();
+					OperationResult result = new OperationResult();
+					result.setSuccess(false);
+					result.setError("lib path is required");
+					or.setResult(result);
+					return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+				}
+
 			}
 		}
 
+		ControlTerminology ct;
+		if (ctIdObj == null) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("ct is required");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		} else {
+			ct = this.controlTerminologyRepository.findOne(Long.valueOf(ctIdObj.toString()));
+			if (ct == null) {
+				OperationResponse or = new OperationResponse();
+				OperationResult result = new OperationResult();
+				result.setSuccess(false);
+				result.setError("ct is required");
+				or.setResult(result);
+				return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+			}
+		}
+
+		List<SDTMVersion> versions = this.sdtmVersionRepository.findByOidAndCtId(sdtmVersion.getOid(), ct.getId());
+		if (CollectionUtils.isEmpty(versions)) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("version is required");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		}
+		project.setSdtmVersion(versions.get(0));
 		project.setName(name);
 		project.setDescription(desc);
 		try {
 			this.sdtmProjectRepository.save(project);
+			List<SDTMDomain> domains = this.sdtmDomainRepository.findByVersionId(project.getSdtmVersion().getId());
+			int i = 1;
+			List<SDTMProjectDomainXref> domainXrefs = new ArrayList<SDTMProjectDomainXref>();
+			for (SDTMDomain domain : domains) {
+				SDTMProjectDomainXref domainXref = new SDTMProjectDomainXref();
+				domainXref.setCreator("admin");
+				domainXref.setUpdatedBy("admin");
+				domainXref.setSdtmDomain(domain);
+				domainXref.setSdtmProject(project);
+				domainXref.setOrderNumber(i++);
+				domainXrefs.add(domainXref);
+			}
+
+			List<SDTMProjectLibrary> libs = new ArrayList<SDTMProjectLibrary>();
+			if (!CollectionUtils.isEmpty(libraryList)) {
+				for (Map<String, String> library : libraryList) {
+					String libName = library.get("name");
+					String libPath = library.get("path");
+					SDTMProjectLibrary lib = new SDTMProjectLibrary();
+					lib.setCreator("admin");
+					lib.setUpdatedBy("admin");
+					lib.setName(libName);
+					lib.setPath(libPath);
+					lib.setSdtmProject(project);
+					libs.add(lib);
+				}
+			}
+			// create all domain xrefs
+			this.sdtmProjectLibraryRepository.save(libs);
+
+			// create all domain xrefs
+			this.sdtmProjectDomainXrefRepository.save(domainXrefs);
+
 			OperationResponse or = new OperationResponse();
 			OperationResult result = new OperationResult();
 			result.setSuccess(true);
@@ -207,7 +315,6 @@ public class SDTMController {
 			or.setResult(result);
 			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
 		}
-		project.setUpdatedBy("admin");
 		if (StringUtils.isEmpty(name)) {
 			OperationResponse or = new OperationResponse();
 			OperationResult result = new OperationResult();
@@ -219,6 +326,7 @@ public class SDTMController {
 
 		project.setName(name);
 		project.setDescription(desc);
+		project.setUpdatedBy("admin");
 		project.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
 		try {
 			this.sdtmProjectRepository.save(project);
@@ -239,51 +347,46 @@ public class SDTMController {
 	}
 
 	@RequestMapping(value = "/sdtm/v1/project/{id}/variable", method = RequestMethod.GET)
-	public List<SDTMProjectVariableRef> listProjectVariables(@PathVariable("id") Long id) {
-		List<SDTMProjectVariableRef> refs = new ArrayList<SDTMProjectVariableRef>(0);
+	public List<SDTMProjectVariableXref> listProjectVariables(@PathVariable("id") Long id) {
+		List<SDTMProjectVariableXref> refs = new ArrayList<SDTMProjectVariableXref>(0);
 
-		SDTMProject project = this.sdtmProjectRepository.findOne(id);
-		if (project != null) {
-			List<SDTMDomain> sdtmDomains = project.getSdtmDomains();
-			if (!CollectionUtils.isEmpty(sdtmDomains)) {
-				for (SDTMDomain domain : sdtmDomains) {
-					List<SDTMVariableRef> varRefs = this.sdtmVariableRefRepository.findByDomainId(domain.getId());
-					for (SDTMVariableRef varRef : varRefs) {
-						SDTMProjectVariableRef ref = new SDTMProjectVariableRef();
-						ref.setCore(StringUtils.isEmpty(varRef.getCore()) ? "Perm" : varRef.getCore());
-						ref.setOrderNumber(varRef.getOrderNumber());
-						ref.setRole(varRef.getRole());
-						ref.setSdtmVariable(varRef.getSdtmVariable());
-						ref.setSdtmDomain(domain);
-						refs.add(ref);
-					}
+		List<SDTMDomain> domains = this.sdtmProjectDomainXrefRepository.findDomainByProjectId(id);
+		if (!CollectionUtils.isEmpty(domains)) {
+			for (SDTMDomain domain : domains) {
+				List<SDTMVariableRef> varRefs = this.sdtmVariableRefRepository.findByDomainId(domain.getId());
+				for (SDTMVariableRef varRef : varRefs) {
+					SDTMProjectVariableXref ref = new SDTMProjectVariableXref();
+					ref.setCore(StringUtils.isEmpty(varRef.getCore()) ? "Perm" : varRef.getCore());
+					ref.setOrderNumber(varRef.getOrderNumber());
+					ref.setRole(varRef.getRole());
+					ref.setSdtmVariable(varRef.getSdtmVariable());
+					ref.setSdtmDomain(domain);
+					refs.add(ref);
 				}
 			}
 		}
+
 		return refs;
 	}
 
 	@RequestMapping(value = "/sdtm/v1/project/{id}/domain/{domainId}/variable", method = RequestMethod.GET)
-	public List<SDTMProjectVariableRef> listProjectDomainVariables(@PathVariable("id") Long id, @PathVariable("domainId") Long domainId) {
-		List<SDTMProjectVariableRef> refs = new ArrayList<SDTMProjectVariableRef>(0);
-		SDTMProject project = this.sdtmProjectRepository.findOne(id);
-		if (project != null) {
-			List<SDTMDomain> sdtmDomains = project.getSdtmDomains();
-			if (!CollectionUtils.isEmpty(sdtmDomains)) {
-				for (SDTMDomain domain : sdtmDomains) {
-					if (domain.getId().equals(domainId)) {
-						List<SDTMVariable> prjVars = this.sdtmProjectVariableRefRepository.findVariableByProjectId(id);
-						List<SDTMVariableRef> varRefs = this.sdtmVariableRefRepository.findByDomainId(domain.getId());
-						for (SDTMVariableRef varRef : varRefs) {
-							if (!prjVars.contains(varRef.getSdtmVariable())) {
-								SDTMProjectVariableRef ref = new SDTMProjectVariableRef();
-								ref.setCore(StringUtils.isEmpty(varRef.getCore()) ? "Perm" : varRef.getCore());
-								ref.setOrderNumber(varRef.getOrderNumber());
-								ref.setRole(varRef.getRole());
-								ref.setSdtmVariable(varRef.getSdtmVariable());
-								ref.setSdtmDomain(domain);
-								refs.add(ref);
-							}
+	public List<SDTMProjectVariableXref> listProjectDomainVariables(@PathVariable("id") Long id, @PathVariable("domainId") Long domainId) {
+		List<SDTMProjectVariableXref> refs = new ArrayList<SDTMProjectVariableXref>(0);
+		List<SDTMDomain> domains = this.sdtmProjectDomainXrefRepository.findDomainByProjectId(id);
+		if (!CollectionUtils.isEmpty(domains)) {
+			for (SDTMDomain domain : domains) {
+				if (domain.getId().equals(domainId)) {
+					List<SDTMVariable> prjVars = this.sdtmProjectVariableXrefRepository.findVariableByProjectId(id);
+					List<SDTMVariableRef> varRefs = this.sdtmVariableRefRepository.findByDomainId(domain.getId());
+					for (SDTMVariableRef varRef : varRefs) {
+						if (!prjVars.contains(varRef.getSdtmVariable())) {
+							SDTMProjectVariableXref ref = new SDTMProjectVariableXref();
+							ref.setCore(StringUtils.isEmpty(varRef.getCore()) ? "Perm" : varRef.getCore());
+							ref.setOrderNumber(varRef.getOrderNumber());
+							ref.setRole(varRef.getRole());
+							ref.setSdtmVariable(varRef.getSdtmVariable());
+							ref.setSdtmDomain(domain);
+							refs.add(ref);
 						}
 					}
 				}
@@ -293,30 +396,28 @@ public class SDTMController {
 	}
 
 	@RequestMapping(value = "/sdtm/v1/project/{id}/domain/{domainId}/allVariable", method = RequestMethod.GET)
-	public List<SDTMProjectVariableRef> listAllProjectDomainVariables(@PathVariable("id") Long id, @PathVariable("domainId") Long domainId) {
-		List<SDTMProjectVariableRef> refs = new ArrayList<SDTMProjectVariableRef>(0);
-		SDTMProject project = this.sdtmProjectRepository.findOne(id);
-		if (project != null) {
-			List<SDTMDomain> sdtmDomains = project.getSdtmDomains();
-			if (!CollectionUtils.isEmpty(sdtmDomains)) {
-				for (SDTMDomain domain : sdtmDomains) {
-					if (domain.getId().equals(domainId)) {
-						List<SDTMVariable> prjVars = this.sdtmProjectVariableRefRepository.findVariableByProjectId(id);
-						List<SDTMVariableRef> varRefs = this.sdtmVariableRefRepository.findByDomainId(domain.getId());
-						for (SDTMVariableRef varRef : varRefs) {
-							SDTMProjectVariableRef ref = new SDTMProjectVariableRef();
-							ref.setCore(StringUtils.isEmpty(varRef.getCore()) ? "Perm" : varRef.getCore());
-							ref.setOrderNumber(varRef.getOrderNumber());
-							ref.setRole(varRef.getRole());
-							ref.setSdtmVariable(varRef.getSdtmVariable());
-							ref.setSdtmDomain(domain);
-							if (prjVars.contains(varRef.getSdtmVariable())) {
-								ref.setExcluded(true);
-							}
-							refs.add(ref);
+	public List<SDTMProjectVariableXref> listAllProjectDomainVariables(@PathVariable("id") Long id, @PathVariable("domainId") Long domainId) {
+		List<SDTMProjectVariableXref> refs = new ArrayList<SDTMProjectVariableXref>(0);
+		List<SDTMDomain> domains = this.sdtmProjectDomainXrefRepository.findDomainByProjectId(id);
+		if (!CollectionUtils.isEmpty(domains)) {
+			for (SDTMDomain domain : domains) {
+				if (domain.getId().equals(domainId)) {
+					List<SDTMVariable> prjVars = this.sdtmProjectVariableXrefRepository.findVariableByProjectId(id);
+					List<SDTMVariableRef> varRefs = this.sdtmVariableRefRepository.findByDomainId(domain.getId());
+					for (SDTMVariableRef varRef : varRefs) {
+						SDTMProjectVariableXref ref = new SDTMProjectVariableXref();
+						ref.setCore(StringUtils.isEmpty(varRef.getCore()) ? "Perm" : varRef.getCore());
+						ref.setOrderNumber(varRef.getOrderNumber());
+						ref.setRole(varRef.getRole());
+						ref.setSdtmVariable(varRef.getSdtmVariable());
+						ref.setSdtmDomain(domain);
+						if (prjVars.contains(varRef.getSdtmVariable())) {
+							ref.setExcluded(true);
 						}
+						refs.add(ref);
 					}
 				}
+
 			}
 		}
 		return refs;
@@ -327,18 +428,18 @@ public class SDTMController {
 		SDTMProject project = this.sdtmProjectRepository.findOne(id);
 		if (project != null) {
 			List<SDTMDomain> domainList = this.sdtmDomainRepository.findByVersionId(project.getSdtmVersion().getId());
-			List<SDTMDomain> sdtmDomains = project.getSdtmDomains();
-			if (!CollectionUtils.isEmpty(sdtmDomains)) {
+			List<SDTMDomain> domains = this.sdtmProjectDomainXrefRepository.findDomainByProjectId(id);
+			if (!CollectionUtils.isEmpty(domains)) {
 				Iterator<SDTMDomain> it = domainList.iterator();
 				while (it.hasNext()) {
 					SDTMDomain domain = it.next();
-					if (sdtmDomains.contains(domain)) {
+					if (domains.contains(domain)) {
 						it.remove();
 					}
 				}
-				for (SDTMDomain sdtmDomain : sdtmDomains) {
-					sdtmDomain.setAdded(true);
-					domainList.add(sdtmDomain);
+				for (SDTMDomain domain : domains) {
+					domain.setAdded(true);
+					domainList.add(domain);
 				}
 			}
 			return domainList;
@@ -348,11 +449,7 @@ public class SDTMController {
 
 	@RequestMapping(value = "/sdtm/v1/project/{id}/domain", method = RequestMethod.GET)
 	public List<SDTMDomain> listProjectDomains(@PathVariable("id") Long id) {
-		SDTMProject project = this.sdtmProjectRepository.findOne(id);
-		if (project != null) {
-			return project.getSdtmDomains();
-		}
-		return new ArrayList<SDTMDomain>(0);
+		return this.sdtmProjectDomainXrefRepository.findDomainByProjectId(id);
 	}
 
 	@RequestMapping(value = "/sdtm/v1/project/{projectId}/domain/{domainId}", method = RequestMethod.DELETE)
@@ -377,13 +474,13 @@ public class SDTMController {
 			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
 		}
 
-		List<SDTMDomain> sdtmDomains = project.getSdtmDomains();
+		SDTMProjectDomainXref domainXref = sdtmProjectDomainXrefRepository.findByProjectIdAndDomainId(projectId, domainId);
 
-		if (sdtmDomains != null) {
-			boolean result = sdtmDomains.remove(domain);
-			if (result) {
-				return updateProject(project);
-			}
+		if (domainXref != null) {
+			domainXref.setStatus(ObjectStatus.deleted);
+			domainXref.setUpdatedBy("admin");
+			domainXref.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+			return this.updateProjectDomainXref(domainXref);
 		}
 		OperationResponse or = new OperationResponse();
 		OperationResult result = new OperationResult();
@@ -424,30 +521,45 @@ public class SDTMController {
 			}
 		}
 
-		List<SDTMDomain> sdtmDomains = project.getSdtmDomains();
+		SDTMProjectDomainXref domainXref = sdtmProjectDomainXrefRepository.findByProjectIdAndDomainId(projectId, domainId);
 
-		if (sdtmDomains == null) {
-			sdtmDomains = new ArrayList<SDTMDomain>();
-			project.setSdtmDomains(sdtmDomains);
-			sdtmDomains.add(domain);
-		} else {
-			if (!sdtmDomains.contains(domain)) {
-				sdtmDomains.add(domain);
-			} else {
-				OperationResponse or = new OperationResponse();
-				OperationResult result = new OperationResult();
-				result.setSuccess(true);
-				or.setResult(result);
-				return new ResponseEntity<OperationResponse>(or, HttpStatus.OK);
+		if (domainXref != null) {
+			if (!domainXref.getStatus().equals(ObjectStatus.active)) {
+				domainXref.setStatus(ObjectStatus.active);
+				domainXref.setUpdatedBy("admin");
+				domainXref.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+				return this.updateProjectDomainXref(domainXref);
 			}
 		}
-
-		return updateProject(project);
+		OperationResponse or = new OperationResponse();
+		OperationResult result = new OperationResult();
+		result.setSuccess(true);
+		or.setResult(result);
+		return new ResponseEntity<OperationResponse>(or, HttpStatus.OK);
 	}
 
-	private ResponseEntity<OperationResponse> updateProject(SDTMProject project) {
+	@RequestMapping(value = "/sdtm/v1/project/{projectId}/variable/{variableId}", method = RequestMethod.DELETE)
+	public ResponseEntity<OperationResponse> removeVariableFromProject(@PathVariable("projectId") Long projectId, @PathVariable("variableId") Long variableId) {
+		SDTMProjectVariableXref prjVarRef = sdtmProjectVariableXrefRepository.findByProjectIdAndVariableId(projectId, variableId);
+		if (prjVarRef != null) {
+			if (!prjVarRef.getStatus().equals(ObjectStatus.deleted)) {
+				prjVarRef.setStatus(ObjectStatus.deleted);
+				prjVarRef.setUpdatedBy("admin");
+				prjVarRef.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+				return this.updateProjectVariableXref(prjVarRef);
+			}
+		}
+		OperationResponse or = new OperationResponse();
+		OperationResult result = new OperationResult();
+		result.setSuccess(true);
+		or.setResult(result);
+		return new ResponseEntity<OperationResponse>(or, HttpStatus.OK);
+
+	}
+
+	private ResponseEntity<OperationResponse> updateProjectDomainXref(SDTMProjectDomainXref domainXref) {
 		try {
-			this.sdtmProjectRepository.save(project);
+			this.sdtmProjectDomainXrefRepository.save(domainXref);
 			OperationResponse or = new OperationResponse();
 			OperationResult result = new OperationResult();
 			result.setSuccess(true);
@@ -464,28 +576,9 @@ public class SDTMController {
 		}
 	}
 
-	@RequestMapping(value = "/sdtm/v1/project/{projectId}/variable/{variableId}", method = RequestMethod.DELETE)
-	public ResponseEntity<OperationResponse> removeVariableFromProject(@PathVariable("projectId") Long projectId, @PathVariable("variableId") Long variableId) {
-		SDTMProjectVariableRef prjVarRef = sdtmProjectVariableRefRepository.findByProjectIdAndVariableId(projectId, variableId);
-		if (prjVarRef != null) {
-			if (!prjVarRef.getStatus().equals(ObjectStatus.deleted)) {
-				prjVarRef.setStatus(ObjectStatus.deleted);
-				prjVarRef.setUpdatedBy("admin");
-				prjVarRef.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
-				return this.updateProjectVariableRef(prjVarRef);
-			}
-		}
-		OperationResponse or = new OperationResponse();
-		OperationResult result = new OperationResult();
-		result.setSuccess(true);
-		or.setResult(result);
-		return new ResponseEntity<OperationResponse>(or, HttpStatus.OK);
-
-	}
-
-	private ResponseEntity<OperationResponse> updateProjectVariableRef(SDTMProjectVariableRef prjVarRef) {
+	private ResponseEntity<OperationResponse> updateProjectVariableXref(SDTMProjectVariableXref prjVarRef) {
 		try {
-			sdtmProjectVariableRefRepository.save(prjVarRef);
+			sdtmProjectVariableXrefRepository.save(prjVarRef);
 			OperationResponse or = new OperationResponse();
 			OperationResult result = new OperationResult();
 			result.setSuccess(true);
@@ -532,21 +625,21 @@ public class SDTMController {
 			}
 		}
 
-		SDTMProjectVariableRef prjVarRef = sdtmProjectVariableRefRepository.findByProjectIdAndVariableId(projectId, variableId);
+		SDTMProjectVariableXref prjVarRef = sdtmProjectVariableXrefRepository.findByProjectIdAndVariableId(projectId, variableId);
 		if (prjVarRef != null) {
 			prjVarRef.setStatus(ObjectStatus.active);
 			prjVarRef.setUpdatedBy("admin");
 			prjVarRef.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
-			return this.updateProjectVariableRef(prjVarRef);
+			return this.updateProjectVariableXref(prjVarRef);
 		} else {
-			prjVarRef = new SDTMProjectVariableRef();
+			prjVarRef = new SDTMProjectVariableXref();
 			prjVarRef.setCreator("admin");
 			prjVarRef.setUpdatedBy("admin");
 			prjVarRef.setSdtmProject(project);
 			prjVarRef.setSdtmVariable(var);
 			prjVarRef.setCore("");
 			prjVarRef.setOrderNumber(-1);
-			return this.updateProjectVariableRef(prjVarRef);
+			return this.updateProjectVariableXref(prjVarRef);
 		}
 	}
 

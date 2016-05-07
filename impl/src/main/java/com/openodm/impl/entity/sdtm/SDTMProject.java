@@ -1,7 +1,5 @@
 package com.openodm.impl.entity.sdtm;
 
-import java.util.List;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -9,8 +7,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
@@ -46,11 +42,6 @@ public class SDTMProject extends PersistentObject {
 	@JsonIgnore
 	private SDTMVersion sdtmVersion;
 
-	@ManyToMany(targetEntity = SDTMDomain.class)
-	@JoinTable(name = "SDTM_PROJECT_DOMAIN_XREF", joinColumns = { @JoinColumn(name = "SDTM_PROJECT_ID") }, inverseJoinColumns = { @JoinColumn(name = "SDTM_DOMAIN_ID") })
-	@JsonIgnore
-	private List<SDTMDomain> sdtmDomains;
-
 	public String getName() {
 		return name;
 	}
@@ -77,14 +68,6 @@ public class SDTMProject extends PersistentObject {
 
 	public Long getId() {
 		return id;
-	}
-
-	public List<SDTMDomain> getSdtmDomains() {
-		return sdtmDomains;
-	}
-
-	public void setSdtmDomains(List<SDTMDomain> sdtmDomains) {
-		this.sdtmDomains = sdtmDomains;
 	}
 
 }

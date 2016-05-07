@@ -326,10 +326,27 @@
 					Description: <textarea ng-model="tempProject.tempModel.description"></textarea><br/>
 					SDTM Version: <select ng-options="version.description for version in modalVersions" ng-model="selectedModalVersion" ng-required="true" ng-change="getAvailableCTs(selectedModalVersion.id)"></select><br/>
 					Control Terminology: <select ng-options="ct.name for ct in modalCts" ng-model="selectedModalCt" ng-required="true"></select>
+					<table class="table mb0 table-files">
+						<thead>
+							<tr>
+								<th></th>
+								<th>Name</th>
+								<th>Path</th>
+							</tr>
+							<tr
+								ng-repeat="item in tempProject.tempModel.libraryList"
+								ng-show="!modalRequesting">
+								<td class="hidden-xs"><a href="" ng-click="remove(tempProject.tempModel.libraryList, item)"><b>-</b></a></td>
+								<td class="hidden-xs"><input type="text" ng-model="item.name" autofocus="autofocus" ng-required="true"/></td>
+								<td class="hidden-xs"><input type="text" ng-model="item.path" ng-required="true"/></td>
+							</tr>
+						</thead>
+					</table>
 					<div ng-include data-src="'error-bar'" class="clearfix"></div>
 				</div>
 				<div class="modal-footer">
 					<div ng-show="!modalRequesting">
+						<button type="button" class="btn btn-default" ng-click="addNewLibraray(tempProject.tempModel.libraryList)">Add Library</button>
 						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 						<button type="submit" class="btn btn-primary">Confirm</button>
 					</div>

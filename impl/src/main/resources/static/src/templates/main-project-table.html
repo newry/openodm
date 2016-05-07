@@ -1,11 +1,6 @@
 <table class="table mb0 table-files">
     <thead>
         <tr>
-             <th>
-                <a href="" ng-click="order('model.sdtmDomain.name')">
-					Domain Name
-                </a>
-            </th>
             <th>
                 <a href="" ng-click="order('model.sdtmVariable.name')">
 					Name
@@ -41,9 +36,6 @@
             </td>
         </tr>
         <tr ng-repeat="item in varList" ng-show="!requesting">
-            <td>
-	           {{item.model.sdtmDomain.name}}
-            </td>
             <td>
 	            <div>{{item.model.sdtmVariable.name}}
 	            </div>

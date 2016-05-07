@@ -419,7 +419,8 @@
 	    	}
 	    };
         $scope.newProject = function() {
-            $scope.tempProject = new Item();
+            $scope.tempProject = new Item({});
+            $scope.tempProject.tempModel.libraryList=[];
             $scope.temp.error = '';
 	        var deferred = $q.defer();
 	    	$http.get("/sdtm/v1/version").success(function(data) {
@@ -445,6 +446,8 @@
 	        	name:$scope.tempProject.tempModel.name,
 	        	description:$scope.tempProject.tempModel.description
 	         };
+	         data.libraryList = $scope.tempProject.tempModel.libraryList;
+	         //console.log(data);
 		     $http.post("/sdtm/v1/project", data).success(function(data) {
 	             deferredHandler(data, deferred);
 	             $scope.getAllProjects();
@@ -642,6 +645,11 @@
 	    	})
 
 	    };
+
+        $scope.addNewLibraray = function(list){
+        	var newItem = {"new":true};
+        	list.push(newItem);
+        }
 
     }]);
 })(window, angular, jQuery);
