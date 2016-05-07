@@ -434,12 +434,14 @@
 		    		return file;
 	            });
 	    	})
+	    	$scope.modalCts=[];
         };
-	    $scope.createProject = function(selectedModalVersion) {
+	    $scope.createProject = function(selectedModalVersion, selectedModalCt) {
         	$scope.modalRequesting = true;
 		     var deferred = $q.defer();
 	         var data = {
 	        	versionId:selectedModalVersion.id,
+	        	ctId:selectedModalCt.id,
 	        	name:$scope.tempProject.tempModel.name,
 	        	description:$scope.tempProject.tempModel.description
 	         };
@@ -621,6 +623,24 @@
 	            $scope.getAllProjectDomainVariables(prj, domain);
 	            $scope.getProjectDomainVariables(prj, domain);
 	        });
+	    };
+	    
+	    $scope.getAvailableCTs = function(versionId) {
+            $scope.modalRequesting = true;
+		    var deferred = $q.defer();
+		    $http.get("/sdtm/v1/version/"+versionId+"/ct").success(function(data) {
+	            deferredHandler(data, deferred);
+	        }).error(function(data, status) {
+	            deferredHandler(data, deferred, 'Error during get projects');
+	        })['finally'](function() {
+	        	$scope.modalRequesting = false;
+	        });
+	    	deferred.promise.then(function(data){
+		    	$scope.modalCts = (data || []).map(function(file) {
+		    		return file;
+	            });
+	    	})
+
 	    };
 
     }]);

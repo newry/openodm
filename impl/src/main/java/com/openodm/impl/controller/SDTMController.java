@@ -2,9 +2,11 @@ package com.openodm.impl.controller;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 
 import org.apache.commons.lang3.StringUtils;
@@ -27,6 +29,7 @@ import com.openodm.impl.controller.response.OperationResponse;
 import com.openodm.impl.controller.response.OperationResult;
 import com.openodm.impl.entity.ObjectStatus;
 import com.openodm.impl.entity.ct.CodeList;
+import com.openodm.impl.entity.ct.ControlTerminology;
 import com.openodm.impl.entity.ct.EnumeratedItem;
 import com.openodm.impl.entity.sdtm.SDTMDomain;
 import com.openodm.impl.entity.sdtm.SDTMProject;
@@ -71,7 +74,25 @@ public class SDTMController {
 
 	@RequestMapping(value = "/sdtm/v1/version", method = RequestMethod.GET)
 	public List<SDTMVersion> getSDTMVersions() throws Exception {
-		return sdtmVersionRepository.findAll();
+		List<SDTMVersion> versions = sdtmVersionRepository.findAll();
+		Set<String> set = new HashSet<String>();
+		List<SDTMVersion> result = new ArrayList<SDTMVersion>();
+		for (SDTMVersion version : versions) {
+			if (set.add(version.getOid())) {
+				result.add(version);
+			}
+		}
+		return result;
+	}
+
+	@RequestMapping(value = "/sdtm/v1/version/{versionId}/ct", method = RequestMethod.GET)
+	public List<ControlTerminology> getCTsByVersionId(@PathVariable("versionId") Long versionId) throws Exception {
+		SDTMVersion sdtmVersion = sdtmVersionRepository.findOne(versionId);
+		if (sdtmVersion != null) {
+			List<ControlTerminology> versions = sdtmVersionRepository.findCTByOid(sdtmVersion.getOid());
+			return versions;
+		}
+		return new ArrayList<ControlTerminology>();
 	}
 
 	@RequestMapping(value = "/sdtm/v1/version/{versionId}", method = RequestMethod.GET)
@@ -500,7 +521,7 @@ public class SDTMController {
 			result.setError("Invalid variable id!");
 			or.setResult(result);
 			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
-		}else{
+		} else {
 			if (!var.getSdtmDomain().getSdtmVersion().getId().equals(project.getSdtmVersion().getId())) {
 				OperationResponse or = new OperationResponse();
 				OperationResult result = new OperationResult();

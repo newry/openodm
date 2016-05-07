@@ -204,7 +204,7 @@ public class SDTMBO {
 			Node item = nodes.item(i);
 			NamedNodeMap attributes = item.getAttributes();
 			String oid = attributes.getNamedItem("OID").getNodeValue();
-			List<SDTMVersion> versions = sdtmVersionRepository.findByOid(oid);
+			List<SDTMVersion> versions = sdtmVersionRepository.findByOidAndCtId(oid, ctId);
 			SDTMVersion version;
 			if (CollectionUtils.isEmpty(versions)) {
 				version = new SDTMVersion();

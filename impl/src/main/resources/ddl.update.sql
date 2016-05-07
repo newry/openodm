@@ -147,7 +147,7 @@
     );
     
     alter table SDTM_VERSION 
-        add constraint UK_td8agsah4xwrpu8iew4n5n7q4 unique (oid);
+        add constraint UK_td8agsah4xwrpu8iew4n5n7q4 unique (oid, control_terminology_id);
         
     alter table SDTM_VERSION 
         add constraint FK_ggx4a78pbuwi7sqxu3ye9qu8q 
@@ -175,7 +175,7 @@
     );
   
       alter table SDTM_DOMAIN 
-        add constraint UK_qvx6n707wfx7tef4fdf1wsc1m unique (oid);
+        add constraint UK_qvx6n707wfx7tef4fdf1wsc1m unique (oid,SDTM_VERSION_ID);
  
      alter table SDTM_DOMAIN 
         add constraint FK_232fv17351d4xwgwka66jmmjv 

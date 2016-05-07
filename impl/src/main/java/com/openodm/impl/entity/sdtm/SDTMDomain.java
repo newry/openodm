@@ -38,7 +38,7 @@ public class SDTMDomain extends PersistentObject {
 	@Column(name = "name", nullable = false, length = 255)
 	private String name;
 
-	@Column(name = "oid", nullable = false, length = 255, unique = true)
+	@Column(name = "oid", nullable = false, length = 255)
 	private String oid;
 
 	@Column(name = "description", nullable = true, length = 4096)

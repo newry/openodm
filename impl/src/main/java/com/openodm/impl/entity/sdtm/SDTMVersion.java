@@ -31,7 +31,7 @@ public class SDTMVersion extends PersistentObject {
 	@Column(name = "ID", unique = true, nullable = false, precision = 22)
 	private Long id;
 
-	@Column(name = "oid", nullable = false, length = 255, unique = true)
+	@Column(name = "oid", nullable = false, length = 255)
 	private String oid;
 
 	@Column(name = "name", nullable = false, length = 255)
