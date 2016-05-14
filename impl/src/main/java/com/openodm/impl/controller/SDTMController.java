@@ -148,6 +148,7 @@ public class SDTMController {
 		return this.sdtmProjectRepository.findAll();
 	}
 
+	@SuppressWarnings("unchecked")
 	@RequestMapping(value = "/sdtm/v1/project", method = RequestMethod.POST)
 	public ResponseEntity<OperationResponse> createProject(@RequestBody Map<String, Object> request) {
 		String name = StringUtils.trim((String) request.get("name"));
@@ -448,8 +449,8 @@ public class SDTMController {
 	}
 
 	@RequestMapping(value = "/sdtm/v1/project/{id}/domain", method = RequestMethod.GET)
-	public List<SDTMDomain> listProjectDomains(@PathVariable("id") Long id) {
-		return this.sdtmProjectDomainXrefRepository.findDomainByProjectId(id);
+	public List<SDTMProjectDomainXref> listProjectDomains(@PathVariable("id") Long id) {
+		return this.sdtmProjectDomainXrefRepository.findByProjectId(id);
 	}
 
 	@RequestMapping(value = "/sdtm/v1/project/{projectId}/domain/{domainId}", method = RequestMethod.DELETE)

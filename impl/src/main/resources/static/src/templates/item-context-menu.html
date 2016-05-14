@@ -1,7 +1,7 @@
 <div id="context-menu" class="dropdown clearfix animated fast fadeIn">
     <ul class="dropdown-menu dropdown-right-click" role="menu" aria-labelledby="dropdownMenu" style="">
         <li>
-            <a href="" tabindex="-1" ng-click="click(temp)" ng-show="!tempProject.tempModel && !tempDomain.tempModel">
+            <a href="" tabindex="-1" ng-click="click(temp)" ng-show="!tempProject.tempModel">
                 <i class="glyphicon glyphicon-folder-open"></i>Open
             </a>
         </li>
@@ -16,8 +16,8 @@
             </a>
         </li>
         <li>
-            <a href="" tabindex="-1" data-toggle="modal" data-target="#editProjectDomainVariables" ng-click="getAllProjectDomainVariables(tempProject.tempModel, tempDomain.tempModel)" ng-show="tempProject.tempModel && tempDomain.tempModel">
-                <i class="glyphicon glyphicon-folder-open"></i>Edit Domain Variables
+            <a href="" tabindex="-1" data-toggle="modal" data-target="#editProjectDomainVariables" ng-click="getAllProjectDomainVariables(tempProject.tempModel, temp.model.sdtmDomain)" ng-show="tempProject.tempModel">
+                <i class="glyphicon glyphicon-folder-open"></i>Edit Domain Key Variables
             </a>
         </li>
     </ul>

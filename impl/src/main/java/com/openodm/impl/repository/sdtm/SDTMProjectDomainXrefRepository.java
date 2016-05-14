@@ -13,7 +13,7 @@ public interface SDTMProjectDomainXrefRepository extends CrudRepository<SDTMProj
 	@Query("SELECT d FROM SDTMProjectDomainXref d WHERE d.sdtmProject.id=:projectId and d.status='active'")
 	public List<SDTMProjectDomainXref> findByProjectId(@Param("projectId") Long projectId);
 
-	@Query("SELECT d.sdtmDomain FROM SDTMProjectDomainXref d WHERE d.sdtmProject.id=:projectId and d.status='active'")
+	@Query("SELECT d.sdtmDomain FROM SDTMProjectDomainXref d WHERE d.sdtmProject.id=:projectId order by d.orderNumber")
 	public List<SDTMDomain> findDomainByProjectId(@Param("projectId") Long projectId);
 
 	@Query("SELECT d FROM SDTMProjectDomainXref d WHERE d.sdtmProject.id=:projectId and d.sdtmDomain.id=:domainId")

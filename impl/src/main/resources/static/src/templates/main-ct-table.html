@@ -40,7 +40,7 @@
                 <div ng-include="config.tplPath + '/spinner.html'"></div>
             </td>
         </tr>
-        <tr ng-repeat="item in itemList | filter: {model:{name: query}} | orderBy:model.customized:reverse" ng-show="!requesting">
+        <tr ng-repeat="item in itemList | filter: {model:{name: query}} | orderBy:predicate:reverse" ng-show="!requesting">
             <td ng-right-click="touch(item)">
                 <a href="" ng-click="click(item)" title="{{item.model.name}}" ng-mouseover="item.hoverIn()" ng-mouseleave="item.hoverOut()">
                     {{item.model.name | strLimit : 32}}

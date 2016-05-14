@@ -422,6 +422,7 @@
             $scope.tempProject = new Item({});
             $scope.tempProject.tempModel.libraryList=[];
             $scope.temp.error = '';
+            $scope.tempCT=new Item({});;
 	        var deferred = $q.defer();
 	    	$http.get("/sdtm/v1/version").success(function(data) {
                 deferredHandler(data, deferred);
@@ -559,6 +560,8 @@
 	        $scope.varList =[];
             $scope.requesting = true;
 	    	$scope.tempProject.tempModel = prj;
+            $scope.tempCT=new Item({});
+            
 		    var deferred = $q.defer();
 		    $http.get("/sdtm/v1/project/"+prj.id+"/domain").success(function(data) {
 	            deferredHandler(data, deferred);
