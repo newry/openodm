@@ -19,6 +19,7 @@
         $scope.requesting = false;
         $scope.modalRequesting = false;
         $scope.modalMDVlist = [];
+		$scope.domainTabs =[];
         $scope.modalVersions = [];
         $scope.temp = new Item();
         $scope.tempCT = new Item();
@@ -352,9 +353,10 @@
             $scope.temp.error = '';
 	    }
 
-        $scope.touch = function(item) {
+        $scope.touch = function(item, type) {
             item = item instanceof Item ? item : new Item();
             item.revert();
+            item.type = type;
             $scope.temp = item;
         };
 
@@ -381,8 +383,28 @@
         		}
         	}
         }
-        $scope.click = function(item) {
-        	if(!$scope.tempCT.tempModel){
+        $scope.click = function(item, type) {
+        	if(item.type==='domain' || type==='domain'){
+        		var existed = false;
+        		var index;
+        		for(var i=0;i<$scope.domainTabs.length;i++){
+        			var domainTab = $scope.domainTabs[i];
+        			if(domainTab.title===item.tempModel.sdtmDomain.name){
+        				existed = true;
+        				domainTab.active=true
+        				index = i;
+        				break;
+        			}
+        			
+        		}
+        		if(!existed){
+        			$scope.domainTabs.push({'title': item.tempModel.sdtmDomain.name, 'active':true});
+        			index = $scope.domainTabs.length-1;
+        		}
+        		if(!$scope.tempProject.tempModel.domains){
+        			$scope.tempProject.tempModel.domains = [];
+        		}
+        		$scope.tempProject.tempModel.domains[index] = item;
 	            return false;
         	}else{
 	            item.getEnumerateItemList($scope.tempCT.tempModel);
@@ -448,7 +470,7 @@
 	        	description:$scope.tempProject.tempModel.description
 	         };
 	         data.libraryList = $scope.tempProject.tempModel.libraryList;
-	         //console.log(data);
+	         // console.log(data);
 		     $http.post("/sdtm/v1/project", data).success(function(data) {
 	             deferredHandler(data, deferred);
 	             $scope.getAllProjects();
@@ -653,6 +675,24 @@
         	var newItem = {"new":true};
         	list.push(newItem);
         }
+
+        $scope.pages = [
+                        {
+                          id: 1,
+                          title: 'Tab 1',
+                          content: '<h4>Page 1</h4><p>Lorem ipsum dolor sit amet enim. Etiam ullamcorper. Suspendisse a pellentesque dui, non felis. Maecenas malesuada elit lectus felis, malesuada ultricies.</p>'
+                        },
+                        {
+                          id: 2,
+                          title: 'Tab 2',
+                          content: '<h4>Page 2</h4><p>Curabitur et ligula. Ut molestie a, ultricies porta urna. Vestibulum commodo volutpat a, convallis ac, laoreet enim. Phasellus fermentum in, dolor.</p>'
+                        },
+                        {
+                          id: 3,
+                          title: 'Tab 3',
+                          content: '<h4>Page 3</h4><p>Pellentesque facilisis. Nulla imperdiet sit amet magna. Vestibulum dapibus, mauris nec malesuada fames ac turpis velit, rhoncus eu, luctus et interdum adipiscing wisi.</p>'
+                        }
+                      ];
 
     }]);
 })(window, angular, jQuery);

@@ -1,0 +1,36 @@
+<table class="table mb0 table-files">
+	<thead>
+		<tr>
+			<th><a href="" ng-click="order('model.orderNumber')"> Order
+			</a> <span class="sortorder" ng-show="predicate[1] === 'model.orderNumber'"
+				ng-class="{reverse:reverse}"></span></th>
+			<th>Active</th>
+			<th>Dataset</th>
+			<th>Label</th>
+			<th>Class</th>
+			<th>Structure</th>
+			<th>Purpose</th>
+		</tr>
+	</thead>
+	<tbody class="file-item">
+		<tr ng-show="requesting">
+			<td colspan="7">
+				<div ng-include="config.tplPath + '/spinner.html'"></div>
+			</td>
+		</tr>
+		<tr ng-repeat="item in tempProject.tempModel.domainList | orderBy:predicate:reverse"
+			ng-show="!requesting">
+			<td ng-right-click="touch(item, 'domain')">
+			<a href="" ng-click="click(item, 'domain')" >
+				{{item.model.orderNumber}}
+			</a>
+			</td>
+			<td>{{item.model.status=='active'?'Y':'N'}}</td>
+			<td>{{item.model.sdtmDomain.domain}}</td>
+			<td>{{item.model.sdtmDomain.description}}</td>
+			<td>{{item.model.sdtmDomain.defClass}}</td>
+			<td>{{item.model.sdtmDomain.structure}}</td>
+			<td>{{item.model.sdtmDomain.purpose}}</td>
+		</tr>
+	</tbody>
+</table>
