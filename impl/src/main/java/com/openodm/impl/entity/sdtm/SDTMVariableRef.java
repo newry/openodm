@@ -42,6 +42,9 @@ public class SDTMVariableRef extends PersistentObject {
 	@Column(name = "role", nullable = true, length = 255)
 	private String role;
 
+	@Column(name = "type")
+	private int type;
+
 	@ManyToOne(targetEntity = SDTMDomain.class, optional = false, fetch = FetchType.LAZY)
 	@JoinColumn(name = "SDTM_DOMAIN_ID", nullable = false)
 	@JsonIgnore
@@ -126,6 +129,14 @@ public class SDTMVariableRef extends PersistentObject {
 		} else if (!id.equals(other.id))
 			return false;
 		return true;
+	}
+
+	public int getType() {
+		return type;
+	}
+
+	public void setType(int type) {
+		this.type = type;
 	}
 
 }

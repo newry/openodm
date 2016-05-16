@@ -214,15 +214,15 @@
         DATE_LAST_MODIFIED timestamp not null,
         STATUS varchar(32) not null,
         UPDATED_BY varchar(255) not null,
-        mandatory varchar(32) not null,
         core varchar(32),
+        mandatory varchar(32) not null,
         order_number int4 not null,
         role varchar(255),
+        type int4 not null default 0,
         SDTM_DOMAIN_ID int8 not null,
         SDTM_VARIABLE_ID int8 not null,
         primary key (ID)
     );
-
     create table SDTM_PROJECT (
         ID  bigserial not null,
         CREATOR varchar(255) not null,

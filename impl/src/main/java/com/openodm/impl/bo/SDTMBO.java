@@ -441,16 +441,16 @@ public class SDTMBO {
 		}
 		List<SDTMVariableRef> allClassesList = varRefMap.get("ALL CLASSES");
 		if (!CollectionUtils.isEmpty(allClassesList)) {
-			createGenericVarRef(domain, allClassesList, 1000);
+			createGenericVarRef(domain, allClassesList, 1000, 2);
 		}
 		List<SDTMVariableRef> genericList = varRefMap.get(StringUtils.upperCase(domain.getDefClass()) + "-GENERAL");
 		if (!CollectionUtils.isEmpty(genericList)) {
 			// LOG.info("domain.getDefClass()={}", domain.getDefClass());
-			createGenericVarRef(domain, genericList, 500);
+			createGenericVarRef(domain, genericList, 500, 1);
 		}
 	}
 
-	private void createGenericVarRef(SDTMDomain domain, List<SDTMVariableRef> allClassesList, int gap) {
+	private void createGenericVarRef(SDTMDomain domain, List<SDTMVariableRef> allClassesList, int gap, int type) {
 		for (SDTMVariableRef varRef : allClassesList) {
 			SDTMVariable sdtmVariable = varRef.getSdtmVariable();
 			String name = sdtmVariable.getName();
@@ -476,8 +476,9 @@ public class SDTMBO {
 				var = vars.get(0);
 			}
 			List<SDTMVariableRef> varRefs = sdtmVariableRefRepository.findByDomainIdAndVariableId(domain.getId(), var.getId());
+			SDTMVariableRef newVarRef;
 			if (CollectionUtils.isEmpty(varRefs)) {
-				SDTMVariableRef newVarRef = new SDTMVariableRef();
+				newVarRef = new SDTMVariableRef();
 				newVarRef.setCreator("admin");
 				newVarRef.setUpdatedBy("admin");
 				newVarRef.setSdtmDomain(domain);
@@ -486,6 +487,17 @@ public class SDTMBO {
 				newVarRef.setCore(varRef.getCore());
 				newVarRef.setRole(varRef.getRole());
 				newVarRef.setOrderNumber(gap + varRef.getOrderNumber());
+				newVarRef.setType(type);
+				sdtmVariableRefRepository.save(newVarRef);
+			} else {
+				newVarRef = varRefs.get(0);
+				newVarRef.setUpdatedBy("admin");
+				newVarRef.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+				newVarRef.setMandatory(varRef.getCore().equalsIgnoreCase("Req") || varRef.getCore().equalsIgnoreCase("Exp") ? "Yes" : "No");
+				newVarRef.setCore(varRef.getCore());
+				newVarRef.setRole(varRef.getRole());
+				newVarRef.setOrderNumber(gap + varRef.getOrderNumber());
+				newVarRef.setType(type);
 				sdtmVariableRefRepository.save(newVarRef);
 			}
 		}
