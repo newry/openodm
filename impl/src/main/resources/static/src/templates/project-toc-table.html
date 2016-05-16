@@ -1,36 +1,33 @@
-<table class="table mb0 table-files">
+<table class="table mb0 table-files" id="toc-table-container">
 	<thead>
 		<tr>
-			<th><a href="" ng-click="order('model.orderNumber')"> Order
-			</a> <span class="sortorder" ng-show="predicate[1] === 'model.orderNumber'"
-				ng-class="{reverse:reverse}"></span></th>
-			<th>Active</th>
 			<th>Dataset</th>
 			<th>Label</th>
 			<th>Class</th>
 			<th>Structure</th>
 			<th>Purpose</th>
+			<th>Operation</th>
 		</tr>
 	</thead>
-	<tbody class="file-item">
+	<tbody class="file-item" data-ng-model="tempProject.tempModel.domainList" ui-sortable="tocSortableOptions">
 		<tr ng-show="requesting">
-			<td colspan="7">
+			<td colspan="6">
 				<div ng-include="config.tplPath + '/spinner.html'"></div>
 			</td>
 		</tr>
-		<tr ng-repeat="item in tempProject.tempModel.domainList | orderBy:predicate:reverse"
-			ng-show="!requesting">
+		<tr id="{{item.model.id}}" ng-repeat="item in tempProject.tempModel.domainList"
+			ng-show="!requesting" ng-class="{strike: item.model.status!='active', normal: item.model.status=='active'}">
 			<td ng-right-click="touch(item, 'domain')">
-			<a href="" ng-click="click(item, 'domain')" >
-				{{item.model.orderNumber}}
-			</a>
+				<a href="" ng-click="click(item, 'domain')">
+					{{item.model.sdtmDomain.domain}}
+				</a>
 			</td>
-			<td>{{item.model.status=='active'?'Y':'N'}}</td>
-			<td>{{item.model.sdtmDomain.domain}}</td>
 			<td>{{item.model.sdtmDomain.description}}</td>
 			<td>{{item.model.sdtmDomain.defClass}}</td>
 			<td>{{item.model.sdtmDomain.structure}}</td>
 			<td>{{item.model.sdtmDomain.purpose}}</td>
+			<td ng-show="item.model.status!='active'"><a href="" ng-click="addDomainForProject(item.model,tempProject.tempModel)">Activate</a></td>
+			<td ng-show="item.model.status=='active'"><a href="" ng-click="removeDomainForProject(item.model,tempProject.tempModel)">Deactive</a></td>
 		</tr>
 	</tbody>
 </table>

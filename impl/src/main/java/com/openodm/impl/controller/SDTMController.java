@@ -1,7 +1,9 @@
 package com.openodm.impl.controller;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -453,6 +455,53 @@ public class SDTMController {
 		return this.sdtmProjectDomainXrefRepository.findByProjectId(id);
 	}
 
+	@RequestMapping(value = "/sdtm/v1/project/{projectId}/domain", method = RequestMethod.POST)
+	public ResponseEntity<OperationResponse> updateDomainOrderForProject(@PathVariable("projectId") Long projectId, @RequestBody List<Map<String, Long>> request) {
+		SDTMProject project = this.sdtmProjectRepository.findOne(projectId);
+		if (project == null) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("Invalid project id!");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		}
+		if (CollectionUtils.isEmpty(request)) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("Invalid request!");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		}
+		Map<Long, Integer> orderMap = new HashMap<Long, Integer>();
+		for (Map<String, Long> m : request) {
+			orderMap.put(m.get("id"), m.get("orderNumber").intValue());
+		}
+		List<SDTMProjectDomainXref> domainXrefs = sdtmProjectDomainXrefRepository.findByProjectId(projectId);
+		List<SDTMProjectDomainXref> changedDomainXrefs = new ArrayList<SDTMProjectDomainXref>();
+		if (!CollectionUtils.isEmpty(domainXrefs)) {
+			for (SDTMProjectDomainXref domainXref : domainXrefs) {
+				Integer newOrder = orderMap.get(domainXref.getId());
+				if (newOrder != null && !newOrder.equals(domainXref.getOrderNumber())) {
+					domainXref.setUpdatedBy("admin");
+					domainXref.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+					domainXref.setOrderNumber(newOrder);
+					changedDomainXrefs.add(domainXref);
+				}
+			}
+		}
+		if (!CollectionUtils.isEmpty(changedDomainXrefs)) {
+			return this.updateProjectDomainXrefs(changedDomainXrefs);
+		}
+		OperationResponse or = new OperationResponse();
+		OperationResult result = new OperationResult();
+		result.setSuccess(true);
+		or.setResult(result);
+		return new ResponseEntity<OperationResponse>(or, HttpStatus.OK);
+
+	}
+
 	@RequestMapping(value = "/sdtm/v1/project/{projectId}/domain/{domainId}", method = RequestMethod.DELETE)
 	public ResponseEntity<OperationResponse> removeDomainToProject(@PathVariable("projectId") Long projectId, @PathVariable("domainId") Long domainId) {
 		SDTMProject project = this.sdtmProjectRepository.findOne(projectId);
@@ -478,7 +527,7 @@ public class SDTMController {
 		SDTMProjectDomainXref domainXref = sdtmProjectDomainXrefRepository.findByProjectIdAndDomainId(projectId, domainId);
 
 		if (domainXref != null) {
-			domainXref.setStatus(ObjectStatus.deleted);
+			domainXref.setStatus(ObjectStatus.inactive);
 			domainXref.setUpdatedBy("admin");
 			domainXref.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
 			return this.updateProjectDomainXref(domainXref);
@@ -558,9 +607,9 @@ public class SDTMController {
 
 	}
 
-	private ResponseEntity<OperationResponse> updateProjectDomainXref(SDTMProjectDomainXref domainXref) {
+	private ResponseEntity<OperationResponse> updateProjectDomainXrefs(List<SDTMProjectDomainXref> domainXrefs) {
 		try {
-			this.sdtmProjectDomainXrefRepository.save(domainXref);
+			this.sdtmProjectDomainXrefRepository.save(domainXrefs);
 			OperationResponse or = new OperationResponse();
 			OperationResult result = new OperationResult();
 			result.setSuccess(true);
@@ -575,6 +624,10 @@ public class SDTMController {
 			or.setResult(result);
 			return new ResponseEntity<OperationResponse>(or, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
+	}
+
+	private ResponseEntity<OperationResponse> updateProjectDomainXref(SDTMProjectDomainXref domainXref) {
+		return this.updateProjectDomainXrefs(Arrays.asList(domainXref));
 	}
 
 	private ResponseEntity<OperationResponse> updateProjectVariableXref(SDTMProjectVariableXref prjVarRef) {

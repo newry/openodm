@@ -314,3 +314,12 @@ table th > a:focus {
     display: none;
   }
 }
+
+.strike {
+    text-decoration: line-through;
+    color: #BBBBBB;
+}
+
+.normal {
+    color: black;
+}

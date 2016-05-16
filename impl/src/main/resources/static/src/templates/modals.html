@@ -387,49 +387,6 @@
 	</div>
 </div>
 
-<div class="modal animated fadeIn" id="addProjectDomain">
-	<div class="modal-dialog">
-		<div class="modal-content">
-			<form>
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal">
-						<span aria-hidden="true">&times;</span> <span class="sr-only">close</span>
-					</button>
-					<h4 class="modal-title">Add/Remove Domain</h4>
-				</div>
-				<div class="modal-body">
-					{{tempProject.tempModel.name}}<br/>
-					<table class="table mb0 table-files">
-						<thead>
-							<tr>
-								<th>Domain Name</th>
-								<th></th>
-							</tr>
-							<tr
-								ng-repeat="item in modalDomainList"
-								ng-show="!modalRequesting">
-								<td class="hidden-xs">{{item.model.name}}</td>
-								<td class="hidden-xs" ng-show="!item.model.added"><a href="" ng-click="addDomainForProject(item.model,tempProject.tempModel)">Add</a></td>
-								<td class="hidden-xs" ng-show="item.model.added"><a href="" ng-click="removeDomainForProject(item.model,tempProject.tempModel)">Remove</a></td>
-							</tr>
-						</thead>
-					</table>
-					
-					<div ng-include data-src="'error-bar'" class="clearfix"></div>
-				</div>
-				<div class="modal-footer">
-					<div ng-show="!modalRequesting">
-						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-					</div>
-					<div ng-show="modalRequesting">
-						<span class="label label-warning">Requesting ...</span>
-					</div>
-				</div>
-			</form>
-		</div>
-	</div>
-</div>
-
 <div class="modal animated fadeIn" id="editProjectDomainVariables">
 	<div class="modal-dialog">
 		<div class="modal-content">

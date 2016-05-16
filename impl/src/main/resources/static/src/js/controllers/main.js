@@ -583,7 +583,7 @@
             $scope.requesting = true;
 	    	$scope.tempProject.tempModel = prj;
             $scope.tempCT=new Item({});
-            
+            $scope.domainTabs=[];
 		    var deferred = $q.defer();
 		    $http.get("/sdtm/v1/project/"+prj.id+"/domain").success(function(data) {
 	            deferredHandler(data, deferred);
@@ -593,35 +593,63 @@
 	        	$scope.requesting = false;
 	        });
 		    deferred.promise.then(function(data){
+		    	prj.domainOrderMap = [];
 		    	prj.domainList = (data || []).map(function(file) {
+	                prj.domainOrderMap[file.id] = file.orderNumber;
 	                return new Item(file);
 	            });
-		    })
+		    });
 	        $scope.viewTemplate = 'main-project-table.html';
 	    };
+        
+        $scope.tocSortableOptions = {
+        	stop: function(e, ui) {
+        		var newChildren = e.target.getElementsByTagName("TR");
+        		var requestData = [];
+        		for(var i=1; i< newChildren.length; i++){
+        			var id = newChildren[i].getAttribute("id");
+            		$scope.tempProject.tempModel.domainOrderMap[id] = i;
+            		requestData.push({"id":id,"orderNumber":i})
+        		}
+                $scope.requesting = true;
+    		    var deferred = $q.defer();
+    		    $http.post("/sdtm/v1/project/"+$scope.tempProject.tempModel.id+"/domain", requestData).success(function(data) {
+    	            deferredHandler(data, deferred);
+    	        }).error(function(data, status) {
+    	            deferredHandler(data, deferred, 'Error during get projects');
+    	        })['finally'](function() {
+    	        	$scope.requesting = false;
+    	        });
+
+        	}
+        };
+        
 
 	    $scope.addDomainForProject = function(domain, prj) {
-            $scope.modalRequesting = true;
+            $scope.requesting = true;
 		    var deferred = $q.defer();
-		    $http.post("/sdtm/v1/project/"+prj.id+"/domain/"+domain.id).success(function(data) {
+		    $http.post("/sdtm/v1/project/"+prj.id+"/domain/"+domain.sdtmDomain.id).success(function(data) {
 	            deferredHandler(data, deferred);
+	        	domain.status='active';
 	        }).error(function(data, status) {
 	            deferredHandler(data, deferred, 'Error during get projects');
 	        })['finally'](function() {
-	        	$scope.modalRequesting = false;
-	            $scope.getAllDomains(prj);
+	        	$scope.requesting = false;
+	            //$scope.getAllDomains(prj);
 	        });
 	    };
+	    
 	    $scope.removeDomainForProject = function(domain, prj) {
-            $scope.modalRequesting = true;
+            $scope.requesting = true;
 		    var deferred = $q.defer();
-		    $http.delete("/sdtm/v1/project/"+prj.id+"/domain/"+domain.id).success(function(data) {
+		    $http.delete("/sdtm/v1/project/"+prj.id+"/domain/"+domain.sdtmDomain.id).success(function(data) {
 	            deferredHandler(data, deferred);
+	        	domain.status='inactive';
 	        }).error(function(data, status) {
 	            deferredHandler(data, deferred, 'Error during get projects');
 	        })['finally'](function() {
-	        	$scope.modalRequesting = false;
-	            $scope.getAllDomains(prj);
+	        	$scope.requesting = false;
+	            //$scope.getAllDomains(prj);
 	        });
 	    };
 
@@ -674,25 +702,12 @@
         $scope.addNewLibraray = function(list){
         	var newItem = {"new":true};
         	list.push(newItem);
-        }
-
-        $scope.pages = [
-                        {
-                          id: 1,
-                          title: 'Tab 1',
-                          content: '<h4>Page 1</h4><p>Lorem ipsum dolor sit amet enim. Etiam ullamcorper. Suspendisse a pellentesque dui, non felis. Maecenas malesuada elit lectus felis, malesuada ultricies.</p>'
-                        },
-                        {
-                          id: 2,
-                          title: 'Tab 2',
-                          content: '<h4>Page 2</h4><p>Curabitur et ligula. Ut molestie a, ultricies porta urna. Vestibulum commodo volutpat a, convallis ac, laoreet enim. Phasellus fermentum in, dolor.</p>'
-                        },
-                        {
-                          id: 3,
-                          title: 'Tab 3',
-                          content: '<h4>Page 3</h4><p>Pellentesque facilisis. Nulla imperdiet sit amet magna. Vestibulum dapibus, mauris nec malesuada fames ac turpis velit, rhoncus eu, luctus et interdum adipiscing wisi.</p>'
-                        }
-                      ];
+        };
+        
+        
+        $scope.closeTab = function(index) {
+        	$scope.domainTabs.splice(index, 1);
+        };
 
     }]);
 })(window, angular, jQuery);
