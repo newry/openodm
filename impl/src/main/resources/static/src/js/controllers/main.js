@@ -406,7 +406,6 @@
         			$scope.tempProject.tempModel.domains = [];
         		}
         		$scope.tempProject.tempModel.domains[index] = item;
-        		$scope.tempProjectDomain = item;
 	            return false;
         	}else{
 	            item.getEnumerateItemList($scope.tempCT.tempModel);
@@ -632,16 +631,18 @@
             	stop: function(e, ui) {
             		var newChildren = e.target.getElementsByTagName("TR");
             		var requestData = [];
+            		var index = newChildren[1].getAttribute("index");
+            		var item = $scope.tempProject.tempModel.domains[index];
             		for(var i=1; i< newChildren.length; i++){
             			var id = newChildren[i].getAttribute("id");
-            			if($scope.tempProjectDomain.tempModel.sdtmDomain.varOrderMap[id] != i){
-	                		$scope.tempProjectDomain.tempModel.sdtmDomain.varOrderMap[id] = i;
+            			if(item.tempModel.sdtmDomain.varOrderMap[id] != i){
+	                		item.tempModel.sdtmDomain.varOrderMap[id] = i;
 	                		requestData.push({"id":id,"orderNumber":i})
             			}
             		}
                     $scope.requesting = true;
         		    var deferred = $q.defer();
-        		    $http.post("/sdtm/v1/project/"+$scope.tempProject.tempModel.id+"/domain/"+$scope.tempProjectDomain.tempModel.sdtmDomain.id+"/variable", requestData).success(function(data) {
+        		    $http.post("/sdtm/v1/project/"+$scope.tempProject.tempModel.id+"/domain/"+item.tempModel.sdtmDomain.id+"/variable", requestData).success(function(data) {
         	            deferredHandler(data, deferred);
         	        }).error(function(data, status) {
         	            deferredHandler(data, deferred, 'Error during get projects');
@@ -706,7 +707,9 @@
         
         
         $scope.closeTab = function(index) {
-        	$scope.domainTabs.splice(index, 1);
+        	if(window.confirm("Realy to close?")){
+        		$scope.domainTabs.splice(index, 1);
+        	}
         };
 
     }]);

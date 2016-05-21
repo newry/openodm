@@ -18,7 +18,7 @@
 				<div ng-include="config.tplPath + '/spinner.html'"></div>
 			</td>
 		</tr>
-		<tr id="{{item.model.id}}" ng-repeat="item in tempProject.tempModel.domains[$index].tempModel.sdtmDomain.variableList"
+		<tr id="{{item.model.id}}" index="{{$index}}" ng-repeat="item in tempProject.tempModel.domains[$index].tempModel.sdtmDomain.variableList"
 			ng-show="!requesting" ng-class="{strike: item.model.status!='active', normal: item.model.status=='active'}">
 			<td>{{item.model.sdtmVariable.name}}</td>
 			<td><input type="text" ng-model="item.model.ct" ng-required="true"/></td>
