@@ -246,10 +246,12 @@
         core varchar(32),
         order_number int4 not null,
         role varchar(255),
+        SDTM_DOMAIN_ID int8 not null,
         SDTM_PROJECT_ID int8 not null,
         SDTM_VARIABLE_ID int8 not null,
         primary key (ID)
-    );    
+    );
+
     alter table SDTM_VARIABLE 
         add constraint FK_4lr68uya05iv6w0w93uxyj5nm 
         foreign key (code_list_id) 
@@ -291,7 +293,7 @@
     
     CREATE UNIQUE INDEX SDTM_VARIABLE_NAME_IDX ON SDTM_VARIABLE (SDTM_DOMAIN_ID, name);
 
-    CREATE UNIQUE INDEX SDTM_PROJECT_VARIABLE_XREF_IDX ON SDTM_PROJECT_VARIABLE_XREF (SDTM_PROJECT_ID, SDTM_VARIABLE_ID);
+    CREATE UNIQUE INDEX SDTM_PROJECT_VARIABLE_XREF_IDX ON SDTM_PROJECT_VARIABLE_XREF (SDTM_PROJECT_ID, SDTM_DOMAIN_ID, SDTM_VARIABLE_ID);
     
     
     alter table SDTM_PROJECT 
@@ -309,6 +311,10 @@
         foreign key (SDTM_VARIABLE_ID) 
         references SDTM_VARIABLE;
     
+      alter table SDTM_PROJECT_VARIABLE_XREF 
+        add constraint FK_k662dbgjttgoyuul6am47wuqt 
+        foreign key (SDTM_DOMAIN_ID) 
+        references SDTM_DOMAIN;
     
     create table SDTM_PROJECT_DOMAIN_XREF (
         ID  bigserial not null,

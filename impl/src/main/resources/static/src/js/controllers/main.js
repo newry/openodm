@@ -400,11 +400,13 @@
         		if(!existed){
         			$scope.domainTabs.push({'title': item.tempModel.sdtmDomain.name, 'active':true});
         			index = $scope.domainTabs.length-1;
+        			$scope.getAllProjectDomainVariables($scope.tempProject.tempModel, item.tempModel.sdtmDomain);
         		}
         		if(!$scope.tempProject.tempModel.domains){
         			$scope.tempProject.tempModel.domains = [];
         		}
         		$scope.tempProject.tempModel.domains[index] = item;
+        		$scope.tempProjectDomain = item;
 	            return false;
         	}else{
 	            item.getEnumerateItemList($scope.tempCT.tempModel);
@@ -541,9 +543,7 @@
 	    };
 
 	    $scope.getAllProjectDomainVariables = function(prj, domain) {
-	        $scope.modalVaribaleList =[];
         	$scope.requesting = true;
-        	$scope.tempDomain.tempModel = domain;
 	        var deferred = $q.defer();
 	    	$http.get("/sdtm/v1/project/"+prj.id+"/domain/"+domain.id+"/allVariable").success(function(data) {
                 deferredHandler(data, deferred);
@@ -553,7 +553,9 @@
             	$scope.requesting = false;
             });
 	    	deferred.promise.then(function(data){
-	    		$scope.modalVariableList = (data || []).map(function(file) {
+	    		domain.varOrderMap = [];
+	    		domain.variableList = (data || []).map(function(file) {
+	    			domain.varOrderMap[file.id] = file.orderNumber;
                     return new Item(file);
                 });
 	    	})
@@ -608,8 +610,10 @@
         		var requestData = [];
         		for(var i=1; i< newChildren.length; i++){
         			var id = newChildren[i].getAttribute("id");
-            		$scope.tempProject.tempModel.domainOrderMap[id] = i;
-            		requestData.push({"id":id,"orderNumber":i})
+        			if($scope.tempProject.tempModel.domainOrderMap[id] != i){
+	            		$scope.tempProject.tempModel.domainOrderMap[id] = i;
+	            		requestData.push({"id":id,"orderNumber":i})
+        			}
         		}
                 $scope.requesting = true;
     		    var deferred = $q.defer();
@@ -624,6 +628,30 @@
         	}
         };
         
+        $scope.domainSortableOptions = {
+            	stop: function(e, ui) {
+            		var newChildren = e.target.getElementsByTagName("TR");
+            		var requestData = [];
+            		for(var i=1; i< newChildren.length; i++){
+            			var id = newChildren[i].getAttribute("id");
+            			if($scope.tempProjectDomain.tempModel.sdtmDomain.varOrderMap[id] != i){
+	                		$scope.tempProjectDomain.tempModel.sdtmDomain.varOrderMap[id] = i;
+	                		requestData.push({"id":id,"orderNumber":i})
+            			}
+            		}
+                    $scope.requesting = true;
+        		    var deferred = $q.defer();
+        		    $http.post("/sdtm/v1/project/"+$scope.tempProject.tempModel.id+"/domain/"+$scope.tempProjectDomain.tempModel.sdtmDomain.id+"/variable", requestData).success(function(data) {
+        	            deferredHandler(data, deferred);
+        	        }).error(function(data, status) {
+        	            deferredHandler(data, deferred, 'Error during get projects');
+        	        })['finally'](function() {
+        	        	$scope.requesting = false;
+        	        });
+
+            	}
+            };
+
 
 	    $scope.addDomainForProject = function(domain, prj) {
             $scope.requesting = true;
@@ -653,34 +681,6 @@
 	        });
 	    };
 
-	    $scope.addVariableForProject = function(prj, domain, variable) {
-            $scope.modalRequesting = true;
-		    var deferred = $q.defer();
-		    $http.post("/sdtm/v1/project/"+prj.id+"/variable/"+variable.id).success(function(data) {
-	            deferredHandler(data, deferred);
-	        }).error(function(data, status) {
-	            deferredHandler(data, deferred, 'Error during get projects');
-	        })['finally'](function() {
-	        	$scope.modalRequesting = false;
-	            $scope.getAllProjectDomainVariables(prj, domain);
-	            $scope.getProjectDomainVariables(prj, domain);
-	        });
-	    };
-	    
-	    $scope.removeVariableForProject = function(prj, domain, variable) {
-            $scope.modalRequesting = true;
-		    var deferred = $q.defer();
-		    $http.delete("/sdtm/v1/project/"+prj.id+"/variable/"+variable.id).success(function(data) {
-	            deferredHandler(data, deferred);
-	        }).error(function(data, status) {
-	            deferredHandler(data, deferred, 'Error during get projects');
-	        })['finally'](function() {
-	        	$scope.modalRequesting = false;
-	            $scope.getAllProjectDomainVariables(prj, domain);
-	            $scope.getProjectDomainVariables(prj, domain);
-	        });
-	    };
-	    
 	    $scope.getAvailableCTs = function(versionId) {
             $scope.modalRequesting = true;
 		    var deferred = $q.defer();

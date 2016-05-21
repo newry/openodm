@@ -9,7 +9,6 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.GenericGenerator;
@@ -22,7 +21,7 @@ import com.openodm.impl.entity.PersistentObject;
 @Entity
 @Table(name = "SDTM_PROJECT_VARIABLE_XREF")
 @DynamicUpdate
-@JsonInclude(Include.NON_EMPTY)
+@JsonInclude(Include.NON_NULL)
 public class SDTMProjectVariableXref extends PersistentObject {
 
 	private static final long serialVersionUID = 9195706482774759770L;
@@ -50,11 +49,10 @@ public class SDTMProjectVariableXref extends PersistentObject {
 	@JoinColumn(name = "SDTM_VARIABLE_ID", nullable = false)
 	private SDTMVariable sdtmVariable;
 
-	@Transient
+	@ManyToOne(targetEntity = SDTMDomain.class, optional = false, fetch = FetchType.LAZY)
+	@JoinColumn(name = "SDTM_DOMAIN_ID", nullable = false)
+	@JsonIgnore
 	private SDTMDomain sdtmDomain;
-
-	@Transient
-	private boolean excluded;
 
 	public String getCore() {
 		return core;
@@ -106,14 +104,6 @@ public class SDTMProjectVariableXref extends PersistentObject {
 
 	public void setSdtmDomain(SDTMDomain sdtmDomain) {
 		this.sdtmDomain = sdtmDomain;
-	}
-
-	public boolean isExcluded() {
-		return excluded;
-	}
-
-	public void setExcluded(boolean excluded) {
-		this.excluded = excluded;
 	}
 
 }

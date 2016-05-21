@@ -29,7 +29,7 @@ import com.openodm.impl.entity.ct.EnumeratedItem;
 @Entity
 @Table(name = "SDTM_VARIABLE")
 @DynamicUpdate
-@JsonInclude(Include.NON_EMPTY)
+@JsonInclude(Include.NON_NULL)
 public class SDTMVariable extends PersistentObject {
 
 	private static final long serialVersionUID = -798805519475960716L;

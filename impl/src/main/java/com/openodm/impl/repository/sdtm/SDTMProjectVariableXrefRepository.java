@@ -7,15 +7,9 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 
 import com.openodm.impl.entity.sdtm.SDTMProjectVariableXref;
-import com.openodm.impl.entity.sdtm.SDTMVariable;
 
 public interface SDTMProjectVariableXrefRepository extends CrudRepository<SDTMProjectVariableXref, Long> {
-	@Query("SELECT d FROM SDTMProjectVariableXref d WHERE d.sdtmProject.id=:projectId and d.sdtmVariable.id=:variableId")
-	public SDTMProjectVariableXref findByProjectIdAndVariableId(@Param("projectId") Long projectId, @Param("variableId") Long variableId);
+	@Query("SELECT d FROM SDTMProjectVariableXref d WHERE d.sdtmProject.id=:projectId and d.sdtmDomain.id=:domainId order by d.orderNumber")
+	public List<SDTMProjectVariableXref> findByProjectIdAndDomainId(@Param("projectId") Long projectId, @Param("domainId") Long domainId);
 
-	@Query("SELECT d FROM SDTMProjectVariableXref d WHERE d.sdtmProject.id=:projectId and d.status='active'")
-	public List<SDTMProjectVariableXref> findByProjectId(@Param("projectId") Long projectId);
-
-	@Query("SELECT d.sdtmVariable FROM SDTMProjectVariableXref d WHERE d.sdtmProject.id=:projectId and d.status='active'")
-	public List<SDTMVariable> findVariableByProjectId(@Param("projectId") Long projectId);
 }

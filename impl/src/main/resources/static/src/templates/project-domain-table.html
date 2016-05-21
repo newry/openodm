@@ -1,2 +1,33 @@
-Domain: {{tempProject.tempModel.domains[$index].model.sdtmDomain.name}}
 <a href="" ng-click="closeTab($index)">Close</a>
+<table class="table mb0 table-files" id="toc-table-container">
+	<thead>
+		<tr>
+			<th>CDISC Variable Name</th>
+			<th>Controlled Terminology</th>
+			<th>Origin</th>
+			<th>CRF Page No</th>
+			<th>Role</th>
+			<th>Core</th>
+			<th>Type</th>
+			<th>Length</th>
+		</tr>
+	</thead>
+	<tbody class="file-item" data-ng-model="tempProject.tempModel.domains[$index].tempModel.sdtmDomain.variableList" ui-sortable="domainSortableOptions">
+		<tr ng-show="requesting">
+			<td colspan="8">
+				<div ng-include="config.tplPath + '/spinner.html'"></div>
+			</td>
+		</tr>
+		<tr id="{{item.model.id}}" ng-repeat="item in tempProject.tempModel.domains[$index].tempModel.sdtmDomain.variableList"
+			ng-show="!requesting" ng-class="{strike: item.model.status!='active', normal: item.model.status=='active'}">
+			<td>{{item.model.sdtmVariable.name}}</td>
+			<td><input type="text" ng-model="item.model.ct" ng-required="true"/></td>
+			<td><input type="text" ng-model="item.model.origin" ng-required="true"/></td>
+			<td><input type="text" ng-model="item.model.crfPageNo" ng-required="true"/></td>
+			<td>{{item.model.role}}</td>
+			<td>{{item.model.core}}</td>
+			<td>{{item.model.sdtmVariable.sasDataType}}</td>
+			<td><input type="text" ng-model="item.model.length" ng-required="true"/></td>
+		</tr>
+	</tbody>
+</table>
