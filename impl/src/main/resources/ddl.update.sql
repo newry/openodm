@@ -244,8 +244,11 @@
         STATUS varchar(32) not null,
         UPDATED_BY varchar(255) not null,
         core varchar(32),
+        crf_page_no varchar(32),
         order_number int4 not null,
+        length int4,
         role varchar(255),
+        code_list_id int8,
         SDTM_DOMAIN_ID int8 not null,
         SDTM_PROJECT_ID int8 not null,
         SDTM_VARIABLE_ID int8 not null,
@@ -311,10 +314,20 @@
         foreign key (SDTM_VARIABLE_ID) 
         references SDTM_VARIABLE;
     
-      alter table SDTM_PROJECT_VARIABLE_XREF 
+    alter table SDTM_PROJECT_VARIABLE_XREF 
         add constraint FK_k662dbgjttgoyuul6am47wuqt 
         foreign key (SDTM_DOMAIN_ID) 
         references SDTM_DOMAIN;
+
+    alter table SDTM_PROJECT_VARIABLE_XREF 
+        add constraint FK_j0obol4cekqxbnpitxw830yys 
+        foreign key (code_list_id) 
+        references CODE_LIST;
+
+    alter table SDTM_PROJECT_VARIABLE_XREF 
+        add constraint FK_ylfkg6c5cokjk4y891sc4wca 
+        foreign key (sdtm_origin_id) 
+        references SDTM_ORIGIN;
     
     create table SDTM_PROJECT_DOMAIN_XREF (
         ID  bigserial not null,
@@ -357,3 +370,31 @@
         add constraint FK_f417w8gw2l9dvo6pmy4gs67dw 
         foreign key (SDTM_PROJECT_ID) 
         references SDTM_PROJECT;
+
+        
+    create table SDTM_ORIGIN (
+        ID  bigserial not null,
+        CREATOR varchar(255) not null,
+        DATE_ADDED timestamp not null,
+        DATE_LAST_MODIFIED timestamp not null,
+        STATUS varchar(32) not null,
+        UPDATED_BY varchar(255) not null,
+        name varchar(255) not null,
+        primary key (ID)
+    );
+
+    create table SDTM_PROJECT_VARIABLE_ORIGIN_XREF (
+        SDTM_PROJECT_VARIABLE_XREF_ID int8 not null,
+        sdtm_origin_id int8 not null
+    );
+    
+    alter table SDTM_PROJECT_VARIABLE_ORIGIN_XREF 
+        add constraint FK_hqbn5q3lyc1yvp9av0g4kgb1y 
+        foreign key (sdtm_origin_id) 
+        references SDTM_ORIGIN;
+
+    alter table SDTM_PROJECT_VARIABLE_ORIGIN_XREF 
+        add constraint FK_35rafe3pa2d5rokxr26jna1ob 
+        foreign key (SDTM_PROJECT_VARIABLE_XREF_ID) 
+        references SDTM_PROJECT_VARIABLE_XREF;
+    

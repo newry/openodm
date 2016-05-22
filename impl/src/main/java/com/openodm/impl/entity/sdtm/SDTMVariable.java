@@ -67,7 +67,6 @@ public class SDTMVariable extends PersistentObject {
 
 	@ManyToOne(targetEntity = CodeList.class, optional = true)
 	@JoinColumn(name = "code_list_id", nullable = true)
-	@JsonIgnore
 	private CodeList codeList;
 
 	@ManyToOne(targetEntity = CustomizedCodeList.class, optional = true)

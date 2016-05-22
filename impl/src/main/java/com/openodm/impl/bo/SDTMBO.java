@@ -1,6 +1,8 @@
 package com.openodm.impl.bo;
 
+import java.io.BufferedReader;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,12 +42,14 @@ import com.openodm.impl.entity.ct.CodeList;
 import com.openodm.impl.entity.ct.ControlTerminology;
 import com.openodm.impl.entity.ct.EnumeratedItem;
 import com.openodm.impl.entity.sdtm.SDTMDomain;
+import com.openodm.impl.entity.sdtm.SDTMOrigin;
 import com.openodm.impl.entity.sdtm.SDTMVariable;
 import com.openodm.impl.entity.sdtm.SDTMVariableRef;
 import com.openodm.impl.entity.sdtm.SDTMVersion;
 import com.openodm.impl.repository.ct.ControlTerminologyRepository;
 import com.openodm.impl.repository.ct.EnumeratedItemRepository;
 import com.openodm.impl.repository.sdtm.SDTMDomainRepository;
+import com.openodm.impl.repository.sdtm.SDTMOriginRepository;
 import com.openodm.impl.repository.sdtm.SDTMVariableRefRepository;
 import com.openodm.impl.repository.sdtm.SDTMVariableRepository;
 import com.openodm.impl.repository.sdtm.SDTMVersionRepository;
@@ -63,6 +67,8 @@ public class SDTMBO {
 	private SDTMVariableRefRepository sdtmVariableRefRepository;
 	@Autowired
 	private SDTMVariableRepository sdtmVariableRepository;
+	@Autowired
+	private SDTMOriginRepository sdtmOriginRepository;
 
 	@Autowired
 	private ControlTerminologyRepository controlTerminologyRepository;
@@ -105,6 +111,22 @@ public class SDTMBO {
 			return null;
 		}
 
+	}
+
+	public void importSDTMOrigin() throws Exception {
+		try (BufferedReader br = new BufferedReader(new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream("originList.properties")))) {
+			String line;
+			while ((line = br.readLine()) != null) {
+				List<SDTMOrigin> exitstedOrigin = sdtmOriginRepository.findByName(line);
+				if (CollectionUtils.isEmpty(exitstedOrigin)) {
+					SDTMOrigin origin = new SDTMOrigin();
+					origin.setCreator("admin");
+					origin.setUpdatedBy("admin");
+					origin.setName(StringUtils.trim(line));
+					sdtmOriginRepository.save(origin);
+				}
+			}
+		}
 	}
 
 	public void importSDTMVersion(InputStream in, Long ctId) throws Exception {

@@ -15,6 +15,7 @@ import com.openodm.impl.entity.ct.CustomizedEnumeratedItem;
 import com.openodm.impl.entity.ct.EnumeratedItem;
 import com.openodm.impl.entity.ct.ExtendedEnumeratedItem;
 import com.openodm.impl.entity.sdtm.SDTMDomain;
+import com.openodm.impl.entity.sdtm.SDTMOrigin;
 import com.openodm.impl.entity.sdtm.SDTMProject;
 import com.openodm.impl.entity.sdtm.SDTMProjectDomainXref;
 import com.openodm.impl.entity.sdtm.SDTMProjectLibrary;
@@ -48,6 +49,7 @@ public class GenerateDDL {
 			cfg.addAnnotatedClass(SDTMProjectVariableXref.class);
 			cfg.addAnnotatedClass(SDTMProjectDomainXref.class);
 			cfg.addAnnotatedClass(SDTMProjectLibrary.class);
+			cfg.addAnnotatedClass(SDTMOrigin.class);
 			SchemaExport export = new SchemaExport(cfg);
 			export.setFormat(true);
 			export.setDelimiter(";");

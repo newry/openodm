@@ -30,6 +30,7 @@
         $scope.fileNavigator = {"history": [$scope.item]};
         $scope.fileUploader = fileUploader;
         $http.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+        $scope.originList = [];
         
         function deferredHandler(data, deferred, defaultMsg) {
         	var error;
@@ -51,6 +52,24 @@
             } 
             return deferred.resolve(data);
         };
+
+	    $scope.getOriginList = function() {
+            	$scope.requesting = true;
+		        var deferred = $q.defer();
+		    	$http.get("/sdtm/v1/origin").success(function(data) {
+	                deferredHandler(data, deferred);
+	            }).error(function(data, status) {
+	            	deferredHandler(data, deferred, 'Error during get metaDataVersion');
+	            })['finally'](function() {
+	            	$scope.requesting = false;
+	            });
+		    	deferred.promise.then(function(data){
+			    	$scope.originList = (data || []).map(function(file) {
+			    		return file;
+		            });
+		    	})
+	    };
+        $scope.getOriginList();
 
 	    $scope.getAllMDVs = function(isModal) {
 	    	if(!isModal){
@@ -642,7 +661,7 @@
             		}
                     $scope.requesting = true;
         		    var deferred = $q.defer();
-        		    $http.post("/sdtm/v1/project/"+$scope.tempProject.tempModel.id+"/domain/"+item.tempModel.sdtmDomain.id+"/variable", requestData).success(function(data) {
+        		    $http.post("/sdtm/v1/project/"+$scope.tempProject.tempModel.id+"/domain/"+item.tempModel.sdtmDomain.id+"/variable/order", requestData).success(function(data) {
         	            deferredHandler(data, deferred);
         	        }).error(function(data, status) {
         	            deferredHandler(data, deferred, 'Error during get projects');
@@ -707,10 +726,71 @@
         
         
         $scope.closeTab = function(index) {
-        	if(window.confirm("Realy to close?")){
+        	//if(window.confirm("Realy to close?")){
         		$scope.domainTabs.splice(index, 1);
+        	//}
+        };
+
+        $scope.saveTabData = function(index) {
+        	var item = $scope.tempProject.tempModel.domains[index];
+        	var variableList = item.tempModel.sdtmDomain.variableList;
+        	//console.log(variableList);
+    		var requestData = [];
+    		var changedVarList = [];
+        	if(variableList && variableList.length > 0){
+        		for(var i=0; i< variableList.length; i++){
+        			var variable = variableList[i];
+        			var reqData = {}
+        			if(variable.model.changed){
+        				changedVarList.push(variable);
+        				reqData.id = variable.model.id;
+	        			if(variable.model.crfPageNo){
+	        				reqData.crfPageNo = variable.model.crfPageNo;
+	        			}
+	        			if(variable.model.length){
+	        				reqData.length = variable.model.length;
+	        			}
+	        			if(variable.model.origins && variable.model.origins.length>0){
+	        				reqData.originList = [];
+	        				for(var j=0;j<variable.model.origins.length;j++){
+	        					reqData.originList.push(variable.model.origins[j].id);
+	        				}
+	        			}
+                		requestData.push(reqData);
+        			}
+        		}
+        	}
+        	if(changedVarList.length > 0){
+	            $scope.requesting = true;
+			    var deferred = $q.defer();
+			    $http.post("/sdtm/v1/project/"+$scope.tempProject.tempModel.id+"/domain/"+item.tempModel.sdtmDomain.id+"/variable", requestData).success(function(data) {
+		            deferredHandler(data, deferred);
+		        }).error(function(data, status) {
+		            deferredHandler(data, deferred, 'Error during get projects');
+		        })['finally'](function() {
+		        	for(var i=0;i<changedVarList.length;i++){
+		        		changedVarList[i].model.changed=false;
+		        	}
+		        	$scope.requesting = false;
+		        });
+        	}
+        	
+        	console.log(requestData);
+        };
+
+        $scope.editOrigin = function(id, show) {
+        	if(show){
+	        	$('#originListSelect_' + id).show();
+	        	$('#originList_' + id).hide();
+        	}else{
+	        	$('#originListSelect_' + id).hide();
+	        	$('#originList_' + id).show();
         	}
         };
+        
+        $scope.markAsChanged = function(item){
+        	item.changed=true;
+        }
 
     }]);
 })(window, angular, jQuery);

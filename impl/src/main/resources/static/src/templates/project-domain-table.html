@@ -1,5 +1,6 @@
 <a href="" ng-click="closeTab($index)">Close</a>
-<table class="table mb0 table-files" id="toc-table-container">
+<a href="" ng-click="saveTabData($index)">Save Changes</a>
+<table border="1" class="table mb0 table-files" id="toc-table-container">
 	<thead>
 		<tr>
 			<th>CDISC Variable Name</th>
@@ -21,13 +22,23 @@
 		<tr id="{{item.model.id}}" index="{{$index}}" ng-repeat="item in tempProject.tempModel.domains[$index].tempModel.sdtmDomain.variableList"
 			ng-show="!requesting" ng-class="{strike: item.model.status!='active', normal: item.model.status=='active'}">
 			<td>{{item.model.sdtmVariable.name}}</td>
-			<td><input type="text" ng-model="item.model.ct" ng-required="true"/></td>
-			<td><input type="text" ng-model="item.model.origin" ng-required="true"/></td>
-			<td><input type="text" ng-model="item.model.crfPageNo" ng-required="true"/></td>
+			<td>{{item.model.codeList.name}}</td>
+			<td>
+				<div id="originList_{{item.model.id}}">
+					<div ng-repeat="item in item.model.origins">{{item.name}}</div>
+					<a href="" ng-click="editOrigin(item.model.id, true)">Edit</a>
+				</div>
+				<div id="originListSelect_{{item.model.id}}" style="display:none">
+					<select multiple ng-multiple="true" ng-model="item.model.origins" ng-change="markAsChanged(item.model)" ng-options="item as item.name for item in originList track by item.id">
+					</select>
+					<a href="" ng-click="editOrigin(item.model.id, false)">Save</a>
+				</div>
+			</td>
+			<td><input type="text" ng-model="item.model.crfPageNo" ng-change="markAsChanged(item.model)" ng-required="true"/></td>
 			<td>{{item.model.role}}</td>
 			<td>{{item.model.core}}</td>
 			<td>{{item.model.sdtmVariable.sasDataType}}</td>
-			<td><input type="text" ng-model="item.model.length" ng-required="true"/></td>
+			<td><input type="text" ng-model="item.model.length" ng-change="markAsChanged(item.model)" ng-required="true"/></td>
 		</tr>
 	</tbody>
 </table>
