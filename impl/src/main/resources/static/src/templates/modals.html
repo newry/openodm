@@ -386,6 +386,53 @@
 		</div>
 	</div>
 </div>
+<div class="modal animated fadeIn" id="editProjectEnumeratedItemList">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<form>
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">
+						<span aria-hidden="true">&times;</span> <span class="sr-only">Close</span>
+					</button>
+					<h4 class="modal-title">{{temp.model.codeList.name}}</h4>
+				</div>
+				<div class="modal-body">
+					Keyword: <input type="text" ng-model="temp.model.enumeratedItemQuery" autofocus="autofocus" ng-required="true"/>
+					<a href="" ng-click="queryEnumeratedItemsForCodeList(temp)"> <i class="glyphicon"></i>Query</a>
+					<table class="table mb0 table-files">
+						<thead>
+							<tr>
+								<th></th>
+								<th>Code</th>
+								<th>CDISC Submission Value</th>
+								<th>CDISC Synonyms</th>
+								<th>CDISC Definition</th>
+								<th>NCI Preferred Term</th>
+							</tr>
+							<tr
+								ng-repeat="item in temp.tempModel.enumeratedItemList"
+								ng-show="!modalRequesting" ng-class="{bold: item.included, normal: !item.included}">
+								<td class="hidden-xs" ng-show="item.included"><a href="" ng-click="editEnumeratedItem(temp, item, true)"><b>Remove</b></a></td>
+								<td class="hidden-xs" ng-show="!item.included"><a href="" ng-click="editEnumeratedItem(temp, item, false)"><b>Add</b></a></td>
+								<td class="hidden-xs">{{item.extCodeId}}</td>
+								<td class="hidden-xs">{{item.codedValue}}</td>
+								<td class="hidden-xs">{{item.cdiscsynonym}}</td>
+								<td class="hidden-xs">{{item.cdiscdefinition}}</td>
+								<td class="hidden-xs">{{item.preferredTerm}}</td>
+							</tr>
+						</thead>
+					</table>
+					<div ng-include data-src="'error-bar'" class="clearfix"></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal"
+						ng-disabled="temp.inprocess">Close</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
 <!-- 
 <div class="modal animated fadeIn" id="editProjectDomainVariables">
 	<div class="modal-dialog">

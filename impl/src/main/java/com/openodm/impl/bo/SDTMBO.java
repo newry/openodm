@@ -376,6 +376,13 @@ public class SDTMBO {
 											var.setUpdatedBy("admin");
 											var.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
 										}
+										if (var.getCodeList() == null) {
+											if (enumItem.getCodeList() != null) {
+												var.setCodeList(enumItem.getCodeList());
+												var.setUpdatedBy("admin");
+												var.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+											}
+										}
 									} else {
 										LOG.error("Cannot find EnumeratedItem, extCodeId={}", extCodeId);
 									}
@@ -404,6 +411,13 @@ public class SDTMBO {
 												enumItems.add(enumItem);
 												var.setUpdatedBy("admin");
 												var.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+											}
+											if (var.getCodeList() == null) {
+												if (enumItem.getCodeList() != null) {
+													var.setCodeList(enumItem.getCodeList());
+													var.setUpdatedBy("admin");
+													var.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+												}
 											}
 										} else {
 											LOG.error("Cannot find EnumeratedItem, extCodeId={}", extCodeId);

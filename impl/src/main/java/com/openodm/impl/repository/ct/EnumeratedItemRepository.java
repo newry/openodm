@@ -16,4 +16,7 @@ public interface EnumeratedItemRepository extends CrudRepository<EnumeratedItem,
 	@Query("SELECT d FROM EnumeratedItem d WHERE d.codeList.id=:codeListId and d.status='active'")
 	public List<EnumeratedItem> findByCodeListId(@Param("codeListId") Long codeListId);
 
+	@Query("SELECT d FROM EnumeratedItem d WHERE d.codeList.id=:codeListId and (d.codedValue like %:q% or d.CDISCSynonym like %:q%) and d.status='active'")
+	public List<EnumeratedItem> query(@Param("q") String q, @Param("codeListId") Long codeListId);
+
 }

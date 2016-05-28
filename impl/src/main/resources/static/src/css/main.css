@@ -323,3 +323,8 @@ table th > a:focus {
 .normal {
     color: black;
 }
+
+.bold {
+    font-style: italic;
+    color: black;
+}

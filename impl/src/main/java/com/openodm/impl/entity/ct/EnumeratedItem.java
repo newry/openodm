@@ -31,6 +31,9 @@ public class EnumeratedItem extends AbstractEnumeratedItem {
 	@Transient
 	private boolean extended = false;
 
+	@Transient
+	private boolean included;
+
 	public CodeList getCodeList() {
 		return codeList;
 	}
@@ -53,6 +56,14 @@ public class EnumeratedItem extends AbstractEnumeratedItem {
 
 	public void setExtended(boolean extended) {
 		this.extended = extended;
+	}
+
+	public boolean isIncluded() {
+		return included;
+	}
+
+	public void setIncluded(boolean included) {
+		this.included = included;
 	}
 
 }

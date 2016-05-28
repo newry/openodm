@@ -295,6 +295,8 @@ public class SDTMController {
 					varXref.setSdtmVariable(varRef.getSdtmVariable());
 					varXref.setCore(varRef.getCore());
 					varXref.setRole(varRef.getRole());
+					varXref.setCodeList(varRef.getSdtmVariable().getCodeList());
+					varXref.setEnumeratedItems(new ArrayList<EnumeratedItem>(varRef.getSdtmVariable().getEnumeratedItems()));
 					varXrefs.add(varXref);
 				}
 			}
@@ -531,8 +533,7 @@ public class SDTMController {
 		for (SDTMProjectVariableXref varXref : varXrefs) {
 			Integer newOrder = orderMap.get(varXref.getId());
 			if (newOrder != null && !newOrder.equals(varXref.getOrderNumber())) {
-				varXref.setUpdatedBy("admin");
-				varXref.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+				setUpdatedBy(varXref);
 				varXref.setOrderNumber(newOrder);
 				changedVarXrefs.add(varXref);
 			}
@@ -546,6 +547,126 @@ public class SDTMController {
 		or.setResult(result);
 		return new ResponseEntity<OperationResponse>(or, HttpStatus.OK);
 
+	}
+
+	@RequestMapping(value = "/sdtm/v1/project/{projectId}/variable/{variableId}/enumeratedItems", method = RequestMethod.GET)
+	public List<EnumeratedItem> getVariableEnumerateItems(@PathVariable("projectId") Long projectId, @PathVariable("variableId") Long variableId) {
+		SDTMProjectVariableXref varXref = sdtmProjectVariableXrefRepository.findOne(variableId);
+		if (varXref != null) {
+			List<EnumeratedItem> enumeratedItems = varXref.getEnumeratedItems();
+			for (EnumeratedItem ei : enumeratedItems) {
+				ei.setIncluded(true);
+			}
+			return enumeratedItems;
+		}
+		return new ArrayList<>(0);
+	}
+
+	@RequestMapping(value = "/sdtm/v1/project/{projectId}/variable/{variableId}/allEnumeratedItems", method = RequestMethod.GET)
+	public List<EnumeratedItem> getAllVariableEnumerateItems(@PathVariable("projectId") Long projectId, @PathVariable("variableId") Long variableId) {
+		SDTMProjectVariableXref varXref = sdtmProjectVariableXrefRepository.findOne(variableId);
+		if (varXref != null) {
+			CodeList codeList = varXref.getCodeList();
+			if (codeList != null) {
+				List<EnumeratedItem> enumeratedItems = varXref.getEnumeratedItems();
+				for (EnumeratedItem ei : enumeratedItems) {
+					ei.setIncluded(true);
+				}
+				List<EnumeratedItem> eis = this.enumeratedItemRepository.findByCodeListId(codeList.getId());
+				if (!CollectionUtils.isEmpty(eis)) {
+					for (EnumeratedItem ei : eis) {
+						if (!enumeratedItems.contains(ei)) {
+							enumeratedItems.add(ei);
+						}
+					}
+
+				}
+				return enumeratedItems;
+			}
+		}
+		return new ArrayList<>(0);
+	}
+
+	@RequestMapping(value = "/sdtm/v1/project/{projectId}/variable/{variableId}/allEnumeratedItemsQuery", method = RequestMethod.GET)
+	public List<EnumeratedItem> queryEnumeratedItem(@PathVariable("projectId") Long projectId, @PathVariable("variableId") Long variableId,
+			@RequestParam(value = "q", required = false) String q) {
+		SDTMProjectVariableXref varXref = sdtmProjectVariableXrefRepository.findOne(variableId);
+		if (varXref != null) {
+			CodeList codeList = varXref.getCodeList();
+			if (codeList != null) {
+				List<EnumeratedItem> enumeratedItems = varXref.getEnumeratedItems();
+				for (EnumeratedItem ei : enumeratedItems) {
+					ei.setIncluded(true);
+				}
+				List<EnumeratedItem> eis;
+				if (StringUtils.isEmpty(q)) {
+					eis = this.enumeratedItemRepository.findByCodeListId(codeList.getId());
+				} else {
+					eis = this.enumeratedItemRepository.query(q, codeList.getId());
+				}
+				if (!CollectionUtils.isEmpty(eis)) {
+					for (EnumeratedItem ei : eis) {
+						if (!enumeratedItems.contains(ei)) {
+							enumeratedItems.add(ei);
+						}
+					}
+
+				}
+				return enumeratedItems;
+			}
+		}
+		return new ArrayList<>(0);
+	}
+
+	@RequestMapping(value = "/sdtm/v1/project/{projectId}/variable/{variableId}/enumeratedItem/{id}", method = RequestMethod.POST)
+	public ResponseEntity<OperationResponse> addEnumeratedItem(@PathVariable("projectId") Long projectId, @PathVariable("variableId") Long variableId,
+			@PathVariable("id") Long id) {
+		SDTMProjectVariableXref varXref = sdtmProjectVariableXrefRepository.findOne(variableId);
+		if (varXref != null) {
+			CodeList codeList = varXref.getCodeList();
+			if (codeList != null) {
+				List<EnumeratedItem> eis = varXref.getEnumeratedItems();
+				EnumeratedItem ei = this.enumeratedItemRepository.findOne(id);
+				if (!eis.contains(ei)) {
+					eis.add(ei);
+					setUpdatedBy(varXref);
+				}
+				return this.updateProjectVariableXref(varXref);
+			}
+		}
+		OperationResponse or = new OperationResponse();
+		OperationResult result = new OperationResult();
+		result.setSuccess(true);
+		or.setResult(result);
+		return new ResponseEntity<OperationResponse>(or, HttpStatus.OK);
+	}
+
+	private void setUpdatedBy(SDTMProjectVariableXref varXref) {
+		varXref.setUpdatedBy("admin");
+		varXref.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+	}
+
+	@RequestMapping(value = "/sdtm/v1/project/{projectId}/variable/{variableId}/enumeratedItem/{id}", method = RequestMethod.DELETE)
+	public ResponseEntity<OperationResponse> removeEnumeratedItem(@PathVariable("projectId") Long projectId, @PathVariable("variableId") Long variableId,
+			@PathVariable("id") Long id) {
+		SDTMProjectVariableXref varXref = sdtmProjectVariableXrefRepository.findOne(variableId);
+		if (varXref != null) {
+			CodeList codeList = varXref.getCodeList();
+			if (codeList != null) {
+				List<EnumeratedItem> eis = varXref.getEnumeratedItems();
+				EnumeratedItem ei = this.enumeratedItemRepository.findOne(id);
+				if (eis.contains(ei)) {
+					eis.remove(ei);
+					setUpdatedBy(varXref);
+				}
+				return this.updateProjectVariableXref(varXref);
+			}
+		}
+		OperationResponse or = new OperationResponse();
+		OperationResult result = new OperationResult();
+		result.setSuccess(true);
+		or.setResult(result);
+		return new ResponseEntity<OperationResponse>(or, HttpStatus.OK);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -596,8 +717,7 @@ public class SDTMController {
 						}
 					}
 				}
-				varXref.setUpdatedBy("admin");
-				varXref.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+				setUpdatedBy(varXref);
 				changedVarXrefs.add(varXref);
 
 			}
@@ -697,6 +817,10 @@ public class SDTMController {
 		result.setSuccess(true);
 		or.setResult(result);
 		return new ResponseEntity<OperationResponse>(or, HttpStatus.OK);
+	}
+
+	private ResponseEntity<OperationResponse> updateProjectVariableXref(SDTMProjectVariableXref varXref) {
+		return this.updateProjectVariableXrefs(Arrays.asList(varXref));
 	}
 
 	private ResponseEntity<OperationResponse> updateProjectVariableXrefs(List<SDTMProjectVariableXref> varXrefs) {

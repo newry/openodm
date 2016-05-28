@@ -22,7 +22,9 @@
 		<tr id="{{item.model.id}}" index="{{$index}}" ng-repeat="item in tempProject.tempModel.domains[$index].tempModel.sdtmDomain.variableList"
 			ng-show="!requesting" ng-class="{strike: item.model.status!='active', normal: item.model.status=='active'}">
 			<td>{{item.model.sdtmVariable.name}}</td>
-			<td>{{item.model.codeList.name}}</td>
+			<td>
+				<a href="" ng-click="getEnumeratedItems(item)">{{item.model.codeList.cdiscsubmissionValue}}</a>
+			</td>
 			<td>
 				<div id="originList_{{item.model.id}}">
 					<div ng-repeat="item in item.model.origins">{{item.name}}</div>

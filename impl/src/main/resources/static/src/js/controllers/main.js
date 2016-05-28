@@ -433,6 +433,71 @@
         	}
         };
 	    
+        $scope.getEnumeratedItems = function(item) {
+	        var deferred = $q.defer();
+	        var prj = $scope.tempProject.tempModel;
+	        console.log(item.model.enumeratedItemQuery);
+	    	$http.get("/sdtm/v1/project/"+prj.id+"/variable/"+item.model.id+"/enumeratedItems").success(function(data) {
+                deferredHandler(data, deferred);
+            }).error(function(data, status) {
+            	deferredHandler(data, deferred, 'Error during get projects');
+            })['finally'](function() {
+            	$scope.requesting = false;
+            });
+            deferred.promise.then(function(data){
+            	item.tempModel.enumeratedItemList = item.model.enumeratedItemList = data;
+            });
+	        $scope.modal('editProjectEnumeratedItemList');
+	        return $scope.touch(item);
+        };
+	    $scope.queryEnumeratedItemsForCodeList = function(item) {
+        	$scope.modalRequesting = true;
+	        var prj = $scope.tempProject.tempModel;
+	        var deferred = $q.defer();
+	        var url = "/sdtm/v1/project/"+prj.id+"/variable/"+item.model.id+"/allEnumeratedItemsQuery";
+	        if(item.model.enumeratedItemQuery){
+	        	url+=("?q="+item.model.enumeratedItemQuery);
+	        }
+	    	$http.get(url).success(function(data) {
+                deferredHandler(data, deferred);
+            }).error(function(data, status) {
+            	deferredHandler(data, deferred, 'Error during get code Lists');
+            })['finally'](function() {
+            	$scope.modalRequesting = false;
+            });
+            deferred.promise.then(function(data){
+            	item.tempModel.enumeratedItemList = item.model.enumeratedItemList = data;
+            });
+	    };
+	    $scope.editEnumeratedItem = function(item, ei, remove) {
+        	$scope.modalRequesting = true;
+	        var prj = $scope.tempProject.tempModel;
+	        var deferred = $q.defer();
+	        var url = "/sdtm/v1/project/"+prj.id+"/variable/"+item.model.id+"/enumeratedItem/"+ei.id;
+	        if(remove){
+		    	$http.delete(url).success(function(data) {
+	                deferredHandler(data, deferred);
+	            }).error(function(data, status) {
+	            	deferredHandler(data, deferred, 'Error during get code Lists');
+	            })['finally'](function() {
+	            	$scope.modalRequesting = false;
+	            });
+	        }else{
+		    	$http.post(url).success(function(data) {
+	                deferredHandler(data, deferred);
+	            }).error(function(data, status) {
+	            	deferredHandler(data, deferred, 'Error during get code Lists');
+	            })['finally'](function() {
+	            	$scope.modalRequesting = false;
+	            });
+	        	
+	        }
+            deferred.promise.then(function(data){
+            	$scope.queryEnumeratedItemsForCodeList(item);
+            });
+
+	    };
+
         $scope.modal = function(id, hide) {
             return $('#' + id).modal(hide ? 'hide' : 'show');
         };
@@ -775,7 +840,7 @@
 		        });
         	}
         	
-        	console.log(requestData);
+        	//console.log(requestData);
         };
 
         $scope.editOrigin = function(id, show) {

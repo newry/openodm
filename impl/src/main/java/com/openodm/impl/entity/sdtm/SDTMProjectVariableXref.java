@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.openodm.impl.entity.PersistentObject;
 import com.openodm.impl.entity.ct.CodeList;
+import com.openodm.impl.entity.ct.EnumeratedItem;
 
 @Entity
 @Table(name = "SDTM_PROJECT_VARIABLE_XREF")
@@ -69,6 +70,11 @@ public class SDTMProjectVariableXref extends PersistentObject {
 	@ManyToMany(targetEntity = SDTMOrigin.class)
 	@JoinTable(name = "SDTM_PROJECT_VARIABLE_ORIGIN_XREF", joinColumns = { @JoinColumn(name = "SDTM_PROJECT_VARIABLE_XREF_ID") }, inverseJoinColumns = { @JoinColumn(name = "sdtm_origin_id") })
 	private List<SDTMOrigin> origins;
+
+	@ManyToMany(targetEntity = EnumeratedItem.class)
+	@JoinTable(name = "SDTM_PROJECT_VARIABLE_ENUM_ITEM_XREF", joinColumns = { @JoinColumn(name = "SDTM_PROJECT_VARIABLE_XREF_ID") }, inverseJoinColumns = { @JoinColumn(name = "ENUMERATED_ITEM_ID") })
+	@JsonIgnore
+	private List<EnumeratedItem> enumeratedItems;
 
 	@Column(name = "crf_page_no", nullable = true, length = 32)
 	private String crfPageNo;
@@ -155,6 +161,14 @@ public class SDTMProjectVariableXref extends PersistentObject {
 
 	public void setLength(Integer length) {
 		this.length = length;
+	}
+
+	public List<EnumeratedItem> getEnumeratedItems() {
+		return enumeratedItems;
+	}
+
+	public void setEnumeratedItems(List<EnumeratedItem> enumeratedItems) {
+		this.enumeratedItems = enumeratedItems;
 	}
 
 }

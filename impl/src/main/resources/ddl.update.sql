@@ -397,4 +397,9 @@
         add constraint FK_35rafe3pa2d5rokxr26jna1ob 
         foreign key (SDTM_PROJECT_VARIABLE_XREF_ID) 
         references SDTM_PROJECT_VARIABLE_XREF;
+
+    create table SDTM_PROJECT_VARIABLE_ENUM_ITEM_XREF (
+        SDTM_PROJECT_VARIABLE_XREF_ID int8 not null,
+        ENUMERATED_ITEM_ID int8 not null
+    );
     
