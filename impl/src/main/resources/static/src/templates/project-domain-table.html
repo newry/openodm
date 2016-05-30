@@ -1,5 +1,6 @@
 <a href="" ng-click="closeTab($index)">Close</a>
 <a href="" ng-click="saveTabData($index)">Save Changes</a>
+<div ng-include data-src="'project-domain-error-bar'" class="clearfix"></div>
 <table border="1" class="table mb0 table-files" id="toc-table-container">
 	<thead>
 		<tr>
@@ -49,3 +50,9 @@
 		</tr>
 	</tbody>
 </table>
+<script type="text/ng-template" id="project-domain-error-bar">
+    <div class="label label-danger error-msg pull-left animated fadeIn" ng-show="temp.error">
+      <i class="glyphicon glyphicon-remove-circle"></i>
+      <span>{{temp.error}}</span>
+    </div>
+</script>
