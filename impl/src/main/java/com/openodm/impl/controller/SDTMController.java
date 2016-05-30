@@ -43,6 +43,7 @@ import com.openodm.impl.entity.sdtm.SDTMProjectVariableXref;
 import com.openodm.impl.entity.sdtm.SDTMVariable;
 import com.openodm.impl.entity.sdtm.SDTMVariableRef;
 import com.openodm.impl.entity.sdtm.SDTMVersion;
+import com.openodm.impl.repository.ct.CodeListRepository;
 import com.openodm.impl.repository.ct.ControlTerminologyRepository;
 import com.openodm.impl.repository.ct.EnumeratedItemRepository;
 import com.openodm.impl.repository.sdtm.SDTMDomainRepository;
@@ -82,6 +83,8 @@ public class SDTMController {
 	private ControlTerminologyRepository controlTerminologyRepository;
 	@Autowired
 	private SDTMProjectLibraryRepository sdtmProjectLibraryRepository;
+	@Autowired
+	private CodeListRepository codeListRepository;
 
 	@RequestMapping(value = "/sdtm/v1/origin", method = RequestMethod.POST)
 	public void importOrigins() throws Exception {
@@ -587,6 +590,91 @@ public class SDTMController {
 		return new ArrayList<>(0);
 	}
 
+	@RequestMapping(value = "/sdtm/v1/project/{projectId}/variable/{variableId}/codeListQuery", method = RequestMethod.GET)
+	public List<CodeList> queryCodeList(@PathVariable("projectId") Long projectId, @PathVariable("variableId") Long variableId,
+			@RequestParam(value = "q", required = false) String q) {
+		SDTMProjectVariableXref varXref = sdtmProjectVariableXrefRepository.findOne(variableId);
+		List<CodeList> codeLists = new ArrayList<CodeList>();
+		if (varXref != null) {
+			CodeList codeList = varXref.getCodeList();
+			if (codeList != null) {
+				codeList.setAdded(true);
+				codeLists.add(codeList);
+			}
+		}
+
+		if (StringUtils.isNotBlank(q)) {
+			SDTMProject project = this.sdtmProjectRepository.findOne(projectId);
+			if (project != null) {
+				ControlTerminology ct = project.getSdtmVersion().getControlTerminology();
+				if (ct != null) {
+					List<CodeList> result = this.controlTerminologyRepository.queryCodeList(StringUtils.lowerCase(q), ct.getId());
+					if (!CollectionUtils.isEmpty(result)) {
+						for (CodeList codeList : result) {
+							if (!codeLists.contains(codeList)) {
+								codeLists.add(codeList);
+							}
+						}
+					}
+				}
+			}
+		}
+		return codeLists;
+	}
+
+	@RequestMapping(value = "/sdtm/v1/project/{projectId}/variable/{variableId}/codeList", method = RequestMethod.GET)
+	public List<CodeList> getCodeList(@PathVariable("projectId") Long projectId, @PathVariable("variableId") Long variableId) {
+		SDTMProjectVariableXref varXref = sdtmProjectVariableXrefRepository.findOne(variableId);
+		List<CodeList> codeLists = new ArrayList<CodeList>();
+		if (varXref != null) {
+			CodeList codeList = varXref.getCodeList();
+			if (codeList != null) {
+				codeList.setAdded(true);
+				codeLists.add(codeList);
+			}
+		}
+
+		return codeLists;
+	}
+
+	@RequestMapping(value = "/sdtm/v1/project/{projectId}/variable/{variableId}/codeList/{id}", method = RequestMethod.POST)
+	public ResponseEntity<OperationResponse> updateCodeList(@PathVariable("projectId") Long projectId, @PathVariable("variableId") Long variableId,
+			@PathVariable("id") Long id) {
+		SDTMProjectVariableXref varXref = sdtmProjectVariableXrefRepository.findOne(variableId);
+		if (varXref != null) {
+			CodeList codeList = this.codeListRepository.findOne(id);
+			if (codeList != null) {
+				varXref.setCodeList(codeList);
+				setUpdatedBy(varXref);
+				return this.updateProjectVariableXref(varXref);
+			}
+		}
+		OperationResponse or = new OperationResponse();
+		OperationResult result = new OperationResult();
+		result.setSuccess(true);
+		or.setResult(result);
+		return new ResponseEntity<OperationResponse>(or, HttpStatus.OK);
+	}
+
+	@RequestMapping(value = "/sdtm/v1/project/{projectId}/variable/{variableId}/codeList/{id}", method = RequestMethod.DELETE)
+	public ResponseEntity<OperationResponse> removeCodeList(@PathVariable("projectId") Long projectId, @PathVariable("variableId") Long variableId,
+			@PathVariable("id") Long id) {
+		SDTMProjectVariableXref varXref = sdtmProjectVariableXrefRepository.findOne(variableId);
+		if (varXref != null) {
+			CodeList codeList = this.codeListRepository.findOne(id);
+			if (codeList != null && codeList.equals(varXref.getCodeList())) {
+				varXref.setCodeList(null);
+				setUpdatedBy(varXref);
+				return this.updateProjectVariableXref(varXref);
+			}
+		}
+		OperationResponse or = new OperationResponse();
+		OperationResult result = new OperationResult();
+		result.setSuccess(true);
+		or.setResult(result);
+		return new ResponseEntity<OperationResponse>(or, HttpStatus.OK);
+	}
+
 	@RequestMapping(value = "/sdtm/v1/project/{projectId}/variable/{variableId}/allEnumeratedItemsQuery", method = RequestMethod.GET)
 	public List<EnumeratedItem> queryEnumeratedItem(@PathVariable("projectId") Long projectId, @PathVariable("variableId") Long variableId,
 			@RequestParam(value = "q", required = false) String q) {
@@ -716,6 +804,21 @@ public class SDTMController {
 							varXref.getOrigins().add(newValue);
 						}
 					}
+				}
+				boolean needCRFPageNo = false;
+				for (SDTMOrigin origin : varXref.getOrigins()) {
+					if (origin.getName().equals("CRF Page")) {
+						needCRFPageNo = true;
+						break;
+					}
+				}
+				if (needCRFPageNo && StringUtils.isEmpty(varXref.getCrfPageNo())) {
+					OperationResponse or = new OperationResponse();
+					OperationResult result = new OperationResult();
+					result.setSuccess(false);
+					result.setError("Invalid request for variable named " + varXref.getSdtmVariable().getName());
+					or.setResult(result);
+					return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
 				}
 				setUpdatedBy(varXref);
 				changedVarXrefs.add(varXref);

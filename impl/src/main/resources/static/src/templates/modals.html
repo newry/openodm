@@ -432,6 +432,53 @@
 		</div>
 	</div>
 </div>
+<div class="modal animated fadeIn" id="addCodeListToProject">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<form>
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">
+						<span aria-hidden="true">&times;</span> <span class="sr-only">close</span>
+					</button>
+					<h4 class="modal-title">Add Code List To {{tempProject.tempModel.name}}</h4>
+				</div>
+				<div class="modal-body">
+					Domain: {{temp.model.sdtmDomain.name}}<br/>
+					Keyword: <input type="text" ng-model="temp.model.codeListQuery" autofocus="autofocus" ng-required="true"/>
+					<a href="" ng-click="queryCodeListsForProject(temp)"> <i class="glyphicon"></i>Query</a>
+					<table class="table mb0 table-files">
+						<thead>
+							<tr>
+								<th>Code List Name</th>
+								<th>Submission Value</th>
+								<th>Code Id</th>
+								<th></th>
+							</tr>
+							<tr
+								ng-repeat="item in temp.model.codeLists" ng-show="!modalRequesting">
+								<td class="hidden-xs">{{item.name}}</td>
+								<td class="hidden-xs">{{item.cdiscsubmissionValue}}</td>
+								<td class="hidden-xs">{{item.extCodeId}}</td>
+								<td class="hidden-xs" ng-show="!item.added"><a href="" ng-click="addCodeListForProject(temp, item, false)">Add</a></td>
+								<td class="hidden-xs" ng-show="item.added"><a href="" ng-click="addCodeListForProject(temp, item, true)">Remove</a></td>
+							</tr>
+						</thead>
+					</table>
+					
+					<div ng-include data-src="'error-bar'" class="clearfix"></div>
+				</div>
+				<div class="modal-footer">
+					<div ng-show="!modalRequesting">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					</div>
+					<div ng-show="modalRequesting">
+						<span class="label label-warning">Requesting ...</span>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
 
 <!-- 
 <div class="modal animated fadeIn" id="editProjectDomainVariables">

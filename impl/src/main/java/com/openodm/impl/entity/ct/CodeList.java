@@ -33,6 +33,9 @@ public class CodeList extends AbstractCodeList {
 	@Transient
 	private boolean customized;
 
+	@Transient
+	private boolean added;
+
 	public boolean isCustomized() {
 		return customized;
 	}
@@ -51,6 +54,14 @@ public class CodeList extends AbstractCodeList {
 
 	public void setSearchTerm(String searchTerm) {
 		this.searchTerm = searchTerm;
+	}
+
+	public boolean isAdded() {
+		return added;
+	}
+
+	public void setAdded(boolean added) {
+		this.added = added;
 	}
 
 }
