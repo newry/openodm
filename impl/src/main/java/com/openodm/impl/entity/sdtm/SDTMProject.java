@@ -1,5 +1,7 @@
 package com.openodm.impl.entity.sdtm;
 
+import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -9,6 +11,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.GenericGenerator;
@@ -42,6 +45,9 @@ public class SDTMProject extends PersistentObject {
 	@JsonIgnore
 	private SDTMVersion sdtmVersion;
 
+	@Transient
+	private List<SDTMProjectLibrary> libraries;
+
 	public String getName() {
 		return name;
 	}
@@ -68,6 +74,14 @@ public class SDTMProject extends PersistentObject {
 
 	public Long getId() {
 		return id;
+	}
+
+	public List<SDTMProjectLibrary> getLibraries() {
+		return libraries;
+	}
+
+	public void setLibraries(List<SDTMProjectLibrary> libraries) {
+		this.libraries = libraries;
 	}
 
 }

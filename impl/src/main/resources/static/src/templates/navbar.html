@@ -28,7 +28,7 @@
         <button class="btn btn-default btn-sm" data-toggle="modal" data-target="#newProject" ng-click="newProject()">
             <i class="glyphicon glyphicon-plus"></i> New Project
         </button>
-        <button class="btn btn-default btn-sm" data-toggle="modal" data-target="#editProject" ng-show="tempProject.tempModel.id">
+        <button class="btn btn-default btn-sm" data-toggle="modal" data-target="#editProject"  ng-click="getProject(tempProject.tempModel.id)" ng-show="tempProject.tempModel.id">
             <i class="glyphicon glyphicon-plus"></i> Edit Project
         </button>
       </div>

@@ -83,6 +83,28 @@
 	            });
         	}
         };
+        
+        
+        Item.prototype.getAttributes = function() {
+            var self = this;
+	        if(this.type === 'domain'){
+	            self.inprocess = true;
+	            self.error = '';
+		        var deferred = $q.defer();
+		        var url = "/sdtm/v1/project/"+ this.model.projectId + "/domain/"+this.model.sdtmDomain.id;
+	            $http.get(url).success(function(data) {
+	                self.deferredHandler(data, deferred);
+	            }).error(function(data, status) {
+	                self.deferredHandler(data, deferred, 'Error during get attributes');
+	            })['finally'](function() {
+	                self.inprocess = false;
+	            });
+	            deferred.promise.then(function(data){
+	                self.tempModel = data;
+	            });
+        	}
+        };
+
 
         return Item;
     }]);

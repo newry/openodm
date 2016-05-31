@@ -18,6 +18,7 @@ import com.openodm.impl.entity.sdtm.SDTMDomain;
 import com.openodm.impl.entity.sdtm.SDTMOrigin;
 import com.openodm.impl.entity.sdtm.SDTMProject;
 import com.openodm.impl.entity.sdtm.SDTMProjectDomainXref;
+import com.openodm.impl.entity.sdtm.SDTMProjectKeyVariableXref;
 import com.openodm.impl.entity.sdtm.SDTMProjectLibrary;
 import com.openodm.impl.entity.sdtm.SDTMProjectVariableXref;
 import com.openodm.impl.entity.sdtm.SDTMVariable;
@@ -47,6 +48,7 @@ public class GenerateDDL {
 			cfg.addAnnotatedClass(SDTMVariable.class);
 			cfg.addAnnotatedClass(SDTMProject.class);
 			cfg.addAnnotatedClass(SDTMProjectVariableXref.class);
+			cfg.addAnnotatedClass(SDTMProjectKeyVariableXref.class);
 			cfg.addAnnotatedClass(SDTMProjectDomainXref.class);
 			cfg.addAnnotatedClass(SDTMProjectLibrary.class);
 			cfg.addAnnotatedClass(SDTMOrigin.class);

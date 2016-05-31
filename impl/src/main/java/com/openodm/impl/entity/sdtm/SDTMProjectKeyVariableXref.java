@@ -19,47 +19,41 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.openodm.impl.entity.PersistentObject;
 
 @Entity
-@Table(name = "SDTM_PROJECT_LIBRARY")
+@Table(name = "SDTM_PROJECT_KEY_VARIABLE_XREF")
 @DynamicUpdate
-@JsonInclude(Include.NON_EMPTY)
-public class SDTMProjectLibrary extends PersistentObject {
-	private static final long serialVersionUID = 2111845415050802396L;
+@JsonInclude(Include.NON_NULL)
+public class SDTMProjectKeyVariableXref extends PersistentObject {
 
+	private static final long serialVersionUID = 9195706482774759770L;
 	@Id
 	@GeneratedValue(generator = "identity", strategy = GenerationType.IDENTITY)
 	@GenericGenerator(name = "identity", strategy = "identity")
 	@Column(name = "ID", unique = true, nullable = false, precision = 22)
 	private Long id;
 
-	@Column(name = "name", nullable = false, length = 24)
-	private String name;
-
-	@Column(name = "path", nullable = true, length = 4096)
-	private String path;
+	@Column(name = "order_number", nullable = false)
+	private Integer orderNumber;
 
 	@ManyToOne(targetEntity = SDTMProject.class, optional = false, fetch = FetchType.LAZY)
 	@JoinColumn(name = "SDTM_PROJECT_ID", nullable = false)
 	@JsonIgnore
 	private SDTMProject sdtmProject;
 
-	public String getName() {
-		return name;
+	@ManyToOne(targetEntity = SDTMVariable.class, optional = false, fetch = FetchType.EAGER)
+	@JoinColumn(name = "SDTM_VARIABLE_ID", nullable = false)
+	private SDTMVariable sdtmVariable;
+
+	@ManyToOne(targetEntity = SDTMDomain.class, optional = false, fetch = FetchType.LAZY)
+	@JoinColumn(name = "SDTM_DOMAIN_ID", nullable = false)
+	@JsonIgnore
+	private SDTMDomain sdtmDomain;
+
+	public Integer getOrderNumber() {
+		return orderNumber;
 	}
 
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getPath() {
-		return path;
-	}
-
-	public void setPath(String path) {
-		this.path = path;
-	}
-
-	public Long getId() {
-		return id;
+	public void setOrderNumber(Integer orderNumber) {
+		this.orderNumber = orderNumber;
 	}
 
 	public SDTMProject getSdtmProject() {
@@ -68,6 +62,26 @@ public class SDTMProjectLibrary extends PersistentObject {
 
 	public void setSdtmProject(SDTMProject sdtmProject) {
 		this.sdtmProject = sdtmProject;
+	}
+
+	public SDTMVariable getSdtmVariable() {
+		return sdtmVariable;
+	}
+
+	public void setSdtmVariable(SDTMVariable sdtmVariable) {
+		this.sdtmVariable = sdtmVariable;
+	}
+
+	public SDTMDomain getSdtmDomain() {
+		return sdtmDomain;
+	}
+
+	public void setSdtmDomain(SDTMDomain sdtmDomain) {
+		this.sdtmDomain = sdtmDomain;
+	}
+
+	public Long getId() {
+		return id;
 	}
 
 }

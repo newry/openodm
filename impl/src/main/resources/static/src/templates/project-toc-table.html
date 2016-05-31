@@ -3,9 +3,7 @@
 		<tr>
 			<th>Dataset</th>
 			<th>Label</th>
-			<th>Class</th>
-			<th>Structure</th>
-			<th>Purpose</th>
+			<th>Key Variables</th>
 			<th>Operation</th>
 		</tr>
 	</thead>
@@ -23,9 +21,12 @@
 				</a>
 			</td>
 			<td>{{item.model.sdtmDomain.description}}</td>
-			<td>{{item.model.sdtmDomain.defClass}}</td>
-			<td>{{item.model.sdtmDomain.structure}}</td>
-			<td>{{item.model.sdtmDomain.purpose}}</td>
+			<td>
+				<div ng-repeat="item in item.model.sdtmDomain.keyVariables">{{item.sdtmVariable.name}}</div>
+				<button class="btn btn-default " ng-click="getKeyVariableList(item)">
+			            <i class="glyphicon glyphicon-plus"></i> Select
+			    </button>
+			</td>
 			<td ng-show="item.model.status!='active'"><a href="" ng-click="addDomainForProject(item.model,tempProject.tempModel)">Activate</a></td>
 			<td ng-show="item.model.status=='active'"><a href="" ng-click="removeDomainForProject(item.model,tempProject.tempModel)">Deactive</a></td>
 		</tr>

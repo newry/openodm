@@ -1,5 +1,7 @@
 package com.openodm.impl.entity.sdtm;
 
+import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -63,6 +65,9 @@ public class SDTMDomain extends PersistentObject {
 
 	@Transient
 	private boolean added;
+
+	@Transient
+	private List<SDTMProjectKeyVariableXref> keyVariables;
 
 	public String getDomain() {
 		return domain;
@@ -171,6 +176,14 @@ public class SDTMDomain extends PersistentObject {
 		} else if (!id.equals(other.id))
 			return false;
 		return true;
+	}
+
+	public List<SDTMProjectKeyVariableXref> getKeyVariables() {
+		return keyVariables;
+	}
+
+	public void setKeyVariables(List<SDTMProjectKeyVariableXref> keyVariables) {
+		this.keyVariables = keyVariables;
 	}
 
 }

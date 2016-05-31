@@ -371,10 +371,28 @@
 				<div class="modal-body">
 					Name: <input type="text" ng-model="tempProject.tempModel.name" autofocus="autofocus" ng-required="true"/><br/>
 					Description: <textarea ng-model="tempProject.tempModel.description"></textarea><br/>
+					<table class="table mb0 table-files">
+						<thead>
+							<tr>
+								<th></th>
+								<th>Name</th>
+								<th>Path</th>
+							</tr>
+							<tr
+								ng-repeat="item in tempProject.tempModel.libraryList"
+								ng-show="!modalRequesting">
+								<td class="hidden-xs"><a href="" ng-click="removeLibraray(tempProject.tempModel.libraryList, item)"><b>-</b></a></td>
+								<td class="hidden-xs"><input type="text" ng-model="item.name" autofocus="autofocus" ng-required="true"/></td>
+								<td class="hidden-xs"><input type="text" ng-model="item.path" ng-required="true"/></td>
+							</tr>
+						</thead>
+					</table>
+
 					<div ng-include data-src="'error-bar'" class="clearfix"></div>
 				</div>
 				<div class="modal-footer">
 					<div ng-show="!modalRequesting">
+						<button type="button" class="btn btn-default" ng-click="addNewLibraray(tempProject.tempModel.libraryList)">Add Library</button>
 						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 						<button type="submit" class="btn btn-primary">Confirm</button>
 					</div>
@@ -444,6 +462,7 @@
 				</div>
 				<div class="modal-body">
 					Domain: {{temp.model.sdtmDomain.name}}<br/>
+					Variable: {{temp.model.sdtmVariable.name}}<br/>
 					Keyword: <input type="text" ng-model="temp.model.codeListQuery" autofocus="autofocus" ng-required="true"/>
 					<a href="" ng-click="queryCodeListsForProject(temp)"> <i class="glyphicon"></i>Query</a>
 					<table class="table mb0 table-files">
@@ -474,6 +493,86 @@
 					<div ng-show="modalRequesting">
 						<span class="label label-warning">Requesting ...</span>
 					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+<div class="modal animated fadeIn" id="showVariableInfo">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<form>
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">
+						<span aria-hidden="true">&times;</span> <span class="sr-only">Close</span>
+					</button>
+					<h4 class="modal-title">{{temp.tempModel.name}}</h4>
+				</div>
+				<div class="modal-body">
+					<table class="table mb0 table-files">
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Value</th>
+							</tr>
+							<tr>
+								<td>Label</td>
+								<td>{{temp.tempModel.sdtmDomain.description}}</td>
+							</tr>
+							<tr>
+								<td>Class</td>
+								<td>{{temp.tempModel.sdtmDomain.defClass}}</td>
+							</tr>
+							<tr>
+								<td>Structure</td>
+								<td>{{temp.tempModel.sdtmDomain.structure}}</td>
+							</tr>
+							<tr>
+								<td>Purpose</td>
+								<td>{{temp.tempModel.sdtmDomain.purpose}}</td>
+							</tr>
+						</thead>
+					</table>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal"
+						ng-disabled="temp.inprocess">Close</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+<div class="modal animated fadeIn" id="editProjectDomainKeyVariable">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<form>
+				<div class="modal-header">
+					</button>
+					<h4 class="modal-title">{{temp.tempModel.sdtmDomain.name}}</h4>
+				</div>
+				<div class="modal-body">
+					<table class="table mb0 table-files">
+						<thead>
+							<tr>
+								<th>CDISC Variable Name	</th>
+								<th></th>
+							</tr>
+							
+						</thead>
+						<tbody data-ng-model="temp.tempModel.keyVariableList" ui-sortable="keyVariableSortableOptions">
+							<tr
+								id="{{item.model.id}}" ng-repeat="item in temp.tempModel.keyVariableList"
+								ng-show="!modalRequesting">
+								<td class="hidden-xs">{{item.model.name}}</td>
+								<td class="hidden-xs" ng-show="!item.model.key"><a href="" ng-click="editKeyVariableForProject(temp, item, false)">Add</a></td>
+								<td class="hidden-xs" ng-show="item.model.key"><a href="" ng-click="editKeyVariableForProject(temp, item, true)">Remove</a></td>
+							</tr>
+						</tbody>
+					</table>
+					<div ng-include data-src="'error-bar'" class="clearfix"></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal" ng-disabled="temp.inprocess" ng-click="getProjectDomains(tempProject.tempModel)">Close</button>
 				</div>
 			</form>
 		</div>

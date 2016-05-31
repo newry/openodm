@@ -402,4 +402,33 @@
         SDTM_PROJECT_VARIABLE_XREF_ID int8 not null,
         ENUMERATED_ITEM_ID int8 not null
     );
+
+    create table SDTM_PROJECT_KEY_VARIABLE_XREF (
+        ID  bigserial not null,
+        CREATOR varchar(255) not null,
+        DATE_ADDED timestamp not null,
+        DATE_LAST_MODIFIED timestamp not null,
+        STATUS varchar(32) not null,
+        UPDATED_BY varchar(255) not null,
+        order_number int4 not null,
+        SDTM_DOMAIN_ID int8 not null,
+        SDTM_PROJECT_ID int8 not null,
+        SDTM_VARIABLE_ID int8 not null,
+        primary key (ID)
+    );
+    
+    alter table SDTM_PROJECT_KEY_VARIABLE_XREF 
+        add constraint FK_eq1i23fyi1nnaubqirfjte7ak 
+        foreign key (SDTM_DOMAIN_ID) 
+        references SDTM_DOMAIN;
+
+    alter table SDTM_PROJECT_KEY_VARIABLE_XREF 
+        add constraint FK_cv2nn8onfynux2yjjhlnrkv4h 
+        foreign key (SDTM_PROJECT_ID) 
+        references SDTM_PROJECT;
+
+    alter table SDTM_PROJECT_KEY_VARIABLE_XREF 
+        add constraint FK_gj1wl3n20uu13i9llg8hr7np5 
+        foreign key (SDTM_VARIABLE_ID) 
+        references SDTM_VARIABLE;
     
