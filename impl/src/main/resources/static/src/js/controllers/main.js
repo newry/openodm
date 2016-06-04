@@ -445,7 +445,6 @@
         $scope.getEnumeratedItems = function(item) {
 	        var deferred = $q.defer();
 	        var prj = $scope.tempProject.tempModel;
-	        //console.log(item.model.enumeratedItemQuery);
 	    	$http.get("/sdtm/v1/project/"+prj.id+"/variable/"+item.model.id+"/enumeratedItems").success(function(data) {
                 deferredHandler(data, deferred);
             }).error(function(data, status) {
@@ -509,7 +508,6 @@
         $scope.getCodeList = function(item) {
 	        var deferred = $q.defer();
 	        var prj = $scope.tempProject.tempModel;
-	        //console.log(item.model.codeListQuery);
 	    	$http.get("/sdtm/v1/project/"+prj.id+"/variable/"+item.model.id+"/codeList").success(function(data) {
                 deferredHandler(data, deferred);
             }).error(function(data, status) {
@@ -520,7 +518,6 @@
             deferred.promise.then(function(data){
             	item.tempModel.codeLists = item.model.codeLists = data;
             });
-            console.log(item);
 	        $scope.modal('addCodeListToProject');
 	        return $scope.touch(item);
         };
@@ -744,25 +741,6 @@
                 });
 	    	})
 	    };
-
-	    
-	    $scope.getAllDomains = function(prj) {
-            $scope.requesting = true;
-		    var deferred = $q.defer();
-		    $http.get("/sdtm/v1/project/"+prj.id+"/allDomain").success(function(data) {
-	            deferredHandler(data, deferred);
-	        }).error(function(data, status) {
-	            deferredHandler(data, deferred, 'Error during get project domains');
-	        })['finally'](function() {
-	        	$scope.requesting = false;
-	        });
-		    deferred.promise.then(function(data){
-		    	$scope.modalDomainList = (data || []).map(function(file) {
-	                return new Item(file);
-	            });
-		    })
-	        $scope.viewTemplate = 'main-project-table.html';
-	    };
 	    
 	    $scope.getProjectDomains = function(prj) {
 	        $scope.varList =[];
@@ -929,7 +907,6 @@
 	            deferredHandler(data, deferred, 'Error during get projects');
 	        })['finally'](function() {
 	        	$scope.requesting = false;
-	            //$scope.getAllDomains(prj);
 	        });
 	    };
 	    
@@ -943,7 +920,6 @@
 	            deferredHandler(data, deferred, 'Error during get projects');
 	        })['finally'](function() {
 	        	$scope.requesting = false;
-	            //$scope.getAllDomains(prj);
 	        });
 	    };
 

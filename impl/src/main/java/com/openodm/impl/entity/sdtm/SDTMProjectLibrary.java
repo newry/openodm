@@ -35,6 +35,7 @@ public class SDTMProjectLibrary extends PersistentObject {
 	private String name;
 
 	@Column(name = "path", nullable = true, length = 4096)
+	@JsonIgnore
 	private String path;
 
 	@ManyToOne(targetEntity = SDTMProject.class, optional = false, fetch = FetchType.LAZY)

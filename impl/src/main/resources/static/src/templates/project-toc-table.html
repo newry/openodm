@@ -1,9 +1,10 @@
 <table border="1" class="table mb0 table-files" id="toc-table-container">
 	<thead>
 		<tr>
-			<th>Dataset</th>
+			<th>Domain</th>
 			<th>Label</th>
 			<th>Key Variables</th>
+			<th>DataSet Initialization</th>
 			<th>Operation</th>
 		</tr>
 	</thead>
@@ -27,6 +28,13 @@
 			            <i class="glyphicon glyphicon-plus"></i> Select
 			    </button>
 			</td>
+			<td>
+				<div ng-repeat="item in item.model.sdtmDomain.dataSets">{{item.name}}</div>
+<!-- 				<button class="btn btn-default " ng-click="getKeyVariableList(item)">
+			            <i class="glyphicon glyphicon-plus"></i> Select
+			    </button>
+ -->
+ 			</td>
 			<td ng-show="item.model.status!='active'"><a href="" ng-click="addDomainForProject(item.model,tempProject.tempModel)">Activate</a></td>
 			<td ng-show="item.model.status=='active'"><a href="" ng-click="removeDomainForProject(item.model,tempProject.tempModel)">Deactive</a></td>
 		</tr>

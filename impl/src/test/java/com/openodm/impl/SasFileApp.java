@@ -18,10 +18,15 @@ public class SasFileApp {
 			System.out.println(sasFileProperties.getFileType());
 			List<Column> columns = sasFileReader.getColumns();
 			for (Column column : columns) {
+				System.out.println(column.getId());
 				System.out.println(column.getName());
+				System.out.println(column.getLabel());
+				System.out.println(column.getType());
+				System.out.println(column.getLength());
+				System.out.println(column.getFormat());
 			}
 			Object[] next;
-			while ((next = sasFileReader.readNext()) != null) {
+			if ((next = sasFileReader.readNext()) != null) {
 				for (Object o : next) {
 					System.out.println(o == null ? null : o + "@" + o.getClass());
 				}

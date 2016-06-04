@@ -69,6 +69,9 @@ public class SDTMDomain extends PersistentObject {
 	@Transient
 	private List<SDTMProjectKeyVariableXref> keyVariables;
 
+	@Transient
+	private List<SDTMProjectDomainDataSet> dataSets;
+
 	public String getDomain() {
 		return domain;
 	}
@@ -184,6 +187,14 @@ public class SDTMDomain extends PersistentObject {
 
 	public void setKeyVariables(List<SDTMProjectKeyVariableXref> keyVariables) {
 		this.keyVariables = keyVariables;
+	}
+
+	public List<SDTMProjectDomainDataSet> getDataSets() {
+		return dataSets;
+	}
+
+	public void setDataSets(List<SDTMProjectDomainDataSet> dataSets) {
+		this.dataSets = dataSets;
 	}
 
 }

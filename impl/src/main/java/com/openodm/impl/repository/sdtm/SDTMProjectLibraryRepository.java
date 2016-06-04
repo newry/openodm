@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 import com.openodm.impl.entity.sdtm.SDTMProjectLibrary;
 
 public interface SDTMProjectLibraryRepository extends CrudRepository<SDTMProjectLibrary, Long> {
-	@Query("SELECT d FROM SDTMProjectLibrary d WHERE d.sdtmProject.id=:projectId")
+	@Query("SELECT d FROM SDTMProjectLibrary d WHERE d.sdtmProject.id=:projectId and d.status='active'")
 	public List<SDTMProjectLibrary> findByProjectId(@Param("projectId") Long projectId);
 
 }

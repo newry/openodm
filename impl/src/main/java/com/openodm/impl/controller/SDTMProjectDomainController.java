@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,6 +27,7 @@ import com.openodm.impl.controller.response.OperationResult;
 import com.openodm.impl.entity.ObjectStatus;
 import com.openodm.impl.entity.sdtm.SDTMDomain;
 import com.openodm.impl.entity.sdtm.SDTMProject;
+import com.openodm.impl.entity.sdtm.SDTMProjectDomainDataSet;
 import com.openodm.impl.entity.sdtm.SDTMProjectDomainXref;
 import com.openodm.impl.entity.sdtm.SDTMProjectKeyVariableXref;
 import com.openodm.impl.entity.sdtm.SDTMProjectVariableXref;
@@ -37,6 +37,7 @@ import com.openodm.impl.repository.ct.ControlTerminologyRepository;
 import com.openodm.impl.repository.ct.EnumeratedItemRepository;
 import com.openodm.impl.repository.sdtm.SDTMDomainRepository;
 import com.openodm.impl.repository.sdtm.SDTMOriginRepository;
+import com.openodm.impl.repository.sdtm.SDTMProjectDomainDataSetRepository;
 import com.openodm.impl.repository.sdtm.SDTMProjectDomainXrefRepository;
 import com.openodm.impl.repository.sdtm.SDTMProjectKeyVariableXrefRepository;
 import com.openodm.impl.repository.sdtm.SDTMProjectLibraryRepository;
@@ -75,6 +76,8 @@ public class SDTMProjectDomainController {
 	private SDTMProjectLibraryRepository sdtmProjectLibraryRepository;
 	@Autowired
 	private CodeListRepository codeListRepository;
+	@Autowired
+	private SDTMProjectDomainDataSetRepository sdtmProjectDomainDataSetRepository;
 
 	@RequestMapping(value = "/sdtm/v1/project/{id}/domain/{domainId}/allVariable", method = RequestMethod.GET)
 	public List<SDTMProjectVariableXref> listAllProjectDomainVariables(@PathVariable("id") Long id, @PathVariable("domainId") Long domainId) {
@@ -233,30 +236,6 @@ public class SDTMProjectDomainController {
 		}
 	}
 
-	@RequestMapping(value = "/sdtm/v1/project/{id}/allDomain", method = RequestMethod.GET)
-	public List<SDTMDomain> listAllDomains(@PathVariable("id") Long id) {
-		SDTMProject project = this.sdtmProjectRepository.findOne(id);
-		if (project != null) {
-			List<SDTMDomain> domainList = this.sdtmDomainRepository.findByVersionId(project.getSdtmVersion().getId());
-			List<SDTMDomain> domains = this.sdtmProjectDomainXrefRepository.findDomainByProjectId(id);
-			if (!CollectionUtils.isEmpty(domains)) {
-				Iterator<SDTMDomain> it = domainList.iterator();
-				while (it.hasNext()) {
-					SDTMDomain domain = it.next();
-					if (domains.contains(domain)) {
-						it.remove();
-					}
-				}
-				for (SDTMDomain domain : domains) {
-					domain.setAdded(true);
-					domainList.add(domain);
-				}
-			}
-			return domainList;
-		}
-		return new ArrayList<SDTMDomain>(0);
-	}
-
 	@RequestMapping(value = "/sdtm/v1/project/{id}/domain", method = RequestMethod.GET)
 	public List<SDTMProjectDomainXref> listProjectDomains(@PathVariable("id") Long id) {
 		List<SDTMProjectDomainXref> domainXrefs = this.sdtmProjectDomainXrefRepository.findByProjectId(id);
@@ -278,6 +257,26 @@ public class SDTMProjectDomainController {
 					List<SDTMProjectKeyVariableXref> list = keyVarMap.get(key);
 					if (!CollectionUtils.isEmpty(list)) {
 						domainXref.getSdtmDomain().setKeyVariables(list);
+					}
+				}
+			}
+			List<SDTMProjectDomainDataSet> dataSets = this.sdtmProjectDomainDataSetRepository.findByProjectId(id);
+
+			if (!CollectionUtils.isEmpty(dataSets)) {
+				Map<Long, List<SDTMProjectDomainDataSet>> keyVarMap = new HashMap<Long, List<SDTMProjectDomainDataSet>>();
+				for (SDTMProjectDomainDataSet dataSet : dataSets) {
+					Long key = dataSet.getSdtmDomain().getId();
+					List<SDTMProjectDomainDataSet> list = keyVarMap.get(key);
+					if (list == null) {
+						list = new ArrayList<SDTMProjectDomainDataSet>();
+						keyVarMap.put(key, list);
+					}
+					list.add(dataSet);
+				}
+				for (SDTMProjectDomainXref domainXref : domainXrefs) {
+					List<SDTMProjectDomainDataSet> list = keyVarMap.get(domainXref.getSdtmDomain().getId());
+					if (!CollectionUtils.isEmpty(list)) {
+						domainXref.getSdtmDomain().setDataSets(list);
 					}
 				}
 			}

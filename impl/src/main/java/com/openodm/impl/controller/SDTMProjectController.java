@@ -400,4 +400,10 @@ public class SDTMProjectController {
 		}
 		return new ArrayList<CodeList>(0);
 	}
+
+	@RequestMapping(value = "/sdtm/v1/project/{id}/library", method = RequestMethod.GET)
+	public List<SDTMProjectLibrary> listProjectLibraries(@PathVariable("id") Long id) {
+		return this.sdtmProjectLibraryRepository.findByProjectId(id);
+	}
+
 }
