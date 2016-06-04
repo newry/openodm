@@ -431,4 +431,28 @@
         add constraint FK_gj1wl3n20uu13i9llg8hr7np5 
         foreign key (SDTM_VARIABLE_ID) 
         references SDTM_VARIABLE;
+
+    create table SDTM_PROJECT_DOMAIN_DATASET (
+        ID  bigserial not null,
+        CREATOR varchar(255) not null,
+        DATE_ADDED timestamp not null,
+        DATE_LAST_MODIFIED timestamp not null,
+        STATUS varchar(32) not null,
+        UPDATED_BY varchar(255) not null,
+        sql varchar(1048576),
+        SDTM_DOMAIN_ID int8 not null,
+        SDTM_PROJECT_LIBRARY_ID int8 not null,
+        primary key (ID)
+    );
+    
+    alter table SDTM_PROJECT_DOMAIN_DATASET 
+        add constraint FK_7usdvka7dvdm182o6wuejgyw 
+        foreign key (SDTM_DOMAIN_ID) 
+        references SDTM_DOMAIN;
+
+    alter table SDTM_PROJECT_DOMAIN_DATASET 
+        add constraint FK_pvka34l6svnxeuisrg6s1bfxw 
+        foreign key (SDTM_PROJECT_LIBRARY_ID) 
+        references SDTM_PROJECT_LIBRARY;
+    
     
