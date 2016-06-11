@@ -31,7 +31,10 @@ public class SDTMProjectDomainDataSet extends PersistentObject {
 	@Column(name = "ID", unique = true, nullable = false, precision = 22)
 	private Long id;
 
-	@Column(name = "sql", nullable = true, length = 1024 * 1024)
+	@Column(name = "name", nullable = false, length = 1024 * 1024)
+	private String name;
+
+	@Column(name = "sql", nullable = false, length = 1024 * 1024)
 	private String sql;
 
 	@ManyToOne(targetEntity = SDTMProjectLibrary.class, optional = false, fetch = FetchType.LAZY)

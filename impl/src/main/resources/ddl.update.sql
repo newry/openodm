@@ -439,7 +439,8 @@
         DATE_LAST_MODIFIED timestamp not null,
         STATUS varchar(32) not null,
         UPDATED_BY varchar(255) not null,
-        sql varchar(1048576),
+        name varchar(1048576) not null,
+        sql varchar(1048576) not null,
         SDTM_DOMAIN_ID int8 not null,
         SDTM_PROJECT_LIBRARY_ID int8 not null,
         primary key (ID)
@@ -454,5 +455,3 @@
         add constraint FK_pvka34l6svnxeuisrg6s1bfxw 
         foreign key (SDTM_PROJECT_LIBRARY_ID) 
         references SDTM_PROJECT_LIBRARY;
-    
-    

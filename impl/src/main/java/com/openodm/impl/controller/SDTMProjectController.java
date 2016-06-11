@@ -1,7 +1,16 @@
 package com.openodm.impl.controller;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
@@ -20,6 +29,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.epam.parso.SasFileReader;
+import com.epam.parso.impl.SasFileReaderImpl;
 import com.openodm.impl.controller.response.OperationResponse;
 import com.openodm.impl.controller.response.OperationResult;
 import com.openodm.impl.entity.ct.CodeList;
@@ -403,7 +414,40 @@ public class SDTMProjectController {
 
 	@RequestMapping(value = "/sdtm/v1/project/{id}/library", method = RequestMethod.GET)
 	public List<SDTMProjectLibrary> listProjectLibraries(@PathVariable("id") Long id) {
-		return this.sdtmProjectLibraryRepository.findByProjectId(id);
+		List<SDTMProjectLibrary> libs = sdtmProjectLibraryRepository.findByProjectId(id);
+		for (SDTMProjectLibrary library : libs) {
+			List<Map<String, Object>> dataSetList = new ArrayList<>();
+			if (library != null) {
+				Path folder = Paths.get(library.getPath());
+				if (Files.exists(folder) && folder.toFile().isDirectory()) {
+					try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(folder)) {
+						for (Path path : directoryStream) {
+							Map<String, Object> map = new HashMap<String, Object>();
+							dataSetList.add(map);
+							Path fileName = path.getFileName();
+							if (fileName.toString().lastIndexOf(".") > -1) {
+								map.put("name", fileName.toString().substring(0, fileName.toString().lastIndexOf(".")));
+							} else {
+								map.put("name", fileName);
+							}
+							try (InputStream is = new FileInputStream(path.toFile())) {
+								SasFileReader sasFileReader = new SasFileReaderImpl(is);
+								map.put("columnList", sasFileReader.getColumns());
+							} catch (FileNotFoundException e) {
+								LOG.error("Got Exception during reading file, folder={}", folder, e);
+							} catch (IOException e) {
+								LOG.error("Got Exception during reading file, folder={}", folder, e);
+							}
+
+						}
+					} catch (IOException ex) {
+					}
+				}
+			}
+			library.setDataSetList(dataSetList);
+
+		}
+		return libs;
 	}
 
 }

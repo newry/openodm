@@ -505,6 +505,52 @@
             });
 
 	    };
+	    
+	    $scope.getProjectLibraryList = function(item) {
+	        var prj = $scope.tempProject.tempModel;
+	        $scope.tempDomainDataSet={};
+		    var deferred = $q.defer();
+		    $http.get("/sdtm/v1/project/"+prj.id+"/library").success(function(data) {
+	            deferredHandler(data, deferred);
+	        }).error(function(data, status) {
+	            deferredHandler(data, deferred, 'Error during get project libraries');
+	        })['finally'](function() {
+	        	$scope.requesting = false;
+	        });
+		    deferred.promise.then(function(data){
+		    	prj.libraryList = (data || []).map(function(file) {
+	                return new Item(file);
+	            });
+		    });
+	        $scope.modal('newProjectDomainDataSet');
+	        return $scope.touch(item);
+	    };
+
+	    $scope.generateSQL = function(item) {
+	        var prj = $scope.tempProject.tempModel;
+	        var tables = new Array();
+	        var columns = new Array();
+	        if(prj.libraryList){
+	        	for(var i=0;i<prj.libraryList.length;i++){
+	        		var lib = prj.libraryList[i].model;
+	        		if(lib.dataSetList && lib.dataSetList.length > 0){
+	    	        	for(var j=0;j<lib.dataSetList.length;j++){
+	    	        		var dataSet = lib.dataSetList[j];
+	    	        		if(dataSet.selectedColumnList && dataSet.selectedColumnList.length > 0){
+	    	        			tables.push(lib.name + "." + dataSet.name);
+	    	    	        	for(var k=0;k<dataSet.selectedColumnList.length;k++){
+	    	    	        		columns.push(lib.name + "." + dataSet.name+"."+dataSet.selectedColumnList[k].name);
+	    	        			}
+	    	        		}
+	    	        	}	        			
+	        		}
+	        	}
+	        }
+	        if(tables.length > 0){
+	        	item.model.sql="SELECT "+ columns.join(", ") + " FROM " + tables.join(", ");
+	        }
+	    };
+	    
         $scope.getCodeList = function(item) {
 	        var deferred = $q.defer();
 	        var prj = $scope.tempProject.tempModel;
@@ -766,7 +812,6 @@
 	        $scope.viewTemplate = 'main-project-table.html';
 	    };
         
-
 	    $scope.getKeyVariableList = function(domain) {
 		    var deferred = $q.defer();
 		    $http.get("/sdtm/v1/project/"+$scope.tempProject.tempModel.id+"/domain/"+domain.model.sdtmDomain.id+"/allKeyVariable").success(function(data) {

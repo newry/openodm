@@ -30,10 +30,9 @@
 			</td>
 			<td>
 				<div ng-repeat="item in item.model.sdtmDomain.dataSets">{{item.name}}</div>
-<!-- 				<button class="btn btn-default " ng-click="getKeyVariableList(item)">
-			            <i class="glyphicon glyphicon-plus"></i> Select
+ 				<button class="btn btn-default " ng-click="getProjectLibraryList(item)">
+			            <i class="glyphicon glyphicon-plus"></i> Add
 			    </button>
- -->
  			</td>
 			<td ng-show="item.model.status!='active'"><a href="" ng-click="addDomainForProject(item.model,tempProject.tempModel)">Activate</a></td>
 			<td ng-show="item.model.status=='active'"><a href="" ng-click="removeDomainForProject(item.model,tempProject.tempModel)">Deactive</a></td>

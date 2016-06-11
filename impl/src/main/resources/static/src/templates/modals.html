@@ -578,6 +578,44 @@
 		</div>
 	</div>
 </div>
+<div class="modal animated fadeIn" id="newProjectDomainDataSet">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<form ng-submit="">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">
+						<span aria-hidden="true">&times;</span> <span class="sr-only">close</span>
+					</button>
+					<h4 class="modal-title">New Data Set for {{temp.model.sdtmDomain.domain}}</h4>
+				</div>
+				<div class="modal-body">
+					Name: <input type="text" ng-model="tempDomainDataSet.name" autofocus="autofocus" ng-required="true"/><br/>
+					Library: <select ng-options="library.model.name for library in tempProject.tempModel.libraryList" ng-model="temp.model.selectedLibrary" ng-required="true"></select><br/>
+					<div ng-show="temp.model.selectedLibrary">
+					DataSet: <select ng-options="dataSet.name for dataSet in temp.model.selectedLibrary.model.dataSetList" ng-model="temp.model.library.selectedDataSet" ng-required="true"></select><br/>
+					</div>
+					<div ng-show="temp.model.library.selectedDataSet">
+					Column:  <select multiple style="width: 40%" ng-options="column.name for column in temp.model.library.selectedDataSet.columnList" ng-model="temp.model.library.selectedDataSet.selectedColumnList" ng-required="true" size="10" ng-change="generateSQL(temp)"></select><br/>
+					</div>
+					<div ng-show="temp.model.sql">
+					SQL:
+						<textarea style="width: 100%" rows="5" ng-model="temp.model.sql" readonly="readonly"></textarea>
+					</div>
+					<div ng-include data-src="'error-bar'" class="clearfix"></div>
+				</div>
+				<div class="modal-footer">
+					<div ng-show="!modalRequesting">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+						<button type="submit" class="btn btn-primary">Confirm</button>
+					</div>
+					<div ng-show="modalRequesting">
+						<span class="label label-warning">Requesting ...</span>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
 
 <!-- 
 <div class="modal animated fadeIn" id="editProjectDomainVariables">
