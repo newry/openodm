@@ -31,6 +31,18 @@
         $scope.fileUploader = fileUploader;
         $http.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
         $scope.originList = [];
+        $scope.dataSetJoinTypeList = [{
+        	  id: 1,
+        	  value: 'sort'
+        	}, {
+        	  id: 2,
+        	  value: 'merge'
+        	}, {
+        	  id: 3,
+        	  value: 'set'
+        	}
+        ];
+        $scope.sortDirectionList = ['asc', 'desc'];
         
         function deferredHandler(data, deferred, defaultMsg) {
         	var error;
@@ -509,6 +521,10 @@
 	    $scope.getProjectLibraryList = function(item) {
 	        var prj = $scope.tempProject.tempModel;
 	        $scope.tempDomainDataSet={};
+	        item.model.selectedMainLibrary=null;
+	        item.model.selectedJoinType=$scope.dataSetJoinTypeList[0];
+	        item.model.selectedLibrary=null;
+	        item.model.sql=null;
 		    var deferred = $q.defer();
 		    $http.get("/sdtm/v1/project/"+prj.id+"/library").success(function(data) {
 	            deferredHandler(data, deferred);
@@ -528,27 +544,80 @@
 
 	    $scope.generateSQL = function(item) {
 	        var prj = $scope.tempProject.tempModel;
-	        var tables = new Array();
-	        var columns = new Array();
-	        if(prj.libraryList){
-	        	for(var i=0;i<prj.libraryList.length;i++){
-	        		var lib = prj.libraryList[i].model;
-	        		if(lib.dataSetList && lib.dataSetList.length > 0){
-	    	        	for(var j=0;j<lib.dataSetList.length;j++){
-	    	        		var dataSet = lib.dataSetList[j];
-	    	        		if(dataSet.selectedColumnList && dataSet.selectedColumnList.length > 0){
-	    	        			tables.push(lib.name + "." + dataSet.name);
-	    	    	        	for(var k=0;k<dataSet.selectedColumnList.length;k++){
-	    	    	        		columns.push(lib.name + "." + dataSet.name+"."+dataSet.selectedColumnList[k].name);
-	    	        			}
+	        var sql;
+	        if(item.model.selectedJoinType.value=='sort'){
+    	        if(item.model.selectedLibrary && item.model.selectedLibrary.selectedDataSet){
+    		        var columns = new Array();
+    		        var aliasColumns = new Array();
+    	        	var dataSet = item.model.selectedLibrary.selectedDataSet;
+    	        	var tableName = item.model.selectedLibrary.model.name + "." + dataSet.name;
+            		if(dataSet.selectedColumnList && dataSet.selectedColumnList.length > 0){
+	    	        	for(var k=0;k<dataSet.selectedColumnList.length;k++){
+	    	        		var col = dataSet.selectedColumnList[k];
+	    	        		columns.push(col.name);
+	    	        		if(col.alias && col.alias!=''){
+	    	        			aliasColumns.push(col.name+"="+col.alias);
 	    	        		}
-	    	        	}	        			
-	        		}
-	        	}
+	        			}
+            		}
+    	        	sql = "proc sort data=" + tableName + " out=" + $scope.tempDomainDataSet.name + "(keep=" + columns.join(" ") ;
+    	        	if(aliasColumns.length > 0){
+    	        		sql += " rename=(" + aliasColumns.join(" ") + ")";
+    	        	}
+    	        	sql += ");\n";
+            		if(dataSet.selectedSortColumnList && dataSet.selectedSortColumnList.length > 0){
+        		        var sortColumns = new Array();
+	    	        	for(var k=0;k<dataSet.selectedSortColumnList.length;k++){
+	    	        		var col = dataSet.selectedSortColumnList[k];
+	    	        		if(col.sortDirection && col.sortDirection=='desc'){
+		    	        		sortColumns.push("descending "+col.name);
+	    	        		}else{
+		    	        		sortColumns.push(col.name);
+	    	        		}
+	        			}
+	    	        	sql+=" by "+sortColumns.join(" ") + ";\n";
+    	        	}
+            		if(dataSet.condition && dataSet.condition!=''){
+	    	        	sql+=" where "+dataSet.condition + ";\n";
+            		}
+            		sql +="run;";
+        	        item.model.sql= sql;
+    	        }
 	        }
-	        if(tables.length > 0){
-	        	item.model.sql="SELECT "+ columns.join(", ") + " FROM " + tables.join(", ");
-	        }
+//	        if(item.model.selectedMainLibrary && item.model.selectedMainLibrary.selectedMainDataSet && item.model.selectedMainLibrary.selectedMainDataSet.selectedMainColumnList){
+//	        	var dataSet = item.model.selectedMainLibrary.selectedMainDataSet;
+//	        	var mainTableName = item.model.selectedMainLibrary.model.name + "." + dataSet.name;
+//	        	var alias = item.model.selectedMainLibrary.model.name + "_" + dataSet.name;
+//        		if(dataSet.selectedMainColumnList && dataSet.selectedMainColumnList.length > 0){
+//    	        	for(var k=0;k<dataSet.selectedMainColumnList.length;k++){
+//    	        		mainColumns.push(alias + "." + dataSet.selectedMainColumnList[k].name);
+//        			}
+//        		}
+//    	        if(item.model.selectedLibrary && item.model.selectedLibrary.selectedDataSet){
+//    	        	var dataSet = item.model.selectedLibrary.selectedDataSet;
+//    	        	var alias = item.model.selectedLibrary.model.name + "_" + dataSet.name;
+//            		if(dataSet.selectedColumnList && dataSet.selectedColumnList.length > 0){
+//        	        	for(var k=0;k<dataSet.selectedColumnList.length;k++){
+//        	        		joinColumns.push(alias + "." + dataSet.selectedColumnList[k].name);
+//            			}
+//            		}
+//    	        }
+//            	sql = "SELECT "+ mainColumns.join(", ");
+//            	if(joinColumns.length > 0){
+//            		sql += "." + joinColumns.join(", ")
+//            	}
+//            	sql += " FROM " + mainTableName + " as " + alias;
+//    	        if(item.model.selectedLibrary && item.model.selectedLibrary.selectedDataSet){
+//    	        	var dataSet = item.model.selectedLibrary.selectedDataSet;
+//    	        	var alias = item.model.selectedLibrary.model.name + "_" + dataSet.name;
+//            		sql += " Join " + item.model.selectedLibrary.model.name + "." + dataSet.name + " as " + alias;
+//            		if(dateSet.selectedJoinColumnList && dateSet.selectedJoinColumnList.length){
+//        	        	for(var k=0;k<dataSet.selectedJoinColumnList.length;k++){
+//        	        		joinColumns.push(alias + "." + dataSet.selectedColumnList[k].name);
+//            			}
+//            		}
+//    	        }
+//	        }
 	    };
 	    
         $scope.getCodeList = function(item) {

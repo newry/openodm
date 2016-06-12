@@ -6,7 +6,7 @@
 
 (function(window, angular, $) {
     'use strict';
-    angular.module('CTApp', ['ngCookies','ui.bootstrap','ui.sortable']);
+    angular.module('CTApp', ['ngCookies','ui.bootstrap','ui.sortable','mgo-angular-wizard']);
 
     /**
      * jQuery inits

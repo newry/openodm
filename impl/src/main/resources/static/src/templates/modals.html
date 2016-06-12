@@ -589,18 +589,96 @@
 					<h4 class="modal-title">New Data Set for {{temp.model.sdtmDomain.domain}}</h4>
 				</div>
 				<div class="modal-body">
-					Name: <input type="text" ng-model="tempDomainDataSet.name" autofocus="autofocus" ng-required="true"/><br/>
-					Library: <select ng-options="library.model.name for library in tempProject.tempModel.libraryList" ng-model="temp.model.selectedLibrary" ng-required="true"></select><br/>
-					<div ng-show="temp.model.selectedLibrary">
-					DataSet: <select ng-options="dataSet.name for dataSet in temp.model.selectedLibrary.model.dataSetList" ng-model="temp.model.library.selectedDataSet" ng-required="true"></select><br/>
+					<div>
+						Name: <input type="text" ng-model="tempDomainDataSet.name" autofocus="autofocus" ng-required="true" ng-change="generateSQL(temp)"/><br/>
+						<wizard> 
+						    <wz-step wz-title="Select Variable">
+								Join Type: <select ng-options="type.value for type in dataSetJoinTypeList" ng-model="temp.model.selectedJoinType"></select><br/>
+							 	Library: <select ng-options="library.model.name for library in tempProject.tempModel.libraryList" ng-model="temp.model.selectedLibrary" ng-required="true"></select>
+								<div ng-show="temp.model.selectedLibrary">
+									DataSet: <select ng-options="dataSet.name for dataSet in temp.model.selectedLibrary.model.dataSetList" ng-model="temp.model.selectedLibrary.selectedDataSet" ng-required="true" ng-change="generateSQL(temp)"></select>
+								</div>
+								<div ng-show="temp.model.selectedLibrary.selectedDataSet">
+							 		Columns:  <select multiple style="width: 40%" ng-options="column.name for column in temp.model.selectedLibrary.selectedDataSet.columnList" ng-model="temp.model.selectedLibrary.selectedDataSet.selectedColumnList" ng-required="true" size="6" ng-change="generateSQL(temp)"></select>
+								</div>
+								<div ng-show="temp.model.selectedLibrary.selectedDataSet.selectedColumnList && temp.model.selectedJoinType.value=='sort'">
+									Sort By:  <select multiple style="width: 40%" ng-options="column.name for column in temp.model.selectedLibrary.selectedDataSet.selectedColumnList" ng-model="temp.model.selectedLibrary.selectedDataSet.selectedSortColumnList" ng-required="true" ng-change="generateSQL(temp)"></select>
+								</div>
+								<div ng-show="temp.model.selectedLibrary.selectedDataSet">
+						        	<input type="submit" wz-next value="Next" />
+						        </div>
+						    </wz-step>
+						    <wz-step wz-title="Rename Variable">
+								<table class="table mb0 table-files">
+									<thead>
+										<tr>
+											<th>Name</th>
+											<th>Alias</th>
+										</tr>
+										<tr
+											ng-repeat="item in temp.model.selectedLibrary.selectedDataSet.selectedColumnList">
+											<td class="hidden-xs">{{item.name}}</td>
+											<td class="hidden-xs"><input type="text" ng-model="item.alias"/></td>
+										</tr>
+									</thead>
+								</table>
+						        <input type="submit" wz-next="generateSQL(temp)" value="Next" />
+						    </wz-step>
+						    <wz-step wz-title="Sort Direction">
+								<table class="table mb0 table-files">
+									<thead>
+										<tr>
+											<th>Name</th>
+											<th>Direction</th>
+										</tr>
+										<tr
+											ng-repeat="item in temp.model.selectedLibrary.selectedDataSet.selectedSortColumnList">
+											<td class="hidden-xs">{{item.name}}</td>
+											<td class="hidden-xs"><select ng-options="type for type in sortDirectionList" ng-model="item.sortDirection"></select></td>
+										</tr>
+									</thead>
+								</table>
+						        <input type="submit" wz-next="generateSQL(temp)" value="Next" />
+						    </wz-step>
+						    <wz-step wz-title="Condition">
+								<input type="text" ng-model="temp.model.selectedLibrary.selectedDataSet.condition" autofocus="autofocus" ng-required="true" ng-change="generateSQL(temp)"/><br/>
+						        <input type="submit" wz-next="generateSQL(temp)" value="Next" />
+						    </wz-step>
+						    <wz-step wz-title="Preview">
+								<div ng-show="temp.model.sql">
+								SQL:
+									<textarea style="width: 100%" rows="5" ng-model="temp.model.sql" readonly="readonly"></textarea>
+								</div>
+						    </wz-step>
+						</wizard>
 					</div>
-					<div ng-show="temp.model.library.selectedDataSet">
-					Column:  <select multiple style="width: 40%" ng-options="column.name for column in temp.model.library.selectedDataSet.columnList" ng-model="temp.model.library.selectedDataSet.selectedColumnList" ng-required="true" size="10" ng-change="generateSQL(temp)"></select><br/>
+					<!-- 
+					<div ng-show="temp.model.selectedJoinType.value=='merge'">
+						Main Library: <select ng-options="library.model.name for library in tempProject.tempModel.libraryList" ng-model="temp.model.selectedMainLibrary" ng-required="true"></select><br/>
+						<div ng-show="temp.model.selectedMainLibrary">
+						Main DataSet: <select ng-options="dataSet.name for dataSet in temp.model.selectedMainLibrary.model.dataSetList" ng-model="temp.model.selectedMainLibrary.selectedMainDataSet" ng-required="true" ng-change="generateSQL(temp)"></select><br/>
+						</div>
+						<div ng-show="temp.model.selectedMainLibrary.selectedMainDataSet">
+						Main Column:  <select multiple style="width: 40%" ng-options="column.name for column in temp.model.selectedMainLibrary.selectedMainDataSet.columnList" ng-model="temp.model.selectedMainLibrary.selectedMainDataSet.selectedMainColumnList" ng-required="true" size="6" ng-change="generateSQL(temp)"></select><br/>
+						</div>
+						<div ng-show="temp.model.selectedMainLibrary.selectedMainDataSet">
+						Join Column:  <select multiple style="width: 40%" ng-options="column.name for column in temp.model.selectedMainLibrary.selectedMainDataSet.columnList" ng-model="temp.model.selectedMainLibrary.selectedMainDataSet.selectedJoinColumnList" ng-required="true" size="6" ng-change="generateSQL(temp)"></select><br/>
+						</div>
+						<div ng-show="temp.model.selectedMainLibrary.selectedMainDataSet.selectedMainColumnList">
+						Library: <select ng-options="library.model.name for library in tempProject.tempModel.libraryList" ng-model="temp.model.selectedLibrary" ng-required="true"></select><br/>
+						</div>
+						<div ng-show="temp.model.selectedLibrary">
+						DataSet: <select ng-options="dataSet.name for dataSet in temp.model.selectedLibrary.model.dataSetList" ng-model="temp.model.selectedLibrary.selectedDataSet" ng-required="true" ng-change="generateSQL(temp)"></select><br/>
+						</div>
+						<div ng-show="temp.model.selectedLibrary.selectedDataSet">
+						Column:  <select multiple style="width: 40%" ng-options="column.name for column in temp.model.selectedLibrary.selectedDataSet.columnList" ng-model="temp.model.selectedLibrary.selectedDataSet.selectedColumnList" ng-required="true" size="6" ng-change="generateSQL(temp)"></select><br/>
+						</div>
 					</div>
 					<div ng-show="temp.model.sql">
 					SQL:
 						<textarea style="width: 100%" rows="5" ng-model="temp.model.sql" readonly="readonly"></textarea>
 					</div>
+					 -->
 					<div ng-include data-src="'error-bar'" class="clearfix"></div>
 				</div>
 				<div class="modal-footer">
