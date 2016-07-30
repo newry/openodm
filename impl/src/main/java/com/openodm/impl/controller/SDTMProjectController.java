@@ -19,6 +19,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -87,6 +88,9 @@ public class SDTMProjectController {
 	private SDTMProjectLibraryRepository sdtmProjectLibraryRepository;
 	@Autowired
 	private CodeListRepository codeListRepository;
+
+	@Value("${project.rootPath}")
+	private String rootPath;
 
 	@RequestMapping(value = "/sdtm/v1/project", method = RequestMethod.GET)
 	public List<SDTMProject> listProjects() {
@@ -418,7 +422,7 @@ public class SDTMProjectController {
 		for (SDTMProjectLibrary library : libs) {
 			List<Map<String, Object>> dataSetList = new ArrayList<>();
 			if (library != null) {
-				Path folder = Paths.get(library.getPath());
+				Path folder = Paths.get(rootPath + "/" + id + "/" + library.getPath());
 				if (Files.exists(folder) && folder.toFile().isDirectory()) {
 					try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(folder)) {
 						for (Path path : directoryStream) {

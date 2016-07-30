@@ -31,8 +31,11 @@ public class SDTMProjectDomainDataSet extends PersistentObject {
 	@Column(name = "ID", unique = true, nullable = false, precision = 22)
 	private Long id;
 
-	@Column(name = "name", nullable = false, length = 1024 * 1024)
+	@Column(name = "name", nullable = false, length = 256)
 	private String name;
+
+	@Column(name = "meta_data", nullable = false, length = 1024 * 1024)
+	private String metaData;
 
 	@Column(name = "sql", nullable = false, length = 1024 * 1024)
 	private String sql;
@@ -56,6 +59,14 @@ public class SDTMProjectDomainDataSet extends PersistentObject {
 
 	public Long getId() {
 		return id;
+	}
+
+	public String getMetaData() {
+		return metaData;
+	}
+
+	public void setMetaData(String metaData) {
+		this.metaData = metaData;
 	}
 
 }

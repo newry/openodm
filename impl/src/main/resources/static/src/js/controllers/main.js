@@ -43,6 +43,7 @@
         	}
         ];
         $scope.sortDirectionList = ['asc', 'desc'];
+        $scope.joinTypeList = ['full', 'inner', 'left'];
         
         function deferredHandler(data, deferred, defaultMsg) {
         	var error;
@@ -521,10 +522,7 @@
 	    $scope.getProjectLibraryList = function(item) {
 	        var prj = $scope.tempProject.tempModel;
 	        $scope.tempDomainDataSet={};
-	        item.model.selectedMainLibrary=null;
-	        item.model.selectedJoinType=$scope.dataSetJoinTypeList[0];
-	        item.model.selectedLibrary=null;
-	        item.model.sql=null;
+	        $scope.tempDomainDataSet.selectedJoinType=$scope.dataSetJoinTypeList[0];
 		    var deferred = $q.defer();
 		    $http.get("/sdtm/v1/project/"+prj.id+"/library").success(function(data) {
 	            deferredHandler(data, deferred);
@@ -541,16 +539,35 @@
 	        $scope.modal('newProjectDomainDataSet');
 	        return $scope.touch(item);
 	    };
-
+	    
+	    $scope.createProjectDomainDataSet = function(item) {
+        	$scope.modalRequesting = true;
+	        var prj = $scope.tempProject.tempModel;
+	        var temp = $scope.temp.tempModel;
+	        var deferred = $q.defer();
+	        var data = {
+	        		sql:item.sql,
+	 	        	name:item.name
+	 	    };
+	        var url = "/sdtm/v1/project/"+prj.id+"/variable/"+temp.sdtmDomain.id+"/workDataSet";
+		    $http.post(url).success(function(data) {
+	            deferredHandler(data, deferred);
+		        $scope.modal('newProjectDomainDataSet', true);
+	        }).error(function(data, status) {
+	        	deferredHandler(data, deferred, 'Error during create work data set');
+	        })['finally'](function() {
+	        	$scope.modalRequesting = false;
+	        });
+	    }
 	    $scope.generateSQL = function(item) {
 	        var prj = $scope.tempProject.tempModel;
 	        var sql;
-	        if(item.model.selectedJoinType.value=='sort'){
-    	        if(item.model.selectedLibrary && item.model.selectedLibrary.selectedDataSet){
+	        if(item.selectedJoinType.value=='sort'){
+    	        if(item.selectedLibrary && item.selectedLibrary.selectedDataSet){
     		        var columns = new Array();
     		        var aliasColumns = new Array();
-    	        	var dataSet = item.model.selectedLibrary.selectedDataSet;
-    	        	var tableName = item.model.selectedLibrary.model.name + "." + dataSet.name;
+    	        	var dataSet = item.selectedLibrary.selectedDataSet;
+    	        	var tableName = item.selectedLibrary.model.name + "." + dataSet.name;
             		if(dataSet.selectedColumnList && dataSet.selectedColumnList.length > 0){
 	    	        	for(var k=0;k<dataSet.selectedColumnList.length;k++){
 	    	        		var col = dataSet.selectedColumnList[k];
@@ -575,49 +592,104 @@
 		    	        		sortColumns.push(col.name);
 	    	        		}
 	        			}
-	    	        	sql+=" by "+sortColumns.join(" ") + ";\n";
+	    	        	sql+="by "+sortColumns.join(" ") + ";\n";
     	        	}
             		if(dataSet.condition && dataSet.condition!=''){
-	    	        	sql+=" where "+dataSet.condition + ";\n";
+	    	        	sql+="where "+dataSet.condition + ";\n";
             		}
             		sql +="run;";
-        	        item.model.sql= sql;
+        	        item.sql= sql;
     	        }
+	        }else if(item.selectedJoinType.value=='merge'){
+    	        if(item.selectedLibrary && item.selectedLibrary.selectedDataSet){
+    		        var columns = new Array();
+    	        	var dataSet = item.selectedLibrary.selectedDataSet;
+    	        	var tableName = item.selectedLibrary.model.name + "." + dataSet.name;
+            		if(dataSet.selectedColumnList && dataSet.selectedColumnList.length > 0){
+	    	        	for(var k=0;k<dataSet.selectedColumnList.length;k++){
+	    	        		var col = dataSet.selectedColumnList[k];
+	    	        		columns.push(col.name);
+	        			}
+            		}
+            		var joinType = item.selectedLibrary.selectedDataSet.joinType;
+        		    var joinDataSets = new Array();
+            		var libList = prj.libraryList;
+            		for(var i=0;i<libList.length;i++){
+            			var lib = libList[i];
+            			if(lib.selectedDataSetList && lib.selectedDataSetList.length){
+            				for(var j=0; j<lib.selectedDataSetList.length;j++){
+            					var usedDataSet = lib.selectedDataSetList[j];
+                	        	var usedTableName = lib.model.name + "." + usedDataSet.name;
+            					if(usedTableName!=tableName){
+            						joinDataSets.push(usedTableName);
+            					}
+            				}
+            			}
+            		}
+            		if(joinDataSets.length>0){
+                		sql= "data out;\n"
+	            		sql += "merge " + tableName + "(in=a1)";
+	            		for(var i=0; i<joinDataSets.length;i++){
+	            			sql+=" "+joinDataSets[i]+"(in=a" + (i+2)+")";
+	            		}
+	            		sql +=";\n"
+		    	        sql+="by "+columns.join(" ") + ";\n";
+	            		if(joinType=='inner'){
+			    	        sql+="if a1";
+		            		for(var i=0; i<joinDataSets.length;i++){
+		            			sql+=" and a"+(i+2);
+		            		}
+		            		sql +=";\n"
+	            		}else if(joinType=='left'){
+			    	        sql+="if a1;\n";
+	            		}
+	            		sql += "run;";
+	        	        item.sql= sql;
+            		}
+    	        }
+	        	
+	        }else if(item.selectedJoinType.value=='set'){
+    	        if(item.selectedLibrary && item.selectedLibrary.selectedDataSet){
+    		        var columns = new Array();
+    	        	var dataSet = item.selectedLibrary.selectedDataSet;
+    	        	var tableName = item.selectedLibrary.model.name + "." + dataSet.name;
+            		if(dataSet.selectedColumnList && dataSet.selectedColumnList.length > 0){
+	    	        	for(var k=0;k<dataSet.selectedColumnList.length;k++){
+	    	        		var col = dataSet.selectedColumnList[k];
+	    	        		columns.push(col.name);
+	        			}
+            		}
+            		var joinType = item.selectedLibrary.selectedDataSet.joinType;
+        		    var joinDataSets = new Array();
+            		var libList = prj.libraryList;
+            		for(var i=0;i<libList.length;i++){
+            			var lib = libList[i];
+            			if(lib.selectedDataSetList && lib.selectedDataSetList.length){
+            				for(var j=0; j<lib.selectedDataSetList.length;j++){
+            					var usedDataSet = lib.selectedDataSetList[j];
+                	        	var usedTableName = lib.model.name + "." + usedDataSet.name;
+            					if(usedTableName!=tableName){
+            						joinDataSets.push(usedTableName);
+            					}
+            				}
+            			}
+            		}
+            		if(joinDataSets.length>0){
+                		sql= "data out;\n"
+	            		sql += "set " + tableName;
+	            		for(var i=0; i<joinDataSets.length;i++){
+	            			sql+=" "+joinDataSets[i];
+	            		}
+	            		sql +=";\n"
+	            		if(columns.length > 0){
+	            			sql+="by "+columns.join(" ") + ";\n";
+	            		}
+	            		sql += "run;";
+	        	        item.sql= sql;
+            		}
+    	        }
+	        	
 	        }
-//	        if(item.model.selectedMainLibrary && item.model.selectedMainLibrary.selectedMainDataSet && item.model.selectedMainLibrary.selectedMainDataSet.selectedMainColumnList){
-//	        	var dataSet = item.model.selectedMainLibrary.selectedMainDataSet;
-//	        	var mainTableName = item.model.selectedMainLibrary.model.name + "." + dataSet.name;
-//	        	var alias = item.model.selectedMainLibrary.model.name + "_" + dataSet.name;
-//        		if(dataSet.selectedMainColumnList && dataSet.selectedMainColumnList.length > 0){
-//    	        	for(var k=0;k<dataSet.selectedMainColumnList.length;k++){
-//    	        		mainColumns.push(alias + "." + dataSet.selectedMainColumnList[k].name);
-//        			}
-//        		}
-//    	        if(item.model.selectedLibrary && item.model.selectedLibrary.selectedDataSet){
-//    	        	var dataSet = item.model.selectedLibrary.selectedDataSet;
-//    	        	var alias = item.model.selectedLibrary.model.name + "_" + dataSet.name;
-//            		if(dataSet.selectedColumnList && dataSet.selectedColumnList.length > 0){
-//        	        	for(var k=0;k<dataSet.selectedColumnList.length;k++){
-//        	        		joinColumns.push(alias + "." + dataSet.selectedColumnList[k].name);
-//            			}
-//            		}
-//    	        }
-//            	sql = "SELECT "+ mainColumns.join(", ");
-//            	if(joinColumns.length > 0){
-//            		sql += "." + joinColumns.join(", ")
-//            	}
-//            	sql += " FROM " + mainTableName + " as " + alias;
-//    	        if(item.model.selectedLibrary && item.model.selectedLibrary.selectedDataSet){
-//    	        	var dataSet = item.model.selectedLibrary.selectedDataSet;
-//    	        	var alias = item.model.selectedLibrary.model.name + "_" + dataSet.name;
-//            		sql += " Join " + item.model.selectedLibrary.model.name + "." + dataSet.name + " as " + alias;
-//            		if(dateSet.selectedJoinColumnList && dateSet.selectedJoinColumnList.length){
-//        	        	for(var k=0;k<dataSet.selectedJoinColumnList.length;k++){
-//        	        		joinColumns.push(alias + "." + dataSet.selectedColumnList[k].name);
-//            			}
-//            		}
-//    	        }
-//	        }
 	    };
 	    
         $scope.getCodeList = function(item) {

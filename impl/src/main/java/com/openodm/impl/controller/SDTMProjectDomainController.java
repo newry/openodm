@@ -13,6 +13,7 @@ import java.util.TimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
@@ -78,6 +79,8 @@ public class SDTMProjectDomainController {
 	private CodeListRepository codeListRepository;
 	@Autowired
 	private SDTMProjectDomainDataSetRepository sdtmProjectDomainDataSetRepository;
+	@Value("${project.rootPath}")
+	private String rootPath;
 
 	@RequestMapping(value = "/sdtm/v1/project/{id}/domain/{domainId}/allVariable", method = RequestMethod.GET)
 	public List<SDTMProjectVariableXref> listAllProjectDomainVariables(@PathVariable("id") Long id, @PathVariable("domainId") Long domainId) {
@@ -448,5 +451,43 @@ public class SDTMProjectDomainController {
 	private ResponseEntity<OperationResponse> updateProjectDomainXref(SDTMProjectDomainXref domainXref) {
 		return this.updateProjectDomainXrefs(Arrays.asList(domainXref));
 	}
+
+//	@RequestMapping(value = "/sdtm/v1/project/{projectId}/domain/{domainId}/workDataSet", method = RequestMethod.POST)
+//	public List<SDTMProjectLibrary> createDomainDataSet(@PathVariable("projectId") Long projectId, @PathVariable("domainId") Long domainId) {
+//		List<SDTMProjectLibrary> libs = sdtmProjectLibraryRepository.findByProjectId(projectId);
+//		for (SDTMProjectLibrary library : libs) {
+//			List<Map<String, Object>> dataSetList = new ArrayList<>();
+//			if (library != null) {
+//				Path folder = Paths.get(rootPath + "/" + id + "/" + library.getPath());
+//				if (Files.exists(folder) && folder.toFile().isDirectory()) {
+//					try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(folder)) {
+//						for (Path path : directoryStream) {
+//							Map<String, Object> map = new HashMap<String, Object>();
+//							dataSetList.add(map);
+//							Path fileName = path.getFileName();
+//							if (fileName.toString().lastIndexOf(".") > -1) {
+//								map.put("name", fileName.toString().substring(0, fileName.toString().lastIndexOf(".")));
+//							} else {
+//								map.put("name", fileName);
+//							}
+//							try (InputStream is = new FileInputStream(path.toFile())) {
+//								SasFileReader sasFileReader = new SasFileReaderImpl(is);
+//								map.put("columnList", sasFileReader.getColumns());
+//							} catch (FileNotFoundException e) {
+//								LOG.error("Got Exception during reading file, folder={}", folder, e);
+//							} catch (IOException e) {
+//								LOG.error("Got Exception during reading file, folder={}", folder, e);
+//							}
+//
+//						}
+//					} catch (IOException ex) {
+//					}
+//				}
+//			}
+//			library.setDataSetList(dataSetList);
+//
+//		}
+//		return libs;
+//	}
 
 }
