@@ -33,7 +33,7 @@ import com.openodm.impl.repository.sdtm.SDTMVariableRefRepository;
 import com.openodm.impl.repository.sdtm.SDTMVariableRepository;
 import com.openodm.impl.repository.sdtm.SDTMVersionRepository;
 
-@RestController
+//@RestController
 public class SDTMController {
 	private static final Logger LOG = LoggerFactory.getLogger(SDTMController.class);
 	@Autowired
