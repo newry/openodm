@@ -58,7 +58,7 @@ import com.openodm.impl.repository.sdtm.SDTMVariableRefRepository;
 import com.openodm.impl.repository.sdtm.SDTMVariableRepository;
 import com.openodm.impl.repository.sdtm.SDTMVersionRepository;
 
-//@RestController
+@RestController
 @SuppressWarnings("unchecked")
 public class SDTMProjectController {
 	private static final Logger LOG = LoggerFactory.getLogger(SDTMProjectController.class);

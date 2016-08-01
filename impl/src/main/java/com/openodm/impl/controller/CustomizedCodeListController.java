@@ -36,7 +36,7 @@ import com.openodm.impl.repository.ct.CustomizedCodeListRepository;
 import com.openodm.impl.repository.ct.CustomizedEnumeratedItemRepository;
 import com.openodm.impl.repository.ct.ExtendedEnumeratedItemRepository;
 
-//@RestController
+@RestController
 public class CustomizedCodeListController {
 	private static final Logger LOG = LoggerFactory.getLogger(CustomizedCodeListController.class);
 	@Autowired

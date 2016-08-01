@@ -40,7 +40,7 @@ import com.openodm.impl.repository.ct.ControlTerminologyRepository;
 import com.openodm.impl.repository.ct.EnumeratedItemRepository;
 import com.openodm.impl.repository.ct.ExtendedEnumeratedItemRepository;
 
-//@RestController
+@RestController
 public class CodeListController {
 	private static final Logger LOG = LoggerFactory.getLogger(CodeListController.class);
 	@Autowired

@@ -15,6 +15,7 @@ import javax.persistence.Table;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.GenericGenerator;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.openodm.impl.entity.PersistentObject;
@@ -40,10 +41,12 @@ public class ControlTerminology extends PersistentObject {
 
 	@ManyToMany(targetEntity = CodeList.class)
 	@JoinTable(name = "CONTROL_TERMINOLOGY_CODE_LIST_XREF", joinColumns = { @JoinColumn(name = "CONTROL_TERMINOLOGY_ID") }, inverseJoinColumns = { @JoinColumn(name = "CODE_LIST_ID") })
+	@JsonIgnore
 	private List<CodeList> codeLists;
 
 	@ManyToMany(targetEntity = CustomizedCodeList.class)
 	@JoinTable(name = "CONTROL_TERMINOLOGY_CUST_CODE_LIST_XREF", joinColumns = { @JoinColumn(name = "CONTROL_TERMINOLOGY_ID") }, inverseJoinColumns = { @JoinColumn(name = "CUSTOMIZED_CODE_LIST_ID") })
+	@JsonIgnore
 	private List<CustomizedCodeList> customizedCodeLists;
 
 	/**

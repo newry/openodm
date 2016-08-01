@@ -11,7 +11,7 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 @MappedSuperclass
 public abstract class PersistentObject implements Serializable {
@@ -20,20 +20,18 @@ public abstract class PersistentObject implements Serializable {
 
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "DATE_ADDED", nullable = false, updatable = false)
-	@JsonIgnore
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "UTC")
 	private Calendar dateAdded = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "DATE_LAST_MODIFIED", nullable = false)
-	@JsonIgnore
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "UTC")
 	private Calendar dateLastModified = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 
 	@Column(name = "CREATOR", nullable = false, length = 255, updatable = false)
-	@JsonIgnore
 	private String creator;
 
 	@Column(name = "UPDATED_BY", nullable = false, length = 255)
-	@JsonIgnore
 	private String updatedBy;
 
 	@Column(name = "STATUS", nullable = false, length = 32)
