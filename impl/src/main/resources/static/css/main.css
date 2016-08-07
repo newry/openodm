@@ -7,9 +7,7 @@ body {
     overflow-x: hidden;
 }
 
-div{
-	width: 100%
-}
+
 /*Just removing default browser padding/margin*/
 html,
 body {
@@ -98,3 +96,8 @@ WebKit inertia scrolling is being added here for any present/future devices that
 .display{
 	width: 100%
 }
+
+.toolbar {
+	float: left;
+}
+

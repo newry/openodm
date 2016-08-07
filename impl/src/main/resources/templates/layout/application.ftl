@@ -7,6 +7,9 @@
     	<div class="Container">
         	<div class="Left"><#include "/common/menu.ftl"></div>
         	<div class="Middle">
+				<div>
+					<#include "/common/breadcrumb.ftl">
+				</div>
 				<div class="Content">
 					<#nested>
 				</div>

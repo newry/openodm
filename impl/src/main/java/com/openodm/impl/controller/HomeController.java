@@ -1,32 +1,76 @@
 package com.openodm.impl.controller;
 
+import java.util.Arrays;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import com.openodm.impl.controller.response.Breadcrumb;
+import com.openodm.impl.entity.ct.CodeList;
+import com.openodm.impl.entity.ct.ControlTerminology;
+import com.openodm.impl.repository.ct.CodeListRepository;
+import com.openodm.impl.repository.ct.ControlTerminologyRepository;
+
 @Controller
 public class HomeController {
+	@Autowired
+	private ControlTerminologyRepository controlTerminologyRepository;
+	@Autowired
+	private CodeListRepository codeListRepository;
+
 	@RequestMapping(path = "/", method = RequestMethod.GET)
 	public String index(Map<String, Object> model) {
 		return "index";
 	}
 
-	@RequestMapping(path = "/ct/list", method = RequestMethod.GET)
+	@RequestMapping(path = "/ct", method = RequestMethod.GET)
 	public String listAllCTs(Map<String, Object> model) {
 		model.put("title", "All CTs");
 		model.put("selected", "ct");
 		return "ct/list";
 	}
 
-	@RequestMapping(path = "/ct/{id}", method = RequestMethod.GET)
-	public String getCTById(@PathVariable Long id, Map<String, Object> model) {
-		model.put("title", "CT");
+	@RequestMapping(path = "/ct/{id}/codeList", method = RequestMethod.GET)
+	public String getCodeListByCTId(@PathVariable Long id, Map<String, Object> model) {
+		model.put("title", "Code List");
 		model.put("selected", "ct");
-		model.put("id", id);
+		model.put("ctId", id);
+		model.put("breadcrumbs", Arrays.asList(Breadcrumb.create("/ct", "All CTs")));
 		return "ct/codeList";
+	}
+
+	@RequestMapping(path = "/ct/{id}/codeList/{codeListId}", method = RequestMethod.GET)
+	public String getEnumeratedItemByCTIdAndCodeListId(@PathVariable Long id, @PathVariable Long codeListId, Map<String, Object> model) {
+		ControlTerminology ct = controlTerminologyRepository.findOne(id);
+		CodeList codeList = codeListRepository.findOne(codeListId);
+		model.put("title", "Enumerated Item");
+		model.put("selected", "ct");
+		model.put("ctId", id);
+		model.put("codeListId", codeListId);
+		model.put("customized", false);
+		model.put("extended", codeList == null ? false : StringUtils.equalsIgnoreCase(codeList.getCodeListExtensible(), "Yes"));
+		model.put("breadcrumbs",
+				Arrays.asList(Breadcrumb.create("/ct", "All CTs"), Breadcrumb.create("/ct/" + id + "/codeList", ct == null ? "#" + id : ct.getName())));
+		return "ct/enumeratedItemList";
+	}
+
+	@RequestMapping(path = "/ct/{id}/customizedCodeList/{codeListId}", method = RequestMethod.GET)
+	public String getEnumeratedItemByCTIdAndCustomizedCodeListId(@PathVariable Long id, @PathVariable Long codeListId, Map<String, Object> model) {
+		ControlTerminology ct = controlTerminologyRepository.findOne(id);
+		model.put("title", "Enumerated Item");
+		model.put("selected", "ct");
+		model.put("ctId", id);
+		model.put("codeListId", codeListId);
+		model.put("customized", true);
+		model.put("extended", true);
+		model.put("breadcrumbs",
+				Arrays.asList(Breadcrumb.create("/ct", "All CTs"), Breadcrumb.create("/ct/" + id + "/codeList", ct == null ? "#" + id : ct.getName())));
+		return "ct/enumeratedItemList";
 	}
 
 }

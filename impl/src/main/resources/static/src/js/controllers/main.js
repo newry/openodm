@@ -389,7 +389,7 @@
             item = item instanceof Item ? item : new Item();
             item.revert();
             item.type = type;
-            if($scope.tempProject.tempModel.id){
+            if($scope.tempProject && $scope.tempProject.tempModel && $scope.tempProject.tempModel.id){
             	item.model.projectId = $scope.tempProject.tempModel.id;
             }
             $scope.temp = item;
