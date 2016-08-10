@@ -8,15 +8,72 @@
                 <th>UpdatedBy</th>
                 <th>CreatedDate</th>
                 <th>LastModifiedDate</th>
-                <th>Operations</th>
             </tr>
         </thead>
 	</table>
 	<script>
 		$(document).ready(function() {
-		    $('#allCT').DataTable( {
+			editor = new $.fn.dataTable.Editor( {
+				ajax: function ( method, url, d, successCallback, errorCallback ) {
+		            var output = { data: [] };
+		 
+		            if ( d.action === 'create' ) {
+		                $.each( d.data, function (key, value) {
+		                	$.ajax({url: "/odm/v1/controlTerminology",contentType:'application/json', type:'POST', data: JSON.stringify(value), success: function(result){
+		                		location.reload();
+    						}});
+		                } );
+		            }
+		            else if ( d.action === 'edit' ) {
+		                // Update each edited item with the data submitted
+		                $.each( d.data, function (id, value) {
+		                	$.ajax({url: "/odm/v1/controlTerminology/"+id,contentType:'application/json', type:'PUT', data: JSON.stringify(value), success: function(result){
+		                		location.reload();
+    						}});
+		                } );
+		            }
+		            else if ( d.action === 'remove' ) {
+		                $.each( d.data, function (id, value) {
+		                	$.ajax({url: "/odm/v1/controlTerminology/"+id,type:'DELETE', success: function(result){
+		                		location.reload();
+    						}});
+		                } );
+		            }
+		            // Show Editor what has changed
+		            //successCallback( output );
+        	   },
+        	   idSrc:  'id',
+			   table: "#allCT",
+			   fields: [ 
+			   		{
+			        	label: "Name:",
+			            name: "name"
+			        },{
+						label: "Description:",
+			            name: "description"
+			        }
+			   ]
+			} );
+		    editor.on( 'preSubmit', function ( e, o, action ) {
+		        if ( action !== 'remove' ) {
+		            var name = editor.field( 'name' );
+		 
+		            if ( ! name.val() ) {
+		                    name.error( 'A name must be given' );
+		            }
+		                 
+		            if ( name.val().length >= 255 ) {
+		                    name.error( 'The name length must be less that 255 characters' );
+		            }
+		            // If any error was reported, cancel the submission so it can be corrected
+		            if ( this.inError() ) {
+		                return false;
+		            }
+		        }
+		    } );			
+		    var table = $('#allCT').DataTable( {
 		        "aaSorting": [],
-		    	"dom": '<"toolbar">frtip',
+		        "dom": "Bfrtip",
 		    	"bLengthChange": false,
 		        "ajax": {
 		        	"url":"/odm/v1/controlTerminology",
@@ -42,17 +99,47 @@
 				    "targets": 1,
 				    "data": null,
 				    "defaultContent": ""
-				  },
-				  {
-				    "targets": 6,
-				    "data": "name",
-				    "render": function ( data, type, full, meta ) {
-				      return '<a href="/ct/'+full.id+'?edit=true">Edit</a>';
-				    }
 				  } 
-				]
+				],
+		        select: {
+		            style:    'os',
+		            selector: 'td:not(:first-child)'
+		        },
+		        buttons: [
+		            { 
+		              extend: "create", 
+		              editor: editor,
+		              formButtons: [
+                    	'Create',
+                    	{ label: 'Cancel', fn: function () { this.close(); } }
+               		  ]
+               		},
+		            { 
+		              extend: "edit", 
+		              editor: editor,
+		              formButtons: [
+                    	'Edit',
+                    	{ label: 'Cancel', fn: function () { this.close(); } }
+               		  ]
+               		},
+               		{
+                	  extend: "selectedSingle",
+                	  text: "Select Dictionary",
+                      action: function ( e, dt, node, config ) {
+                      	var data = table.rows( { selected: true } ).data()[0];
+                      	window.location='/ct/'+data.id+'/codeList';
+	                  }
+    		        },
+		            { 
+		              extend: "remove", 
+		              editor: editor,
+		              formButtons: [
+                    	'Remove',
+                    	{ label: 'Cancel', fn: function () { this.close(); } }
+               		  ]
+               		}
+		        ]
 		    });
-			$("div.toolbar").html('<a href="/ct/new">New Control Terminology</a>');
 			$("#allCT_wrapper").css("width", "100%");
 		} );
 	</script>

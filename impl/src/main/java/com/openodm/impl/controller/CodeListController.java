@@ -190,6 +190,24 @@ public class CodeListController {
 		return saveCT(ct, false);
 	}
 
+	@RequestMapping(value = "/odm/v1/controlTerminology/{id}", method = RequestMethod.DELETE)
+	public ResponseEntity<OperationResponse> deleteControlTerminology(@PathVariable("id") Long id) {
+		ControlTerminology ct = controlTerminologyRepository.findOne(id);
+		if (ct == null) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("id is invalid");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.NOT_FOUND);
+		}
+
+		ct.setStatus(ObjectStatus.deleted);
+		ct.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+		ct.setUpdatedBy("admin");
+		return saveCT(ct, false);
+	}
+
 	@RequestMapping(value = "/odm/v1/controlTerminology/{id}/codeList/{codeListId}", method = RequestMethod.POST)
 	public ResponseEntity<OperationResponse> addCodeList(@PathVariable("id") Long id, @PathVariable("codeListId") Long codeListId) {
 		ControlTerminology ct = controlTerminologyRepository.findOne(id);

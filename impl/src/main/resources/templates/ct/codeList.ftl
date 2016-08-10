@@ -48,7 +48,38 @@
 				      		return '<a href="/ct/${ctId}/customizedCodeList/'+full.id+'">'+data+'</a>';
 				      	}
 				      	return '<a href="/ct/${ctId}/codeList/'+full.id+'">'+data+'</a>';
-				    },
+				    }
+				  },
+				  {
+				    "targets": 1,
+				    "data": "description",
+				    "createdCell": function (td, cellData, rowData, row, col) {
+					      if ( rowData.customized ) {
+					        $(td).addClass('selectable')
+					      }
+				    }
+				  },
+				  {
+				    "targets": 2,
+				    "data": "cdiscsubmissionValue",
+				    "createdCell": function (td, cellData, rowData, row, col) {
+					      if ( rowData.customized ) {
+					        $(td).addClass('selectable')
+					      }
+				    }
+				  },
+				  {
+				    "targets": 3,
+				    "data": "extCodeId",
+				    "createdCell": function (td, cellData, rowData, row, col) {
+					      if ( rowData.customized ) {
+					        $(td).addClass('selectable')
+					      }
+				    }
+				  },
+				  {
+				    "targets": 4,
+				    "data": "codeListExtensible",
 				    "createdCell": function (td, cellData, rowData, row, col) {
 					      if ( rowData.customized ) {
 					        $(td).addClass('selectable')
@@ -60,7 +91,12 @@
 				    "data": "customized",
 				    "render": function ( data, type, full, meta ) {
 				      return data?"Yes":"No";
-				    }				    
+				    },
+				    "createdCell": function (td, cellData, rowData, row, col) {
+					      if ( rowData.customized ) {
+					        $(td).addClass('selectable')
+					      }
+				    }
 				  }
 				],
 				select: {
