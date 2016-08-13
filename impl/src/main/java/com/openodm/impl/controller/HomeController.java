@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import com.openodm.impl.controller.response.Breadcrumb;
 import com.openodm.impl.entity.ct.CodeList;
 import com.openodm.impl.entity.ct.ControlTerminology;
+import com.openodm.impl.repository.ct.CTVersionRepository;
 import com.openodm.impl.repository.ct.CodeListRepository;
 import com.openodm.impl.repository.ct.ControlTerminologyRepository;
 
@@ -22,6 +23,8 @@ public class HomeController {
 	private ControlTerminologyRepository controlTerminologyRepository;
 	@Autowired
 	private CodeListRepository codeListRepository;
+	@Autowired
+	private CTVersionRepository ctVersionRepository;
 
 	@RequestMapping(path = "/", method = RequestMethod.GET)
 	public String index(Map<String, Object> model) {
@@ -33,6 +36,16 @@ public class HomeController {
 		model.put("title", "All CTs");
 		model.put("selected", "ct");
 		return "ct/list";
+	}
+
+	@RequestMapping(path = "/ct/new", method = RequestMethod.GET)
+	public String newCT(Map<String, Object> model) {
+		model.put("title", "Create new CT");
+		model.put("selected", "ct");
+		model.put("breadcrumbs", Arrays.asList(Breadcrumb.create("/ct", "All CTs")));
+		model.put("ctVersions", ctVersionRepository.findAll());
+
+		return "ct/new";
 	}
 
 	@RequestMapping(path = "/ct/{id}/codeList", method = RequestMethod.GET)

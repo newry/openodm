@@ -109,10 +109,10 @@
 		            { 
 		              extend: "create", 
 		              editor: editor,
-		              formButtons: [
-                    	'Create',
-                    	{ label: 'Cancel', fn: function () { this.close(); } }
-               		  ]
+                      action: function ( e, dt, node, config ) {
+                      	var data = table.rows( { selected: true } ).data()[0];
+                      	window.location='/ct/new';
+	                  }
                		},
 		            { 
 		              extend: "edit", 
@@ -122,14 +122,6 @@
                     	{ label: 'Cancel', fn: function () { this.close(); } }
                		  ]
                		},
-               		{
-                	  extend: "selectedSingle",
-                	  text: "Select Dictionary",
-                      action: function ( e, dt, node, config ) {
-                      	var data = table.rows( { selected: true } ).data()[0];
-                      	window.location='/ct/'+data.id+'/codeList';
-	                  }
-    		        },
 		            { 
 		              extend: "remove", 
 		              editor: editor,

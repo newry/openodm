@@ -54,7 +54,7 @@ public class CustomizedCodeListController {
 	public ResponseEntity<OperationResponse> createCustomizedCodeList(@RequestBody Map<String, String> request) {
 		String name = StringUtils.trim(request.get("name"));
 		String desc = StringUtils.trim(request.get("description"));
-		String submissionValue = StringUtils.trim(request.get("submissionValue"));
+		String submissionValue = getSubmissionValue(request);
 		String ctId = StringUtils.trim(request.get("ctId"));
 		ControlTerminology ct = null;
 		CustomizedCodeList ccl = new CustomizedCodeList();
@@ -123,11 +123,19 @@ public class CustomizedCodeListController {
 		}
 	}
 
+	private String getSubmissionValue(Map<String, String> request) {
+		String submissionValue = StringUtils.trim(request.get("submissionValue"));
+		if (StringUtils.isEmpty(submissionValue)) {
+			submissionValue = StringUtils.trim(request.get("cdiscsubmissionValue"));
+		}
+		return submissionValue;
+	}
+
 	@RequestMapping(value = "/odm/v1/customizedCodeList/{id}", method = RequestMethod.PUT)
 	public ResponseEntity<OperationResponse> updateCustomizedCodeList(@PathVariable("id") Long id, @RequestBody Map<String, String> request) {
 		String name = StringUtils.trim(request.get("name"));
 		String desc = StringUtils.trim(request.get("description"));
-		String submissionValue = StringUtils.trim(request.get("submissionValue"));
+		String submissionValue = getSubmissionValue(request);
 		CustomizedCodeList ccl = null;
 		if (StringUtils.isEmpty(name)) {
 			OperationResponse or = new OperationResponse();
@@ -154,6 +162,47 @@ public class CustomizedCodeListController {
 			ccl.setUpdatedBy("admin");
 			ccl.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
 			customizedCodeListRepository.save(ccl);
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(true);
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.OK);
+		} catch (Exception e) {
+			LOG.error("Error during creating the CustomizedCodeList", e);
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("Error during creating the CustomizedCodeList");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@RequestMapping(value = "/odm/v1/ctId/{ctId}/customizedCodeList/{id}", method = RequestMethod.DELETE)
+	public ResponseEntity<OperationResponse> updateCustomizedCodeList(@PathVariable("ctId") Long ctId, @PathVariable("id") Long id) {
+		ControlTerminology ct = this.controlTerminologyRepository.findOne(ctId);
+		if (ct == null) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("ctId is invalid");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.NOT_FOUND);
+		}
+		CustomizedCodeList ccl = this.customizedCodeListRepository.findOne(id);
+		if (ccl == null) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("id is invalid");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.NOT_FOUND);
+		}
+
+		try {
+			ct.getCustomizedCodeLists().remove(ccl);
+			this.controlTerminologyRepository.save(ct);
+			customizedCodeListRepository.delete(ccl);
 			OperationResponse or = new OperationResponse();
 			OperationResult result = new OperationResult();
 			result.setSuccess(true);

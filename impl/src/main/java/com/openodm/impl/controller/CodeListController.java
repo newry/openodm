@@ -44,7 +44,7 @@ import com.openodm.impl.repository.ct.ExtendedEnumeratedItemRepository;
 public class CodeListController {
 	private static final Logger LOG = LoggerFactory.getLogger(CodeListController.class);
 	@Autowired
-	private CTVersionRepository metaDataVersionRepository;
+	private CTVersionRepository ctVersionRepository;
 	@Autowired
 	private CodeListRepository codeListRepository;
 	@Autowired
@@ -57,8 +57,8 @@ public class CodeListController {
 	private ODMBO odmBo;
 
 	@RequestMapping(value = "/odm/v1/metaDataVersion", method = RequestMethod.GET)
-	public List<CTVersion> listMetaDataVersion() {
-		return metaDataVersionRepository.findAll();
+	public List<CTVersion> listCTVersion() {
+		return ctVersionRepository.findAll();
 	}
 
 	@RequestMapping(value = "/odm/v1/codeList", method = RequestMethod.GET)
@@ -124,6 +124,7 @@ public class CodeListController {
 	public ResponseEntity<OperationResponse> createControlTerminology(@RequestBody Map<String, String> request) {
 		String name = StringUtils.trim(request.get("name"));
 		String desc = StringUtils.trim(request.get("description"));
+		String ctVersionId = StringUtils.trim(request.get("ctVersionId"));
 		ControlTerminology ct = new ControlTerminology();
 		ct.setCreator("admin");
 		ct.setUpdatedBy("admin");
@@ -153,9 +154,22 @@ public class CodeListController {
 				}
 			}
 		}
-
 		ct.setName(name);
 		ct.setDescription(desc);
+		if (!StringUtils.isEmpty(ctVersionId)) {
+			List<CodeList> codeLists = codeListRepository.findByMetaDataVersionId(Long.valueOf(ctVersionId));
+			if (CollectionUtils.isEmpty(codeLists)) {
+				OperationResponse or = new OperationResponse();
+				OperationResult result = new OperationResult();
+				result.setSuccess(false);
+				result.setError("ctVersion is invalid");
+				or.setResult(result);
+				return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+			} else {
+				ct.setCodeLists(codeLists);
+			}
+
+		}
 		return saveCT(ct, true);
 	}
 
