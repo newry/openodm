@@ -50,6 +50,12 @@ public class CustomizedCodeListController {
 	@Autowired
 	private ExtendedEnumeratedItemRepository extendedEnumeratedItemRepository;
 
+	@RequestMapping(value = "/odm/v1/controlTerminology/{ctId}/customizedCodeList", method = RequestMethod.POST)
+	public ResponseEntity<OperationResponse> createCustomizedCodeList(@PathVariable("id") Long ctId, @RequestBody Map<String, String> request) {
+		request.put("ctId", String.valueOf(ctId));
+		return this.createCustomizedCodeList(request);
+	}
+
 	@RequestMapping(value = "/odm/v1/customizedCodeList", method = RequestMethod.POST)
 	public ResponseEntity<OperationResponse> createCustomizedCodeList(@RequestBody Map<String, String> request) {
 		String name = StringUtils.trim(request.get("name"));
@@ -178,7 +184,7 @@ public class CustomizedCodeListController {
 		}
 	}
 
-	@RequestMapping(value = "/odm/v1/ctId/{ctId}/customizedCodeList/{id}", method = RequestMethod.DELETE)
+	@RequestMapping(value = "/odm/v1/controlTerminology/{ctId}/customizedCodeList/{id}", method = RequestMethod.DELETE)
 	public ResponseEntity<OperationResponse> updateCustomizedCodeList(@PathVariable("ctId") Long ctId, @PathVariable("id") Long id) {
 		ControlTerminology ct = this.controlTerminologyRepository.findOne(ctId);
 		if (ct == null) {

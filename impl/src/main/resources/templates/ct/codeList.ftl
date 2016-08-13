@@ -15,34 +15,42 @@
 		$(document).ready(function() {
 		    editor = new $.fn.dataTable.Editor( {
 				 ajax: function ( method, url, d, successCallback, errorCallback ) {
-		            var output = { data: [] };
-		 
 		            if ( d.action === 'create' ) {
 		                $.each( d.data, function (key, value) {
 		                	value.ctId = ${ctId};
-		                	$.ajax({url: "/odm/v1/customizedCodeList",contentType:'application/json', type:'POST', data: JSON.stringify(value), success: function(result){
+		                	$.ajax({url: "/odm/v1/controlTerminology/${ctId}/customizedCodeList",contentType:'application/json', type:'POST', data: JSON.stringify(value), success: function(result){
 		                		location.reload();
     						}});
 		                } );
 		            }
 		            else if ( d.action === 'edit' ) {
-		                // Update each edited item with the data submitted
-		                $.each( d.data, function (id, value) {
-		                	value.ctId = ${ctId};
-		                	$.ajax({url: "/odm/v1/customizedCodeList/"+id,contentType:'application/json', type:'PUT', data: JSON.stringify(value), success: function(result){
-		                		location.reload();
-    						}});
-		                } );
+					    var data = table.row( { selected: true } ).data();
+		            	if(data.customized){
+			                $.each( d.data, function (id, value) {
+			                	$.ajax({url: "/odm/v1/customizedCodeList/"+id,contentType:'application/json', type:'PUT', data: JSON.stringify(value), success: function(result){
+			                		location.reload();
+	    						}});
+			                });
+		                }else{
+			               	location.reload();
+		                }
 		            }
 		            else if ( d.action === 'remove' ) {
-		                $.each( d.data, function (id, value) {
-		                	$.ajax({url: "/odm/v1/ctId/${ctId}/customizedCodeList/"+id,type:'DELETE', success: function(result){
-		                		location.reload();
-    						}});
-		                } );
+					    var data = table.row( { selected: true } ).data();
+		            	if(data.customized){
+			                $.each( d.data, function (id, value) {
+			                	$.ajax({url: "/odm/v1/controlTerminology/${ctId}/customizedCodeList/"+id,type:'DELETE', success: function(result){
+			                		location.reload();
+	    						}});
+			                } );
+		                }else{
+			                $.each( d.data, function (id, value) {
+			                	$.ajax({url: "/odm/v1/controlTerminology/${ctId}/codeList/"+id,type:'DELETE', success: function(result){
+			                		location.reload();
+	    						}});
+			                } );
+		                }
 		            }
-		            // Show Editor what has changed
-		            //successCallback( output );
         	    },
 		        idSrc:  'id',
 		        table: "#codeList",
@@ -79,7 +87,7 @@
 		        }
 		    } );			
 		    
-		    $('#codeList').DataTable( {
+		    var table = $('#codeList').DataTable( {
 		        "aaSorting": [],
 		        "dom": "Bfrtip",
 		    	"bLengthChange": false,
@@ -110,36 +118,30 @@
 				    "targets": 1,
 				    "data": "description",
 				    "createdCell": function (td, cellData, rowData, row, col) {
-					      if ( rowData.customized ) {
+					      //if ( rowData.customized ) {
 					        $(td).addClass('selectable')
-					      }
+					      //}
 				    }
 				  },
 				  {
 				    "targets": 2,
 				    "data": "cdiscsubmissionValue",
 				    "createdCell": function (td, cellData, rowData, row, col) {
-					      if ( rowData.customized ) {
-					        $(td).addClass('selectable')
-					      }
+					    $(td).addClass('selectable')
 				    }
 				  },
 				  {
 				    "targets": 3,
 				    "data": "extCodeId",
 				    "createdCell": function (td, cellData, rowData, row, col) {
-					      if ( rowData.customized ) {
-					        $(td).addClass('selectable')
-					      }
+					    $(td).addClass('selectable')
 				    }
 				  },
 				  {
 				    "targets": 4,
 				    "data": "codeListExtensible",
 				    "createdCell": function (td, cellData, rowData, row, col) {
-					      if ( rowData.customized ) {
-					        $(td).addClass('selectable')
-					      }
+					    $(td).addClass('selectable')
 				    }
 				  },
 				  {
@@ -149,9 +151,7 @@
 				      return data?"Yes":"No";
 				    },
 				    "createdCell": function (td, cellData, rowData, row, col) {
-					      if ( rowData.customized ) {
-					        $(td).addClass('selectable')
-					      }
+					    $(td).addClass('selectable')
 				    }
 				  }
 				],
@@ -161,6 +161,14 @@
 				},
 		        buttons: [
 		            { extend: "create", editor: editor },
+		            { 
+		              extend: "create", 
+                	  text: "Select Code List",
+                      action: function ( e, dt, node, config ) {
+                      	window.location='/ct/${ctId}/selectCodeList';
+	                  }
+               		},
+		            
 		            { extend: "edit",   editor: editor },
 		            { extend: "remove", editor: editor }
 		        ]

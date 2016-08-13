@@ -67,9 +67,13 @@ public class HomeController {
 		model.put("codeListId", codeListId);
 		model.put("customized", false);
 		model.put("extended", codeList == null ? false : StringUtils.equalsIgnoreCase(codeList.getCodeListExtensible(), "Yes"));
+		addBreadCrumbs(id, model, ct);
+		return "ct/enumeratedItemList";
+	}
+
+	private void addBreadCrumbs(Long id, Map<String, Object> model, ControlTerminology ct) {
 		model.put("breadcrumbs",
 				Arrays.asList(Breadcrumb.create("/ct", "All CTs"), Breadcrumb.create("/ct/" + id + "/codeList", ct == null ? "#" + id : ct.getName())));
-		return "ct/enumeratedItemList";
 	}
 
 	@RequestMapping(path = "/ct/{id}/customizedCodeList/{codeListId}", method = RequestMethod.GET)
@@ -81,9 +85,19 @@ public class HomeController {
 		model.put("codeListId", codeListId);
 		model.put("customized", true);
 		model.put("extended", true);
-		model.put("breadcrumbs",
-				Arrays.asList(Breadcrumb.create("/ct", "All CTs"), Breadcrumb.create("/ct/" + id + "/codeList", ct == null ? "#" + id : ct.getName())));
+		addBreadCrumbs(id, model, ct);
 		return "ct/enumeratedItemList";
 	}
+
+	@RequestMapping(path = "/ct/{id}/selectCodeList", method = RequestMethod.GET)
+	public String searchCodeListByCTId(@PathVariable Long id, Map<String, Object> model) {
+		ControlTerminology ct = controlTerminologyRepository.findOne(id);
+		model.put("title", "Select Code List");
+		model.put("selected", "ct");
+		model.put("ctId", id);
+		addBreadCrumbs(id, model, ct);
+		return "ct/selectCodeList";
+	}
+
 
 }

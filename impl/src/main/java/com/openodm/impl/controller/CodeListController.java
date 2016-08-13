@@ -252,6 +252,67 @@ public class CodeListController {
 
 	}
 
+	@RequestMapping(value = "/odm/v1/controlTerminology/{id}/codeList/{codeListId}", method = RequestMethod.DELETE)
+	public ResponseEntity<OperationResponse> deleteCodeList(@PathVariable("id") Long id, @PathVariable("codeListId") Long codeListId) {
+		ControlTerminology ct = controlTerminologyRepository.findOne(id);
+		if (ct == null) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("id is invalid");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		} else {
+			CodeList codeList = codeListRepository.findOne(codeListId);
+			if (codeList == null) {
+				OperationResponse or = new OperationResponse();
+				OperationResult result = new OperationResult();
+				result.setSuccess(false);
+				result.setError("codeListId is invalid");
+				or.setResult(result);
+				return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+			} else {
+				List<CodeList> codeLists = ct.getCodeLists();
+				codeLists.remove(codeList);
+				return saveCT(ct, false);
+			}
+		}
+
+	}
+
+	@RequestMapping(value = "/odm/v1/controlTerminology/{id}/codeList", method = RequestMethod.POST)
+	public ResponseEntity<OperationResponse> addCodeLists(@PathVariable("id") Long id, @RequestBody Map<String, List<Long>> request) {
+		ControlTerminology ct = controlTerminologyRepository.findOne(id);
+		if (ct == null) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("id is invalid");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		} else {
+			List<Long> ids = request.get("codeListIds");
+			Iterable<CodeList> codeLists = codeListRepository.findAll(ids);
+			if (codeLists == null || !codeLists.iterator().hasNext()) {
+				OperationResponse or = new OperationResponse();
+				OperationResult result = new OperationResult();
+				result.setSuccess(false);
+				result.setError("codeListId is invalid");
+				or.setResult(result);
+				return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+			} else {
+				List<CodeList> existingCodeLists = ct.getCodeLists();
+				for (CodeList codeList : codeLists) {
+					if (!existingCodeLists.contains(codeList)) {
+						existingCodeLists.add(codeList);
+					}
+				}
+				return saveCT(ct, false);
+			}
+		}
+
+	}
+
 	@RequestMapping(value = "/odm/v1/controlTerminology/{id}/metaDataVersion/{metaDataVersionId}", method = RequestMethod.POST)
 	public ResponseEntity<OperationResponse> addMetaDataVersion(@PathVariable("id") Long id, @PathVariable("metaDataVersionId") Long metaDataVersionId) {
 		ControlTerminology ct = controlTerminologyRepository.findOne(id);

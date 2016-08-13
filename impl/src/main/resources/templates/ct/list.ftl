@@ -110,7 +110,6 @@
 		              extend: "create", 
 		              editor: editor,
                       action: function ( e, dt, node, config ) {
-                      	var data = table.rows( { selected: true } ).data()[0];
                       	window.location='/ct/new';
 	                  }
                		},
