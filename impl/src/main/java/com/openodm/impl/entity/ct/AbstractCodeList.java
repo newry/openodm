@@ -27,7 +27,7 @@ public abstract class AbstractCodeList extends PersistentObject {
 	@Column(name = "oid", nullable = true, length = 255)
 	private String oid;
 
-	@Column(name = "name", nullable = false, length = 255, unique = true)
+	@Column(name = "name", nullable = false, length = 255)
 	private String name;
 
 	@Column(name = "description", nullable = true, length = 4096)

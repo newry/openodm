@@ -74,4 +74,8 @@ public abstract class PersistentObject implements Serializable {
 		this.dateLastModified = dateLastModified;
 	}
 
+	public void setDateAdded(Calendar dateAdded) {
+		this.dateAdded = dateAdded;
+	}
+
 }

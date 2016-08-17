@@ -21,7 +21,11 @@
 		                $.each( d.data, function (key, value) {
 		                	$.ajax({url: "/odm/v1/controlTerminology",contentType:'application/json', type:'POST', data: JSON.stringify(value), success: function(result){
 		                		location.reload();
-    						}});
+    						},
+			                error:function(xhr, error, thrown){
+			                	errorHandler(editor, xhr, error, thrown, d.action);
+	    					}
+    						});
 		                } );
 		            }
 		            else if ( d.action === 'edit' ) {
@@ -29,14 +33,20 @@
 		                $.each( d.data, function (id, value) {
 		                	$.ajax({url: "/odm/v1/controlTerminology/"+id,contentType:'application/json', type:'PUT', data: JSON.stringify(value), success: function(result){
 		                		location.reload();
-    						}});
+    						},
+			                error:function(xhr, error, thrown){
+			                	errorHandler(editor, xhr, error, thrown, d.action);
+	    					}});
 		                } );
 		            }
 		            else if ( d.action === 'remove' ) {
 		                $.each( d.data, function (id, value) {
 		                	$.ajax({url: "/odm/v1/controlTerminology/"+id,type:'DELETE', success: function(result){
 		                		location.reload();
-    						}});
+    						},
+			                error:function(xhr, error, thrown){
+			                	errorHandler(editor, xhr, error, thrown, d.action);
+	    					}});
 		                } );
 		            }
 		            // Show Editor what has changed

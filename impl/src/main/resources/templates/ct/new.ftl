@@ -47,7 +47,11 @@
 					data.ctVersionId = ctVersionId;
 		            $.ajax({url: "/odm/v1/controlTerminology",contentType:'application/json', type:'POST', data: JSON.stringify(data), success: function(result){
 		                		window.location='/ct';
-    				}});
+    				},
+			        error:function(xhr, error, thrown){
+			             alert(xhr.responseJSON.result.error)
+	    			}
+    				});
 					
 				}
 			);

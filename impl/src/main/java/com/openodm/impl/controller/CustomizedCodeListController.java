@@ -2,10 +2,8 @@ package com.openodm.impl.controller;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -35,6 +33,7 @@ import com.openodm.impl.repository.ct.ControlTerminologyRepository;
 import com.openodm.impl.repository.ct.CustomizedCodeListRepository;
 import com.openodm.impl.repository.ct.CustomizedEnumeratedItemRepository;
 import com.openodm.impl.repository.ct.ExtendedEnumeratedItemRepository;
+import com.openodm.impl.util.Utils;
 
 @RestController
 public class CustomizedCodeListController {
@@ -51,7 +50,7 @@ public class CustomizedCodeListController {
 	private ExtendedEnumeratedItemRepository extendedEnumeratedItemRepository;
 
 	@RequestMapping(value = "/odm/v1/controlTerminology/{ctId}/customizedCodeList", method = RequestMethod.POST)
-	public ResponseEntity<OperationResponse> createCustomizedCodeList(@PathVariable("id") Long ctId, @RequestBody Map<String, String> request) {
+	public ResponseEntity<OperationResponse> createCustomizedCodeList(@PathVariable("ctId") Long ctId, @RequestBody Map<String, String> request) {
 		request.put("ctId", String.valueOf(ctId));
 		return this.createCustomizedCodeList(request);
 	}
@@ -71,16 +70,6 @@ public class CustomizedCodeListController {
 			result.setError("Name is required");
 			or.setResult(result);
 			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
-		} else {
-			List<CustomizedCodeList> list = customizedCodeListRepository.findByName(name);
-			if (!CollectionUtils.isEmpty(list)) {
-				OperationResponse or = new OperationResponse();
-				OperationResult result = new OperationResult();
-				result.setSuccess(false);
-				result.setError("Code with same name existed");
-				or.setResult(result);
-				return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
-			}
 		}
 
 		if (StringUtils.isEmpty(ctId) || !StringUtils.isNumeric(ctId)) {
@@ -166,7 +155,7 @@ public class CustomizedCodeListController {
 			ccl.setDescription(desc);
 			ccl.setCDISCSubmissionValue(submissionValue);
 			ccl.setUpdatedBy("admin");
-			ccl.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+			Utils.updatePODataLastModified(ccl);
 			customizedCodeListRepository.save(ccl);
 			OperationResponse or = new OperationResponse();
 			OperationResult result = new OperationResult();
@@ -185,7 +174,7 @@ public class CustomizedCodeListController {
 	}
 
 	@RequestMapping(value = "/odm/v1/controlTerminology/{ctId}/customizedCodeList/{id}", method = RequestMethod.DELETE)
-	public ResponseEntity<OperationResponse> updateCustomizedCodeList(@PathVariable("ctId") Long ctId, @PathVariable("id") Long id) {
+	public ResponseEntity<OperationResponse> deleteCustomizedCodeList(@PathVariable("ctId") Long ctId, @PathVariable("id") Long id) {
 		ControlTerminology ct = this.controlTerminologyRepository.findOne(ctId);
 		if (ct == null) {
 			OperationResponse or = new OperationResponse();
@@ -208,7 +197,10 @@ public class CustomizedCodeListController {
 		try {
 			ct.getCustomizedCodeLists().remove(ccl);
 			this.controlTerminologyRepository.save(ct);
-			customizedCodeListRepository.delete(ccl);
+			ccl.setStatus(ObjectStatus.deleted);
+			ccl.setUpdatedBy("admin");
+			Utils.updatePODataLastModified(ccl);
+			customizedCodeListRepository.save(ccl);
 			OperationResponse or = new OperationResponse();
 			OperationResult result = new OperationResult();
 			result.setSuccess(true);
@@ -231,8 +223,289 @@ public class CustomizedCodeListController {
 		return list;
 	}
 
+	@RequestMapping(value = "/odm/v1/controlTerminology/{ctId}/customizedCodeList/{ccId}/customizedEnumeratedItem", method = RequestMethod.POST)
+	public ResponseEntity<OperationResponse> createCustomizedEnumeratedItem(@PathVariable("ctId") Long ctId, @PathVariable("ccId") Long ccId,
+			@RequestBody Map<String, String> request) {
+		CustomizedCodeList customizedCodeList = customizedCodeListRepository.findOne(ccId);
+		if (customizedCodeList == null) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("invalid codeListId");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		}
+		String extCodeId = StringUtils.trim(request.get("extCodeId"));
+		String codedValue = StringUtils.trim(request.get("codedValue"));
+		if (StringUtils.isAnyEmpty(extCodeId, codedValue)) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("invalid extCodeId or codedValue");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		}
+		CustomizedEnumeratedItem cei = customizedEnumeratedItemRepository.findByCodeListIdAndCodeValue(ccId, codedValue);
+		if (cei == null) {
+			cei = new CustomizedEnumeratedItem();
+			cei.setExtCodeId(extCodeId);
+			cei.setCodedValue(codedValue);
+			cei.setCustomizedCodeList(customizedCodeList);
+			cei.setCreator("admin");
+			cei.setUpdatedBy("admin");
+		} else if (!cei.getStatus().equals(ObjectStatus.active)) {
+			Utils.updatePODateAdded(cei);
+			Utils.updatePOStatus(cei, ObjectStatus.active);
+		} else {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("Code already existed");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		}
+		try {
+			customizedEnumeratedItemRepository.save(cei);
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(true);
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.CREATED);
+		} catch (Exception e) {
+			LOG.error("Error during creating the CustomizedEnumeratedItem", e);
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("Error during creating the CustomizedEnumeratedItem");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@RequestMapping(value = "/odm/v1/controlTerminology/{ctId}/codeList/{ccId}/extendedEnumeratedItem", method = RequestMethod.POST)
+	public ResponseEntity<OperationResponse> createExtendedEnumeratedItem(@PathVariable("ctId") Long ctId, @PathVariable("ccId") Long ccId,
+			@RequestBody Map<String, String> request) {
+		CodeList codeList = codeListRepository.findOne(ccId);
+		if (codeList == null || StringUtils.equalsIgnoreCase(codeList.getCodeListExtensible(), "No")) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("invalid codeListId");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		}
+		ControlTerminology ct = this.controlTerminologyRepository.findOne(ctId);
+		if (ct == null) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("invalid ctId");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		}
+
+		String extCodeId = StringUtils.trim(request.get("extCodeId"));
+		String codedValue = StringUtils.trim(request.get("codedValue"));
+		if (StringUtils.isAnyEmpty(extCodeId, codedValue)) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("invalid extCodeId or codedValue");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		}
+
+		ExtendedEnumeratedItem cei = extendedEnumeratedItemRepository.findByCtIdAndCodeListIdAndCodeValue(ctId, ccId, codedValue);
+		if (cei == null) {
+			cei = new ExtendedEnumeratedItem();
+		} else if (!cei.getStatus().equals(ObjectStatus.active)) {
+			Utils.updatePODateAdded(cei);
+			Utils.updatePOStatus(cei, ObjectStatus.active);
+		} else {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("Code already existed");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		}
+		cei.setExtCodeId(extCodeId);
+		cei.setCodedValue(codedValue);
+		cei.setCodeList(codeList);
+		cei.setControlTerminology(ct);
+		cei.setCreator("admin");
+		cei.setUpdatedBy("admin");
+		try {
+			extendedEnumeratedItemRepository.save(cei);
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(true);
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.CREATED);
+		} catch (Exception e) {
+			LOG.error("Error during creating the ExtendedEnumeratedItem", e);
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("Error during creating the ExtendedEnumeratedItem");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@RequestMapping(value = "/odm/v1/controlTerminology/{ctId}/codeList/{ccId}/extendedEnumeratedItem/{id}", method = RequestMethod.PUT)
+	public ResponseEntity<OperationResponse> updateExtendedEnumeratedItem(@PathVariable("ctId") Long ctId, @PathVariable("ccId") Long ccId,
+			@PathVariable("id") Long id, @RequestBody Map<String, String> request) {
+		String extCodeId = StringUtils.trim(request.get("extCodeId"));
+		String codedValue = StringUtils.trim(request.get("codedValue"));
+		if (StringUtils.isAnyEmpty(extCodeId, codedValue)) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("invalid extCodeId or codedValue");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		}
+		ExtendedEnumeratedItem cei = this.extendedEnumeratedItemRepository.findOne(id);
+		if (cei == null) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("id is invalid");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.NOT_FOUND);
+		}
+		ExtendedEnumeratedItem existingCei = extendedEnumeratedItemRepository.findByCtIdAndCodeListIdAndCodeValue(ctId, ccId, codedValue);
+		if (existingCei != null && existingCei.getStatus().equals(ObjectStatus.active) && !existingCei.getId().equals(cei.getId())) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("Code already existed");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		}
+		cei.setExtCodeId(extCodeId);
+		cei.setCodedValue(codedValue);
+		cei.setUpdatedBy("admin");
+		Utils.updatePODataLastModified(cei);
+		return updateExtendedEnumerateItem(cei);
+	}
+
+	@RequestMapping(value = "/odm/v1/controlTerminology/{ctId}/codeList/{ccId}/extendedEnumeratedItem/{id}", method = RequestMethod.DELETE)
+	public ResponseEntity<OperationResponse> deleteExtendedEnumeratedItem(@PathVariable("ctId") Long ctId, @PathVariable("ccId") Long ccId,
+			@PathVariable("id") Long id) {
+		ExtendedEnumeratedItem cei = this.extendedEnumeratedItemRepository.findOne(id);
+		if (cei == null) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("id is invalid");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.NOT_FOUND);
+		}
+		Utils.updatePOStatus(cei, ObjectStatus.deleted);
+		cei.setUpdatedBy("admin");
+		return updateExtendedEnumerateItem(cei);
+
+	}
+
+	@RequestMapping(value = "/odm/v1/controlTerminology/{ctId}/customizedCodeList/{ccId}/customizedEnumeratedItem/{id}", method = RequestMethod.PUT)
+	public ResponseEntity<OperationResponse> updateCustomizedEnumeratedItem(@PathVariable("ctId") Long ctId, @PathVariable("ccId") Long ccId,
+			@PathVariable("id") Long id, @RequestBody Map<String, String> request) {
+		String extCodeId = StringUtils.trim(request.get("extCodeId"));
+		String codedValue = StringUtils.trim(request.get("codedValue"));
+		if (StringUtils.isAnyEmpty(extCodeId, codedValue)) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("invalid extCodeId or codedValue");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		}
+		CustomizedEnumeratedItem cei = this.customizedEnumeratedItemRepository.findOne(id);
+		if (cei == null) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("id is invalid");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.NOT_FOUND);
+		}
+		CustomizedEnumeratedItem existingCei = customizedEnumeratedItemRepository.findByCodeListIdAndCodeValue(ccId, codedValue);
+		if (existingCei != null && existingCei.getStatus().equals(ObjectStatus.active) && !existingCei.getId().equals(cei.getId())) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("Code already existed");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		}
+
+		cei.setExtCodeId(extCodeId);
+		cei.setCodedValue(codedValue);
+		cei.setUpdatedBy("admin");
+		Utils.updatePODataLastModified(cei);
+		return updateCustomizedEnumerateItem(cei);
+	}
+
+	@RequestMapping(value = "/odm/v1/controlTerminology/{ctId}/customizedCodeList/{ccId}/customizedEnumeratedItem/{id}", method = RequestMethod.DELETE)
+	public ResponseEntity<OperationResponse> deleteEnumeratedItem(@PathVariable("ctId") Long ctId, @PathVariable("ccId") Long ccId,
+			@PathVariable("id") Long id) {
+		CustomizedEnumeratedItem cei = this.customizedEnumeratedItemRepository.findOne(id);
+		if (cei == null) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("id is invalid");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.NOT_FOUND);
+		}
+		Utils.updatePOStatus(cei, ObjectStatus.deleted);
+		cei.setUpdatedBy("admin");
+		return updateCustomizedEnumerateItem(cei);
+	}
+
+	private ResponseEntity<OperationResponse> updateExtendedEnumerateItem(ExtendedEnumeratedItem cei) {
+		try {
+			extendedEnumeratedItemRepository.save(cei);
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(true);
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.OK);
+		} catch (Exception e) {
+			LOG.error("Error during creating the ExtendedEnumeratedItem", e);
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("Error during saving the ExtendedEnumeratedItem");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	private ResponseEntity<OperationResponse> updateCustomizedEnumerateItem(CustomizedEnumeratedItem cei) {
+		try {
+			customizedEnumeratedItemRepository.save(cei);
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(true);
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.OK);
+		} catch (Exception e) {
+			LOG.error("Error during creating the CustomizedEnumeratedItem", e);
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("Error during saving the CustomizedEnumeratedItem");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@Deprecated
 	@RequestMapping(value = "/odm/v1/customizedEnumeratedItem", method = RequestMethod.POST)
-	public ResponseEntity<OperationResponse> createEnumeratedItem(@RequestBody List<Map<String, String>> requests) {
+	public ResponseEntity<OperationResponse> createEnumeratedItems(@RequestBody List<Map<String, String>> requests) {
 		List<CustomizedEnumeratedItem> list = new ArrayList<CustomizedEnumeratedItem>();
 		List<ExtendedEnumeratedItem> list2 = new ArrayList<ExtendedEnumeratedItem>();
 		if (!CollectionUtils.isEmpty(requests)) {
@@ -281,7 +554,7 @@ public class CustomizedCodeListController {
 								result.setError("invalid codeListId");
 								or.setResult(result);
 								return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
-							} else if (StringUtils.endsWithIgnoreCase(codeList.getCodeListExtensible(), "No")) {
+							} else if (StringUtils.equalsIgnoreCase(codeList.getCodeListExtensible(), "No")) {
 								OperationResponse or = new OperationResponse();
 								OperationResult result = new OperationResult();
 								result.setSuccess(false);
@@ -356,43 +629,46 @@ public class CustomizedCodeListController {
 
 	private void handleExtenedEnumerateItem(List<ExtendedEnumeratedItem> list2, CodeList codeList, ControlTerminology ct, String idStr, String deleted,
 			String extCodeId, String codedValue, String codeListIdStr, String ctIdStr) {
-		ExtendedEnumeratedItem eei = new ExtendedEnumeratedItem();
+		ExtendedEnumeratedItem eei;
 		if (StringUtils.isNotBlank(idStr)) {
 			eei = extendedEnumeratedItemRepository.findOne(Long.valueOf(idStr));
-			if (StringUtils.isNotEmpty(deleted)) {
-				eei.setExtCodeId(extCodeId);
-				eei.setCodedValue(codedValue);
-				eei.setStatus(ObjectStatus.deleted);
-				eei.setCodeList(codeList);
-				eei.setControlTerminology(ct);
-				eei.setUpdatedBy("admin");
-			} else {
-				eei.setExtCodeId(extCodeId);
-				eei.setCodedValue(codedValue);
-				eei.setCodeList(codeList);
-				eei.setControlTerminology(ct);
-				eei.setUpdatedBy("admin");
+			if (eei != null) {
+				if (StringUtils.isNotEmpty(deleted)) {
+					eei.setExtCodeId(extCodeId);
+					eei.setCodedValue(codedValue);
+					eei.setStatus(ObjectStatus.deleted);
+					eei.setCodeList(codeList);
+					eei.setControlTerminology(ct);
+					eei.setUpdatedBy("admin");
+					Utils.updatePODataLastModified(eei);
+				} else {
+					eei.setExtCodeId(extCodeId);
+					eei.setCodedValue(codedValue);
+					eei.setCodeList(codeList);
+					eei.setControlTerminology(ct);
+					eei.setUpdatedBy("admin");
+					Utils.updatePODataLastModified(eei);
+				}
 			}
 		} else {
-			List<ExtendedEnumeratedItem> eeis = this.extendedEnumeratedItemRepository.findByCtIdAndCodeListIdAndCodeValue(Long.valueOf(ctIdStr),
-					Long.valueOf(codeListIdStr), codedValue);
-			if (!CollectionUtils.isEmpty(eeis)) {
-				eei = eeis.get(0);
+			eei = this.extendedEnumeratedItemRepository.findByCtIdAndCodeListIdAndCodeValue(Long.valueOf(ctIdStr), Long.valueOf(codeListIdStr), codedValue);
+			if (eei != null) {
 				eei.setExtCodeId(extCodeId);
 				eei.setCodedValue(codedValue);
 				eei.setCodeList(codeList);
 				eei.setControlTerminology(ct);
 				eei.setStatus(ObjectStatus.active);
 				eei.setUpdatedBy("admin");
-				eei.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+				Utils.updatePODataLastModified(eei);
 			} else {
+				eei = new ExtendedEnumeratedItem();
 				eei.setExtCodeId(extCodeId);
 				eei.setCodedValue(codedValue);
 				eei.setCodeList(codeList);
 				eei.setControlTerminology(ct);
 				eei.setCreator("admin");
 				eei.setUpdatedBy("admin");
-				eei.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+				Utils.updatePODataLastModified(eei);
 			}
 		}
 		list2.add(eei);
@@ -416,22 +692,20 @@ public class CustomizedCodeListController {
 				cei.setUpdatedBy("admin");
 			}
 		} else {
-			List<CustomizedEnumeratedItem> ceis = customizedEnumeratedItemRepository.findByCodeListIdAndCodeValue(Long.valueOf(codeListId), codedValue);
-			if (!CollectionUtils.isEmpty(ceis)) {
-				cei = ceis.get(0);
+			cei = customizedEnumeratedItemRepository.findByCodeListIdAndCodeValue(Long.valueOf(codeListId), codedValue);
+			if (cei != null) {
 				cei.setExtCodeId(extCodeId);
 				cei.setCodedValue(codedValue);
 				cei.setCustomizedCodeList(codeList);
-				cei.setStatus(ObjectStatus.active);
 				cei.setUpdatedBy("admin");
-				cei.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+				Utils.updatePOStatus(cei, ObjectStatus.active);
 			} else {
+				cei = new CustomizedEnumeratedItem();
 				cei.setExtCodeId(extCodeId);
 				cei.setCodedValue(codedValue);
 				cei.setCustomizedCodeList(codeList);
 				cei.setCreator("admin");
 				cei.setUpdatedBy("admin");
-				cei.setDateLastModified(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
 			}
 		}
 		list.add(cei);

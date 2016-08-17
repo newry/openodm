@@ -20,7 +20,10 @@
 		                	value.ctId = ${ctId};
 		                	$.ajax({url: "/odm/v1/controlTerminology/${ctId}/customizedCodeList",contentType:'application/json', type:'POST', data: JSON.stringify(value), success: function(result){
 		                		location.reload();
-    						}});
+    						},
+			                error:function(xhr, error, thrown){
+			                	errorHandler(editor, xhr, error, thrown, d.action);
+	    					}});
 		                } );
 		            }
 		            else if ( d.action === 'edit' ) {
@@ -29,7 +32,11 @@
 			                $.each( d.data, function (id, value) {
 			                	$.ajax({url: "/odm/v1/customizedCodeList/"+id,contentType:'application/json', type:'PUT', data: JSON.stringify(value), success: function(result){
 			                		location.reload();
-	    						}});
+	    						},
+			                	error:function(xhr, error, thrown){
+			                		errorHandler(editor, xhr, error, thrown, d.action);
+	    						}
+	    						});
 			                });
 		                }else{
 			               	location.reload();
@@ -41,13 +48,21 @@
 			                $.each( d.data, function (id, value) {
 			                	$.ajax({url: "/odm/v1/controlTerminology/${ctId}/customizedCodeList/"+id,type:'DELETE', success: function(result){
 			                		location.reload();
-	    						}});
+	    						},
+			                	error:function(xhr, error, thrown){
+			                		errorHandler(editor, xhr, error, thrown, d.action);
+	    						}
+	    						});
 			                } );
 		                }else{
 			                $.each( d.data, function (id, value) {
 			                	$.ajax({url: "/odm/v1/controlTerminology/${ctId}/codeList/"+id,type:'DELETE', success: function(result){
 			                		location.reload();
-	    						}});
+	    						},
+			                	error:function(xhr, error, thrown){
+			                		errorHandler(editor, xhr, error, thrown, d.action);
+	    						}
+	    						});
 			                } );
 		                }
 		            }
@@ -98,8 +113,8 @@
 		        "columns": [
 		            { "data": "name" },
 		            { "data": "description" },
-		            { "data": "cdiscsubmissionValue" },
-		            { "data": "extCodeId" },
+		            { "data": "cdiscsubmissionValue" ,"defaultContent": ""},
+		            { "data": "extCodeId","defaultContent": "" },
 		            { "data": "codeListExtensible" },
 		            { "data": "customized" }
 		        ],
@@ -160,7 +175,12 @@
 					selector: '.selectable'
 				},
 		        buttons: [
-		            { extend: "create", editor: editor },
+		            { extend: "create", editor: editor,
+		         		formButtons: [
+	                    	'Edit',
+	                    	{ label: 'Cancel', fn: function () { this.close(); } }
+	               		]
+		            },
 		            { 
 		              extend: "create", 
                 	  text: "Select Code List",
@@ -168,9 +188,18 @@
                       	window.location='/ct/${ctId}/selectCodeList';
 	                  }
                		},
-		            
-		            { extend: "edit",   editor: editor },
-		            { extend: "remove", editor: editor }
+		            { extend: "edit",   editor: editor,
+						formButtons: [
+	                    	'Edit',
+	                    	{ label: 'Cancel', fn: function () { this.close(); } }
+	               		]
+		            },
+		            { extend: "remove", editor: editor, 
+		         		formButtons: [
+	                    	'Edit',
+	                    	{ label: 'Cancel', fn: function () { this.close(); } }
+	               		]
+		            }
 		        ]
 		    });
 		    $("#codeList_wrapper").css("width", "100%");

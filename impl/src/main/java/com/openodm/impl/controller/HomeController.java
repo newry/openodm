@@ -84,7 +84,7 @@ public class HomeController {
 		model.put("ctId", id);
 		model.put("codeListId", codeListId);
 		model.put("customized", true);
-		model.put("extended", true);
+		model.put("extended", false);
 		addBreadCrumbs(id, model, ct);
 		return "ct/enumeratedItemList";
 	}
@@ -98,6 +98,5 @@ public class HomeController {
 		addBreadCrumbs(id, model, ct);
 		return "ct/selectCodeList";
 	}
-
 
 }

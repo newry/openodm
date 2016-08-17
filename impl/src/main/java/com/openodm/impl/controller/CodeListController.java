@@ -195,6 +195,18 @@ public class CodeListController {
 			or.setResult(result);
 			return new ResponseEntity<OperationResponse>(or, HttpStatus.NOT_FOUND);
 		}
+		List<ControlTerminology> existingCts = controlTerminologyRepository.findByName(name);
+		if (!CollectionUtils.isEmpty(existingCts)) {
+			ControlTerminology existingCt = existingCts.get(0);
+			if (!existingCt.getId().equals(ct.getId()) && existingCt.getStatus().equals(ObjectStatus.active)) {
+				OperationResponse or = new OperationResponse();
+				OperationResult result = new OperationResult();
+				result.setSuccess(false);
+				result.setError("CT with same name existed!");
+				or.setResult(result);
+				return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+			}
+		}
 
 		ct.setName(name);
 		ct.setDescription(desc);
@@ -261,7 +273,7 @@ public class CodeListController {
 			result.setSuccess(false);
 			result.setError("id is invalid");
 			or.setResult(result);
-			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.NOT_FOUND);
 		} else {
 			CodeList codeList = codeListRepository.findOne(codeListId);
 			if (codeList == null) {
