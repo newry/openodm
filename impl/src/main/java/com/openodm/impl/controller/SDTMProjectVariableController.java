@@ -34,29 +34,15 @@ import com.openodm.impl.entity.sdtm.SDTMProjectVariableXref;
 import com.openodm.impl.repository.ct.CodeListRepository;
 import com.openodm.impl.repository.ct.ControlTerminologyRepository;
 import com.openodm.impl.repository.ct.EnumeratedItemRepository;
-import com.openodm.impl.repository.sdtm.SDTMDomainRepository;
 import com.openodm.impl.repository.sdtm.SDTMOriginRepository;
 import com.openodm.impl.repository.sdtm.SDTMProjectDomainXrefRepository;
-import com.openodm.impl.repository.sdtm.SDTMProjectKeyVariableXrefRepository;
-import com.openodm.impl.repository.sdtm.SDTMProjectLibraryRepository;
 import com.openodm.impl.repository.sdtm.SDTMProjectRepository;
 import com.openodm.impl.repository.sdtm.SDTMProjectVariableXrefRepository;
-import com.openodm.impl.repository.sdtm.SDTMVariableRefRepository;
-import com.openodm.impl.repository.sdtm.SDTMVariableRepository;
-import com.openodm.impl.repository.sdtm.SDTMVersionRepository;
 
 @RestController
 @SuppressWarnings("unchecked")
 public class SDTMProjectVariableController {
 	private static final Logger LOG = LoggerFactory.getLogger(SDTMProjectVariableController.class);
-	@Autowired
-	private SDTMVersionRepository sdtmVersionRepository;
-	@Autowired
-	private SDTMDomainRepository sdtmDomainRepository;
-	@Autowired
-	private SDTMVariableRefRepository sdtmVariableRefRepository;
-	@Autowired
-	private SDTMVariableRepository sdtmVariableRepository;
 	@Autowired
 	private EnumeratedItemRepository enumeratedItemRepository;
 	@Autowired
@@ -66,13 +52,9 @@ public class SDTMProjectVariableController {
 	@Autowired
 	private SDTMProjectVariableXrefRepository sdtmProjectVariableXrefRepository;
 	@Autowired
-	private SDTMProjectKeyVariableXrefRepository sdtmProjectKeyVariableXrefRepository;
-	@Autowired
 	private SDTMProjectDomainXrefRepository sdtmProjectDomainXrefRepository;
 	@Autowired
 	private ControlTerminologyRepository controlTerminologyRepository;
-	@Autowired
-	private SDTMProjectLibraryRepository sdtmProjectLibraryRepository;
 	@Autowired
 	private CodeListRepository codeListRepository;
 

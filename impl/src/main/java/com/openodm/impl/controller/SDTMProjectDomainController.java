@@ -33,50 +33,29 @@ import com.openodm.impl.entity.sdtm.SDTMProjectDomainXref;
 import com.openodm.impl.entity.sdtm.SDTMProjectKeyVariableXref;
 import com.openodm.impl.entity.sdtm.SDTMProjectVariableXref;
 import com.openodm.impl.entity.sdtm.SDTMVariable;
-import com.openodm.impl.repository.ct.CodeListRepository;
-import com.openodm.impl.repository.ct.ControlTerminologyRepository;
-import com.openodm.impl.repository.ct.EnumeratedItemRepository;
 import com.openodm.impl.repository.sdtm.SDTMDomainRepository;
-import com.openodm.impl.repository.sdtm.SDTMOriginRepository;
 import com.openodm.impl.repository.sdtm.SDTMProjectDomainDataSetRepository;
 import com.openodm.impl.repository.sdtm.SDTMProjectDomainXrefRepository;
 import com.openodm.impl.repository.sdtm.SDTMProjectKeyVariableXrefRepository;
-import com.openodm.impl.repository.sdtm.SDTMProjectLibraryRepository;
 import com.openodm.impl.repository.sdtm.SDTMProjectRepository;
 import com.openodm.impl.repository.sdtm.SDTMProjectVariableXrefRepository;
-import com.openodm.impl.repository.sdtm.SDTMVariableRefRepository;
 import com.openodm.impl.repository.sdtm.SDTMVariableRepository;
-import com.openodm.impl.repository.sdtm.SDTMVersionRepository;
 
 @RestController
 public class SDTMProjectDomainController {
 	private static final Logger LOG = LoggerFactory.getLogger(SDTMProjectDomainController.class);
 	@Autowired
-	private SDTMVersionRepository sdtmVersionRepository;
-	@Autowired
 	private SDTMDomainRepository sdtmDomainRepository;
-	@Autowired
-	private SDTMVariableRefRepository sdtmVariableRefRepository;
 	@Autowired
 	private SDTMVariableRepository sdtmVariableRepository;
 	@Autowired
-	private EnumeratedItemRepository enumeratedItemRepository;
-	@Autowired
 	private SDTMProjectRepository sdtmProjectRepository;
-	@Autowired
-	private SDTMOriginRepository sdtmOriginRepository;
 	@Autowired
 	private SDTMProjectVariableXrefRepository sdtmProjectVariableXrefRepository;
 	@Autowired
 	private SDTMProjectKeyVariableXrefRepository sdtmProjectKeyVariableXrefRepository;
 	@Autowired
 	private SDTMProjectDomainXrefRepository sdtmProjectDomainXrefRepository;
-	@Autowired
-	private ControlTerminologyRepository controlTerminologyRepository;
-	@Autowired
-	private SDTMProjectLibraryRepository sdtmProjectLibraryRepository;
-	@Autowired
-	private CodeListRepository codeListRepository;
 	@Autowired
 	private SDTMProjectDomainDataSetRepository sdtmProjectDomainDataSetRepository;
 	@Value("${project.rootPath}")
@@ -297,7 +276,8 @@ public class SDTMProjectDomainController {
 	}
 
 	@RequestMapping(value = "/sdtm/v1/project/{projectId}/domain", method = RequestMethod.POST)
-	public ResponseEntity<OperationResponse> updateDomainOrderForProject(@PathVariable("projectId") Long projectId, @RequestBody List<Map<String, Long>> request) {
+	public ResponseEntity<OperationResponse> updateDomainOrderForProject(@PathVariable("projectId") Long projectId,
+			@RequestBody List<Map<String, Long>> request) {
 		SDTMProject project = this.sdtmProjectRepository.findOne(projectId);
 		if (project == null) {
 			OperationResponse or = new OperationResponse();
@@ -452,42 +432,49 @@ public class SDTMProjectDomainController {
 		return this.updateProjectDomainXrefs(Arrays.asList(domainXref));
 	}
 
-//	@RequestMapping(value = "/sdtm/v1/project/{projectId}/domain/{domainId}/workDataSet", method = RequestMethod.POST)
-//	public List<SDTMProjectLibrary> createDomainDataSet(@PathVariable("projectId") Long projectId, @PathVariable("domainId") Long domainId) {
-//		List<SDTMProjectLibrary> libs = sdtmProjectLibraryRepository.findByProjectId(projectId);
-//		for (SDTMProjectLibrary library : libs) {
-//			List<Map<String, Object>> dataSetList = new ArrayList<>();
-//			if (library != null) {
-//				Path folder = Paths.get(rootPath + "/" + id + "/" + library.getPath());
-//				if (Files.exists(folder) && folder.toFile().isDirectory()) {
-//					try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(folder)) {
-//						for (Path path : directoryStream) {
-//							Map<String, Object> map = new HashMap<String, Object>();
-//							dataSetList.add(map);
-//							Path fileName = path.getFileName();
-//							if (fileName.toString().lastIndexOf(".") > -1) {
-//								map.put("name", fileName.toString().substring(0, fileName.toString().lastIndexOf(".")));
-//							} else {
-//								map.put("name", fileName);
-//							}
-//							try (InputStream is = new FileInputStream(path.toFile())) {
-//								SasFileReader sasFileReader = new SasFileReaderImpl(is);
-//								map.put("columnList", sasFileReader.getColumns());
-//							} catch (FileNotFoundException e) {
-//								LOG.error("Got Exception during reading file, folder={}", folder, e);
-//							} catch (IOException e) {
-//								LOG.error("Got Exception during reading file, folder={}", folder, e);
-//							}
-//
-//						}
-//					} catch (IOException ex) {
-//					}
-//				}
-//			}
-//			library.setDataSetList(dataSetList);
-//
-//		}
-//		return libs;
-//	}
+	// @RequestMapping(value =
+	// "/sdtm/v1/project/{projectId}/domain/{domainId}/workDataSet", method =
+	// RequestMethod.POST)
+	// public List<SDTMProjectLibrary>
+	// createDomainDataSet(@PathVariable("projectId") Long projectId,
+	// @PathVariable("domainId") Long domainId) {
+	// List<SDTMProjectLibrary> libs =
+	// sdtmProjectLibraryRepository.findByProjectId(projectId);
+	// for (SDTMProjectLibrary library : libs) {
+	// List<Map<String, Object>> dataSetList = new ArrayList<>();
+	// if (library != null) {
+	// Path folder = Paths.get(rootPath + "/" + id + "/" + library.getPath());
+	// if (Files.exists(folder) && folder.toFile().isDirectory()) {
+	// try (DirectoryStream<Path> directoryStream =
+	// Files.newDirectoryStream(folder)) {
+	// for (Path path : directoryStream) {
+	// Map<String, Object> map = new HashMap<String, Object>();
+	// dataSetList.add(map);
+	// Path fileName = path.getFileName();
+	// if (fileName.toString().lastIndexOf(".") > -1) {
+	// map.put("name", fileName.toString().substring(0,
+	// fileName.toString().lastIndexOf(".")));
+	// } else {
+	// map.put("name", fileName);
+	// }
+	// try (InputStream is = new FileInputStream(path.toFile())) {
+	// SasFileReader sasFileReader = new SasFileReaderImpl(is);
+	// map.put("columnList", sasFileReader.getColumns());
+	// } catch (FileNotFoundException e) {
+	// LOG.error("Got Exception during reading file, folder={}", folder, e);
+	// } catch (IOException e) {
+	// LOG.error("Got Exception during reading file, folder={}", folder, e);
+	// }
+	//
+	// }
+	// } catch (IOException ex) {
+	// }
+	// }
+	// }
+	// library.setDataSetList(dataSetList);
+	//
+	// }
+	// return libs;
+	// }
 
 }

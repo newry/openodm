@@ -1,7 +1,11 @@
-package com.openodm.impl.controller;
+package com.openodm.impl.controller.page;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,9 +17,15 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import com.openodm.impl.controller.response.Breadcrumb;
 import com.openodm.impl.entity.ct.CodeList;
 import com.openodm.impl.entity.ct.ControlTerminology;
+import com.openodm.impl.entity.sdtm.SDTMProject;
+import com.openodm.impl.entity.sdtm.SDTMProjectLibrary;
+import com.openodm.impl.entity.sdtm.SDTMVersion;
 import com.openodm.impl.repository.ct.CTVersionRepository;
 import com.openodm.impl.repository.ct.CodeListRepository;
 import com.openodm.impl.repository.ct.ControlTerminologyRepository;
+import com.openodm.impl.repository.sdtm.SDTMProjectLibraryRepository;
+import com.openodm.impl.repository.sdtm.SDTMProjectRepository;
+import com.openodm.impl.repository.sdtm.SDTMVersionRepository;
 
 @Controller
 public class HomeController {
@@ -25,6 +35,12 @@ public class HomeController {
 	private CodeListRepository codeListRepository;
 	@Autowired
 	private CTVersionRepository ctVersionRepository;
+	@Autowired
+	private SDTMVersionRepository sdtmVersionRepository;
+	@Autowired
+	private SDTMProjectRepository sdtmProjectRepository;
+	@Autowired
+	private SDTMProjectLibraryRepository sdtmProjectLibraryRepository;
 
 	@RequestMapping(path = "/", method = RequestMethod.GET)
 	public String index(Map<String, Object> model) {
@@ -97,6 +113,47 @@ public class HomeController {
 		model.put("ctId", id);
 		addBreadCrumbs(id, model, ct);
 		return "ct/selectCodeList";
+	}
+
+	@RequestMapping(path = "/project", method = RequestMethod.GET)
+	public String listAllProjects(Map<String, Object> model) {
+		model.put("title", "All Projects");
+		model.put("selected", "prj");
+		return "project/list";
+	}
+
+	@RequestMapping(path = "/project/new", method = RequestMethod.GET)
+	public String newProject(Map<String, Object> model) {
+		model.put("title", "Create new Project");
+		model.put("selected", "prj");
+		model.put("breadcrumbs", Arrays.asList(Breadcrumb.create("/project", "All Projects")));
+		List<SDTMVersion> versions = sdtmVersionRepository.findAll();
+		Set<String> set = new HashSet<String>();
+		List<SDTMVersion> result = new ArrayList<SDTMVersion>();
+		for (SDTMVersion version : versions) {
+			if (set.add(version.getOid())) {
+				result.add(version);
+			}
+		}
+		model.put("sdtmVersions", versions);
+
+		return "project/new";
+	}
+
+	@RequestMapping(path = "/project/{id}", method = RequestMethod.GET)
+	public String editProject(@PathVariable Long id, Map<String, Object> model) {
+		model.put("title", "Edit Project");
+		model.put("selected", "prj");
+		model.put("breadcrumbs", Arrays.asList(Breadcrumb.create("/project", "All Projects")));
+		SDTMProject prj = sdtmProjectRepository.findOne(id);
+		if (prj != null) {
+			List<SDTMProjectLibrary> libs = this.sdtmProjectLibraryRepository.findByProjectId(id);
+			prj.setLibraries(libs);
+			model.put("project", prj);
+			model.put("prjId", id);
+		}
+
+		return "project/edit";
 	}
 
 }

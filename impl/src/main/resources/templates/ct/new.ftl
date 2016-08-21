@@ -1,5 +1,6 @@
 <@layout>
 	<form>
+		<div id="error" style="color:red"></div>
 		<div class="DTE_Form_Content">
 			<div>
 				<label class="DTE_Label">
@@ -42,14 +43,14 @@
 					var data = {};
 					data.name = name;
 					if(desc){
-						data.desc = desc;
+						data.description = desc;
 					}
 					data.ctVersionId = ctVersionId;
 		            $.ajax({url: "/odm/v1/controlTerminology",contentType:'application/json', type:'POST', data: JSON.stringify(data), success: function(result){
 		                		window.location='/ct';
     				},
 			        error:function(xhr, error, thrown){
-			             alert(xhr.responseJSON.result.error)
+			             $("#error").html(xhr.responseJSON.result.error)
 	    			}
     				});
 					

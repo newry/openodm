@@ -44,18 +44,13 @@ import com.openodm.impl.entity.sdtm.SDTMProjectLibrary;
 import com.openodm.impl.entity.sdtm.SDTMProjectVariableXref;
 import com.openodm.impl.entity.sdtm.SDTMVariableRef;
 import com.openodm.impl.entity.sdtm.SDTMVersion;
-import com.openodm.impl.repository.ct.CodeListRepository;
 import com.openodm.impl.repository.ct.ControlTerminologyRepository;
-import com.openodm.impl.repository.ct.EnumeratedItemRepository;
 import com.openodm.impl.repository.sdtm.SDTMDomainRepository;
-import com.openodm.impl.repository.sdtm.SDTMOriginRepository;
 import com.openodm.impl.repository.sdtm.SDTMProjectDomainXrefRepository;
-import com.openodm.impl.repository.sdtm.SDTMProjectKeyVariableXrefRepository;
 import com.openodm.impl.repository.sdtm.SDTMProjectLibraryRepository;
 import com.openodm.impl.repository.sdtm.SDTMProjectRepository;
 import com.openodm.impl.repository.sdtm.SDTMProjectVariableXrefRepository;
 import com.openodm.impl.repository.sdtm.SDTMVariableRefRepository;
-import com.openodm.impl.repository.sdtm.SDTMVariableRepository;
 import com.openodm.impl.repository.sdtm.SDTMVersionRepository;
 
 @RestController
@@ -69,25 +64,15 @@ public class SDTMProjectController {
 	@Autowired
 	private SDTMVariableRefRepository sdtmVariableRefRepository;
 	@Autowired
-	private SDTMVariableRepository sdtmVariableRepository;
-	@Autowired
-	private EnumeratedItemRepository enumeratedItemRepository;
-	@Autowired
 	private SDTMProjectRepository sdtmProjectRepository;
 	@Autowired
-	private SDTMOriginRepository sdtmOriginRepository;
-	@Autowired
 	private SDTMProjectVariableXrefRepository sdtmProjectVariableXrefRepository;
-	@Autowired
-	private SDTMProjectKeyVariableXrefRepository sdtmProjectKeyVariableXrefRepository;
 	@Autowired
 	private SDTMProjectDomainXrefRepository sdtmProjectDomainXrefRepository;
 	@Autowired
 	private ControlTerminologyRepository controlTerminologyRepository;
 	@Autowired
 	private SDTMProjectLibraryRepository sdtmProjectLibraryRepository;
-	@Autowired
-	private CodeListRepository codeListRepository;
 
 	@Value("${project.rootPath}")
 	private String rootPath;
@@ -362,7 +347,7 @@ public class SDTMProjectController {
 
 		try {
 			this.sdtmProjectRepository.save(project);
-			if (!CollectionUtils.isEmpty(libraryList)) {
+			if (!CollectionUtils.isEmpty(existLibs)) {
 				sdtmProjectLibraryRepository.delete(existLibs);
 			}
 			if (!CollectionUtils.isEmpty(libs)) {

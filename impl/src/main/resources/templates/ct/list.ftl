@@ -91,7 +91,7 @@
 		        },
 		        "columns": [
 		            { "data": "name" },
-		            { "data": "description" },
+		            { "data": "description", "defaultContent": ""},
 		            { "data": "creator" },
 		            { "data": "updatedBy" },
 		            { "data": "dateAdded" },
@@ -104,11 +104,6 @@
 				    "render": function ( data, type, full, meta ) {
 				      return '<a href="/ct/'+full.id+'/codeList">'+data+'</a>';
 				    }				    
-				  },
-				  {
-				    "targets": 1,
-				    "data": null,
-				    "defaultContent": ""
 				  } 
 				],
 		        select: {
