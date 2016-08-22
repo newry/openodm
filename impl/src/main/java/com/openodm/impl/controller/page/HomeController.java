@@ -145,15 +145,29 @@ public class HomeController {
 		model.put("title", "Edit Project");
 		model.put("selected", "prj");
 		model.put("breadcrumbs", Arrays.asList(Breadcrumb.create("/project", "All Projects")));
+		model.put("prjId", id);
 		SDTMProject prj = sdtmProjectRepository.findOne(id);
 		if (prj != null) {
 			List<SDTMProjectLibrary> libs = this.sdtmProjectLibraryRepository.findByProjectId(id);
 			prj.setLibraries(libs);
 			model.put("project", prj);
-			model.put("prjId", id);
 		}
 
 		return "project/edit";
+	}
+
+	@RequestMapping(path = "/project/{id}/toc", method = RequestMethod.GET)
+	public String getProjectTOC(@PathVariable Long id, Map<String, Object> model) {
+		model.put("title", "Project TOC");
+		model.put("selected", "prj");
+		model.put("breadcrumbs", Arrays.asList(Breadcrumb.create("/project", "All Projects")));
+		model.put("prjId", id);
+		return "project/toc";
+	}
+
+	private void addBreadCrumbs(Long id, Map<String, Object> model, SDTMProject prj) {
+		model.put("breadcrumbs", Arrays.asList(Breadcrumb.create("/project", "All Projects"),
+				Breadcrumb.create("/project/" + id + "/toc", prj == null ? "#" + id : prj.getName())));
 	}
 
 }

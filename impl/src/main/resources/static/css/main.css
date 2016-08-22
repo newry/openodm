@@ -100,4 +100,7 @@ WebKit inertia scrolling is being added here for any present/future devices that
 .toolbar {
 	float: left;
 }
-
+.strike {
+    text-decoration: line-through;
+    color: #BBBBBB;
+}
