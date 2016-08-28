@@ -17,12 +17,14 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import com.openodm.impl.controller.response.Breadcrumb;
 import com.openodm.impl.entity.ct.CodeList;
 import com.openodm.impl.entity.ct.ControlTerminology;
+import com.openodm.impl.entity.sdtm.SDTMDomain;
 import com.openodm.impl.entity.sdtm.SDTMProject;
 import com.openodm.impl.entity.sdtm.SDTMProjectLibrary;
 import com.openodm.impl.entity.sdtm.SDTMVersion;
 import com.openodm.impl.repository.ct.CTVersionRepository;
 import com.openodm.impl.repository.ct.CodeListRepository;
 import com.openodm.impl.repository.ct.ControlTerminologyRepository;
+import com.openodm.impl.repository.sdtm.SDTMDomainRepository;
 import com.openodm.impl.repository.sdtm.SDTMProjectLibraryRepository;
 import com.openodm.impl.repository.sdtm.SDTMProjectRepository;
 import com.openodm.impl.repository.sdtm.SDTMVersionRepository;
@@ -41,6 +43,8 @@ public class HomeController {
 	private SDTMProjectRepository sdtmProjectRepository;
 	@Autowired
 	private SDTMProjectLibraryRepository sdtmProjectLibraryRepository;
+	@Autowired
+	private SDTMDomainRepository sdtmDomainRepository;
 
 	@RequestMapping(path = "/", method = RequestMethod.GET)
 	public String index(Map<String, Object> model) {
@@ -167,7 +171,7 @@ public class HomeController {
 
 	@RequestMapping(path = "/project/{id}/domain/{domainId}/selectKeyVariable", method = RequestMethod.GET)
 	public String selectKeyVariables(@PathVariable Long id, @PathVariable Long domainId, Map<String, Object> model) {
-		model.put("title", "Select Key Variables");
+		model.put("title", "Key Variables for " + getDomainName(domainId, sdtmDomainRepository.findOne(domainId)));
 		model.put("selected", "prj");
 		SDTMProject prj = sdtmProjectRepository.findOne(id);
 		addBreadCrumbs(id, model, prj);
@@ -176,9 +180,13 @@ public class HomeController {
 		return "project/selectKeyVariable";
 	}
 
+	private String getDomainName(Long domainId, SDTMDomain domain) {
+		return domain == null ? "#" + domainId : domain.getName();
+	}
+
 	@RequestMapping(path = "/project/{id}/domain/{domainId}/variable", method = RequestMethod.GET)
 	public String getProjectDomainVariablesKeyVariables(@PathVariable Long id, @PathVariable Long domainId, Map<String, Object> model) {
-		model.put("title", "Domain Variables");
+		model.put("title", "Variables For " + getDomainName(domainId, sdtmDomainRepository.findOne(domainId)));
 		model.put("selected", "prj");
 		SDTMProject prj = sdtmProjectRepository.findOne(id);
 		addBreadCrumbs(id, model, prj);

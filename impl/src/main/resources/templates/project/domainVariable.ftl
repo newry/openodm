@@ -198,7 +198,7 @@
 		    			$("#"+data.id).attr("orderNumber", data.orderNumber);
 		    		});
 		    		if(requestData.length > 0){
-		            	$.ajax({url: "/sdtm/v1/project/${prjId}/domain",contentType:'application/json', type:'POST', data: JSON.stringify(requestData)});
+		            	$.ajax({url: "/sdtm/v1/project/${prjId}/domain/${domainId}/variable/order",contentType:'application/json', type:'POST', data: JSON.stringify(requestData)});
 		    		}
 		    	}
 		    });
