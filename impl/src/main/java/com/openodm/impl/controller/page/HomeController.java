@@ -165,6 +165,28 @@ public class HomeController {
 		return "project/toc";
 	}
 
+	@RequestMapping(path = "/project/{id}/domain/{domainId}/selectKeyVariable", method = RequestMethod.GET)
+	public String selectKeyVariables(@PathVariable Long id, @PathVariable Long domainId, Map<String, Object> model) {
+		model.put("title", "Select Key Variables");
+		model.put("selected", "prj");
+		SDTMProject prj = sdtmProjectRepository.findOne(id);
+		addBreadCrumbs(id, model, prj);
+		model.put("prjId", id);
+		model.put("domainId", domainId);
+		return "project/selectKeyVariable";
+	}
+
+	@RequestMapping(path = "/project/{id}/domain/{domainId}/variable", method = RequestMethod.GET)
+	public String getProjectDomainVariablesKeyVariables(@PathVariable Long id, @PathVariable Long domainId, Map<String, Object> model) {
+		model.put("title", "Domain Variables");
+		model.put("selected", "prj");
+		SDTMProject prj = sdtmProjectRepository.findOne(id);
+		addBreadCrumbs(id, model, prj);
+		model.put("prjId", id);
+		model.put("domainId", domainId);
+		return "project/domainVariable";
+	}
+
 	private void addBreadCrumbs(Long id, Map<String, Object> model, SDTMProject prj) {
 		model.put("breadcrumbs", Arrays.asList(Breadcrumb.create("/project", "All Projects"),
 				Breadcrumb.create("/project/" + id + "/toc", prj == null ? "#" + id : prj.getName())));

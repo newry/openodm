@@ -342,7 +342,7 @@ public class SDTMProjectVariableController {
 					varXref.setCrfPageNo(pageNo);
 				}
 				String length = (String) m.get("length");
-				if (StringUtils.isNumeric(pageNo)) {
+				if (StringUtils.isNumeric(length)) {
 					varXref.setLength(Integer.valueOf(length));
 				}
 				List<Number> originList = (List<Number>) m.get("originList");

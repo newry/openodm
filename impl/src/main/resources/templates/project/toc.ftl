@@ -5,8 +5,7 @@
                 <th>Order</th>
                 <th>Domain</th>
                 <th>Label</th>
-                <th>Creator</th>
-                <th>UpdatedBy</th>
+                <th>Key Variables</th>
                 <th>CreatedDate</th>
                 <th>LastModifiedDate</th>
             </tr>
@@ -16,8 +15,6 @@
 		$(document).ready(function() {
 			editor = new $.fn.dataTable.Editor( {
 				ajax: function ( method, url, d, successCallback, errorCallback ) {
-		            var output = { data: [] };
-		 
 		            if ( d.action === 'remove' ) {
 		                $.each( d.data, function (id, value) {
 		                	var type="POST";
@@ -32,8 +29,6 @@
 	    					}});
 		                } );
 		            }
-		            // Show Editor what has changed
-		            //successCallback( output );
         	   },
         	   idSrc:  'id',
 			   table: "#allTOC"
@@ -63,8 +58,7 @@
 		            { "data": "orderNumber" },
 		            { "data": "sdtmDomain.name" },
 		            { "data": "sdtmDomain.description", "defaultContent": ""},
-		            { "data": "creator" },
-		            { "data": "updatedBy" },
+		            { "data": "sdtmDomain.keyVariables", "defaultContent": [] },
 		            { "data": "dateAdded" },
 		            { "data": "dateLastModified" }
 		        ],
@@ -72,12 +66,30 @@
 				  {
 				    "targets": 1,
 				    "render": function ( data, type, full, meta ) {
-				      return '<a href="/project/'+full.id+'/toc">'+data+'</a>';
+				      return '<a href="/project/${prjId}/domain/'+full.sdtmDomain.id+'/variable">'+data+'</a>';
 				    }				    
+				  },
+				  {
+				    "targets": 3,
+				    "data": "sdtmDomain.keyVariables",
+				    "render": function ( data, type, full, meta ) {
+				      var result ="";
+				      if(data){
+					      data.map(function(row, index){
+					      	if(index==0){
+					      		result += row.sdtmVariable.name;
+					      	}else{
+					      		result += "<br/>" + row.sdtmVariable.name;
+					      	}
+					      });
+				      }
+				      return result;
+				    },
 				  }
+
 				],
 		        select: {
-		            style:    'os',
+		            style:    'single',
 		            selector: 'td:not(:nth-child(1))'
 		        },
 		        "createdRow": function (row, data, index ) {
@@ -91,13 +103,22 @@
 		            { 
 		              extend: "remove", 
 		              text: 'Activate/Deactivate',
-		              
 		              editor: editor,
 		              formButtons: [
                     	'Confirm',
                     	{ label: 'Cancel', fn: function () { this.close(); } }
                		  ]
-               		}
+               		},
+		            { 
+		              extend: "edit", 
+		              text: 'Select Key Variables',
+		              editor: editor,
+                      action: function ( e, dt, node, config ) {
+                      	var data = table.row( { selected: true } ).data();
+                      	window.location='/project/${prjId}/domain/'+data.sdtmDomain.id+'/selectKeyVariable';
+	                  }
+              		}
+               		
 		        ]
 		    });
 		    table.rowReordering(
@@ -110,6 +131,9 @@
 		    			if((index+1)!= oldOrder){
 		    				requestData.push({"id":row.id,"orderNumber":index+1});
 		    			}
+		    		});
+		    		requestData.map(function(data){
+		    			$("#"+data.id).attr("orderNumber", data.orderNumber);
 		    		});
 		    		if(requestData.length > 0){
 		            	$.ajax({url: "/sdtm/v1/project/${prjId}/domain",contentType:'application/json', type:'POST', data: JSON.stringify(requestData)});

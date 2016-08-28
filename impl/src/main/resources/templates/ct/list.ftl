@@ -49,8 +49,6 @@
 	    					}});
 		                } );
 		            }
-		            // Show Editor what has changed
-		            //successCallback( output );
         	   },
         	   idSrc:  'id',
 			   table: "#allCT",
@@ -107,7 +105,7 @@
 				  } 
 				],
 		        select: {
-		            style:    'os',
+		            style:    'single',
 		            selector: 'td:not(:first-child)'
 		        },
 		        buttons: [

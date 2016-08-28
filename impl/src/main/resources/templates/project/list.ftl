@@ -43,7 +43,7 @@
 				  }
 				],
 		        select: {
-		            style:    'os',
+		            style:    'single',
 		            selector: 'td:not(:first-child)'
 		        },
 		        buttons: [

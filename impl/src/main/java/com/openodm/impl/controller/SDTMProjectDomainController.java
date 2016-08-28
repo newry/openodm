@@ -78,16 +78,19 @@ public class SDTMProjectDomainController {
 		if (projectDomainXref != null) {
 			List<SDTMProjectKeyVariableXref> refs = this.sdtmProjectKeyVariableXrefRepository.findByProjectIdAndDomainId(id, domainId);
 			Set<Long> varIds = new HashSet<Long>();
+			int order = 0;
 			for (SDTMProjectKeyVariableXref ref : refs) {
 				SDTMVariable var = ref.getSdtmVariable();
 				var.setKey(true);
 				vars.add(ref);
 				varIds.add(var.getId());
+				order = ref.getOrderNumber();
 			}
 			List<SDTMProjectVariableXref> varRefs = this.sdtmProjectVariableXrefRepository.findByProjectIdAndDomainId(id, domainId);
 			for (SDTMProjectVariableXref varRef : varRefs) {
 				if (!varIds.contains(varRef.getSdtmVariable().getId())) {
 					SDTMProjectKeyVariableXref keyVarRef = new SDTMProjectKeyVariableXref();
+					keyVarRef.setOrderNumber(++order);
 					keyVarRef.setSdtmVariable(varRef.getSdtmVariable());
 					vars.add(keyVarRef);
 				}
