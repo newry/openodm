@@ -6,7 +6,7 @@
                 <th>CDISC Variable Name</th>
                 <th>Controlled Terminology</th>
                 <th>Origin</th>
-                <th>CRF Page No</th>
+                <th>CRF Page No.</th>
                 <th>Role</th>
                 <th>Core</th>
                 <th>Type</th>
@@ -87,7 +87,7 @@
 		                	}
 		                	var array = new Array();
 		                	array.push(data);
-		                	$.ajax({url: "/sdtm/v1/project/${prjId}/domain/${domainId}/variable",contentType:'application/json', type:'POST', data: JSON.stringify(array), success: function(result){
+		                	$.ajax({url: "/sdtm/v1/project/${prjId?long?c}/domain/${domainId?long?c}/variable",contentType:'application/json', type:'POST', data: JSON.stringify(array), success: function(result){
 		                		location.reload();
     						},
 			                error:function(xhr, error, thrown){
@@ -104,7 +104,7 @@
 			            name: "origins",
 			            type: "todo"
 			        },{
-						label: "CRF Page No:",
+						label: "CRF Page No.:",
 			            name: "crfPageNo"
 			        },{
 						label: "Length:",
@@ -112,6 +112,22 @@
 			        }
 			   ]
 			} );
+		    editor.on( 'preSubmit', function ( e, o, action ) {
+		        if ( action !== 'remove' ) {
+		            var origins = editor.field( 'origins' );
+		            var crfPageNo = editor.field( 'crfPageNo' );
+		            if (origins.val() && contains(origins.val(), 2)) {
+		            	if(!crfPageNo.val() || crfPageNo.val()==''){
+		                	crfPageNo.error( 'A CRF Page No. must be given' );
+		                }
+		            }
+		                 
+		            // If any error was reported, cancel the submission so it can be corrected
+		            if ( this.inError() ) {
+		                return false;
+		            }
+		        }
+		    } );
 		    var table = $('#allVar').DataTable( {
 		        "aaSorting": [],
 		        "paging": false,
@@ -119,13 +135,13 @@
 		        "dom": "Bfrtip",
 		    	"bLengthChange": false,
 		        "ajax": {
-		        	"url":"/sdtm/v1/project/${prjId}/domain/${domainId}/allVariable",
+		        	"url":"/sdtm/v1/project/${prjId?long?c}/domain/${domainId?long?c}/allVariable",
 		        	"dataSrc": ""
 		        },
 		        "columns": [
 		            { "data": "orderNumber" },
 		            { "data": "sdtmVariable.name" },
-		            { "data": "sdtmVariable.codeList", "defaultContent": {} },
+		            { "data": "codeList", "defaultContent": {} },
 		            { "data": "origins", "defaultContent": []},
 		            { "data": "crfPageNo", "defaultContent": "" },
 		            { "data": "role" },
@@ -179,8 +195,17 @@
                     	'Confirm',
                     	{ label: 'Cancel', fn: function () { this.close(); } }
                		  ]
-              		}
+              		},
+               		{
+               		  extend: "edit", 
+		              text: 'Select Control Terminology',
+		              editor: editor,
+                      action: function ( e, dt, node, config ) {
+                      	var data = table.row( { selected: true } ).data();
+                      	window.location='/project/${prjId?long?c}/domain/${domainId?long?c}/variable/'+data.id+'/selectCodeList';
+	                  }
                		
+               		}
 		        ]
 		    });
 		    table.rowReordering(
@@ -198,7 +223,7 @@
 		    			$("#"+data.id).attr("orderNumber", data.orderNumber);
 		    		});
 		    		if(requestData.length > 0){
-		            	$.ajax({url: "/sdtm/v1/project/${prjId}/domain/${domainId}/variable/order",contentType:'application/json', type:'POST', data: JSON.stringify(requestData)});
+		            	$.ajax({url: "/sdtm/v1/project/${prjId?long?c}/domain/${domainId?long?c}/variable/order",contentType:'application/json', type:'POST', data: JSON.stringify(requestData)});
 		    		}
 		    	}
 		    });

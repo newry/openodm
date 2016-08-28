@@ -14,9 +14,9 @@
 		$(document).ready(function() {
 			<#if customized || extended>
 		          <#if customized>
-		          		var serviceUrl = "/odm/v1/controlTerminology/${ctId}/customizedCodeList/${codeListId}/customizedEnumeratedItem/";
+		          		var serviceUrl = "/odm/v1/controlTerminology/${ctId?long?c}/customizedCodeList/${codeListId?long?c}/customizedEnumeratedItem/";
 		          <#else>
-		          		var serviceUrl = "/odm/v1/controlTerminology/${ctId}/codeList/${codeListId}/extendedEnumeratedItem/";
+		          		var serviceUrl = "/odm/v1/controlTerminology/${ctId?long?c}/codeList/${codeListId?long?c}/extendedEnumeratedItem/";
 		          </#if>
 		    editor = new $.fn.dataTable.Editor( {
 				 ajax: function ( method, url, d, successCallback, errorCallback ) {
@@ -104,7 +104,7 @@
 		        </#if>
 		    	"bLengthChange": false,
 		        "ajax": {
-		        	"url": <#if customized>"/odm/v1/customizedEnumeratedItem?ctId=${ctId}&codeListId=${codeListId}"<#else>"/odm/v1/enumeratedItem?ctId=${ctId}&codeListId=${codeListId}"</#if>,
+		        	"url": <#if customized>"/odm/v1/customizedEnumeratedItem?ctId=${ctId?long?c}&codeListId=${codeListId?long?c}"<#else>"/odm/v1/enumeratedItem?ctId=${ctId?long?c}&codeListId=${codeListId?long?c}"</#if>,
 		        	"dataSrc": ""
 		        },
 		        "columns": [

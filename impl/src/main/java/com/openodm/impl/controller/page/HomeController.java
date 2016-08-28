@@ -171,7 +171,7 @@ public class HomeController {
 
 	@RequestMapping(path = "/project/{id}/domain/{domainId}/selectKeyVariable", method = RequestMethod.GET)
 	public String selectKeyVariables(@PathVariable Long id, @PathVariable Long domainId, Map<String, Object> model) {
-		model.put("title", "Key Variables for " + getDomainName(domainId, sdtmDomainRepository.findOne(domainId)));
+		model.put("title", "Select Key Variables");
 		model.put("selected", "prj");
 		SDTMProject prj = sdtmProjectRepository.findOne(id);
 		addBreadCrumbs(id, model, prj);
@@ -198,6 +198,20 @@ public class HomeController {
 	private void addBreadCrumbs(Long id, Map<String, Object> model, SDTMProject prj) {
 		model.put("breadcrumbs", Arrays.asList(Breadcrumb.create("/project", "All Projects"),
 				Breadcrumb.create("/project/" + id + "/toc", prj == null ? "#" + id : prj.getName())));
+	}
+
+	@RequestMapping(path = "/project/{id}/domain/{domainId}/variable/{variableId}/selectCodeList", method = RequestMethod.GET)
+	public String selectCodelist(@PathVariable Long id, @PathVariable Long domainId, @PathVariable Long variableId, Map<String, Object> model) {
+		model.put("title", "Select Code List");
+		model.put("selected", "prj");
+		SDTMProject prj = sdtmProjectRepository.findOne(id);
+		model.put("breadcrumbs", Arrays.asList(Breadcrumb.create("/project", "All Projects"),
+				Breadcrumb.create("/project/" + id + "/toc", prj == null ? "#" + id : prj.getName()),
+				Breadcrumb.create("/project/" + id + "/domain/" + domainId + "/variable", getDomainName(domainId, sdtmDomainRepository.findOne(domainId)))));
+		model.put("prjId", id);
+		model.put("variableId", variableId);
+		model.put("domainId", domainId);
+		return "project/selectDomainVariableCodeList";
 	}
 
 }

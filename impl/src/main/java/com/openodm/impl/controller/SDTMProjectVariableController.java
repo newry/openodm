@@ -154,21 +154,25 @@ public class SDTMProjectVariableController {
 			}
 		}
 
-		if (StringUtils.isNotBlank(q)) {
-			SDTMProject project = this.sdtmProjectRepository.findOne(projectId);
-			if (project != null) {
-				ControlTerminology ct = project.getSdtmVersion().getControlTerminology();
-				if (ct != null) {
-					List<CodeList> result = this.controlTerminologyRepository.queryCodeList(StringUtils.lowerCase(q), ct.getId());
-					if (!CollectionUtils.isEmpty(result)) {
-						for (CodeList codeList : result) {
-							if (!codeLists.contains(codeList)) {
-								codeLists.add(codeList);
-							}
+		SDTMProject project = this.sdtmProjectRepository.findOne(projectId);
+		if (project != null) {
+			ControlTerminology ct = project.getSdtmVersion().getControlTerminology();
+			if (ct != null) {
+				List<CodeList> result;
+				if (StringUtils.isNotBlank(q)) {
+					result = this.controlTerminologyRepository.queryCodeList(StringUtils.lowerCase(q), ct.getId());
+				} else {
+					result = this.controlTerminologyRepository.findCodeListById(ct.getId());
+				}
+				if (!CollectionUtils.isEmpty(result)) {
+					for (CodeList codeList : result) {
+						if (!codeLists.contains(codeList)) {
+							codeLists.add(codeList);
 						}
 					}
 				}
 			}
+
 		}
 		return codeLists;
 	}

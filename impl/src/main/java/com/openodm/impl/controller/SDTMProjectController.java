@@ -245,9 +245,10 @@ public class SDTMProjectController {
 			}
 			this.sdtmProjectRepository.save(project);
 
-			// create all domain xrefs
+			// create all domain libs
 			this.sdtmProjectLibraryRepository.save(libs);
 
+			createLibFolders(project, libs);
 			// create all domain xrefs
 			this.sdtmProjectDomainXrefRepository.save(domainXrefs);
 
@@ -267,6 +268,15 @@ public class SDTMProjectController {
 			result.setError("Error during creating the Project");
 			or.setResult(result);
 			return new ResponseEntity<OperationResponse>(or, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	private void createLibFolders(SDTMProject project, List<SDTMProjectLibrary> libs) {
+		for (SDTMProjectLibrary lib : libs) {
+			Path folder = Paths.get(rootPath + "/" + project.getId() + "/" + lib.getPath());
+			if (!folder.toFile().exists()) {
+				folder.toFile().mkdirs();
+			}
 		}
 	}
 
@@ -353,6 +363,8 @@ public class SDTMProjectController {
 			if (!CollectionUtils.isEmpty(libs)) {
 				this.sdtmProjectLibraryRepository.save(libs);
 			}
+			createLibFolders(project, libs);
+
 			OperationResponse or = new OperationResponse();
 			OperationResult result = new OperationResult();
 			result.setSuccess(true);

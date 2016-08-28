@@ -21,7 +21,7 @@
 		        "dom": "Bfrtip",
 		    	"bLengthChange": false,
 		        "ajax": {
-		        	"url":"/odm/v1/codeListQuery?ctId=${ctId}&q=",
+		        	"url":"/odm/v1/codeListQuery?ctId=${ctId?long?c}&q=",
 		        	"dataSrc": ""
 		        },
 		        "columns": [
@@ -36,9 +36,9 @@
 				    "data": "name",
 				    "render": function ( data, type, full, meta ) {
 				      	if(full.customized){
-				      		return '<a href="/ct/${ctId}/customizedCodeList/'+full.id+'">'+data+'</a>';
+				      		return '<a href="/ct/${ctId?long?c}/customizedCodeList/'+full.id+'">'+data+'</a>';
 				      	}
-				      	return '<a href="/ct/${ctId}/codeList/'+full.id+'">'+data+'</a>';
+				      	return '<a href="/ct/${ctId?long?c}/codeList/'+full.id+'">'+data+'</a>';
 				    }
 				  }
 
@@ -56,7 +56,7 @@
                       	datas.map(function(obj){
                       		value.codeListIds.push(obj.id);
                       	});
-		                $.ajax({url: "/odm/v1/controlTerminology/${ctId}/codeList/",contentType:'application/json', data: JSON.stringify(value), type:'POST', success: function(result){
+		                $.ajax({url: "/odm/v1/controlTerminology/${ctId?long?c}/codeList/",contentType:'application/json', data: JSON.stringify(value), type:'POST', success: function(result){
 		                	rows.remove().draw(false);
     					}});
 	                  }

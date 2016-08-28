@@ -19,7 +19,7 @@
 		                	if(value.id){
 		                		type="DELETE";
 		                	}
-		                	$.ajax({url: "/sdtm/v1/project/${prjId}/domain/${domainId}/keyVariable/"+value.sdtmVariable.id,type:type, success: function(result){
+		                	$.ajax({url: "/sdtm/v1/project/${prjId?long?c}/domain/${domainId?long?c}/keyVariable/"+value.sdtmVariable.id,type:type, success: function(result){
 		                		location.reload();
     						},
 			                error:function(xhr, error, thrown){
@@ -48,7 +48,7 @@
 		        "dom": "Bfrtip",
 		    	"bLengthChange": false,
 		        "ajax": {
-		        	"url":"/sdtm/v1/project/${prjId}/domain/${domainId}/allKeyVariable",
+		        	"url":"/sdtm/v1/project/${prjId?long?c}/domain/${domainId?long?c}/allKeyVariable",
 		        	"dataSrc": ""
 		        },
 		        "columns": [
@@ -104,7 +104,7 @@
 		    		});
 		    		
 		    		if(requestData.length > 0){
-		            	$.ajax({url: "/sdtm/v1/project/${prjId}/domain/${domainId}/keyVariable/order",contentType:'application/json', type:'POST', data: JSON.stringify(requestData)});
+		            	$.ajax({url: "/sdtm/v1/project/${prjId?long?c}/domain/${domainId?long?c}/keyVariable/order",contentType:'application/json', type:'POST', data: JSON.stringify(requestData)});
 		    		}
 		    	}
 		    });

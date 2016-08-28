@@ -26,7 +26,7 @@
 					<select id="sdtmVersion">
 						<option value="">Select</option>
 						<#list sdtmVersions as sdtmVersion>
-							<option value="${sdtmVersion.id}">${sdtmVersion.description}</option>
+							<option value="${sdtmVersion.id?long?c}">${sdtmVersion.description}</option>
 						</#list>
 					</select>
 				</div>

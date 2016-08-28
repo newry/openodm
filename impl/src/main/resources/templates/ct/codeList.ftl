@@ -17,8 +17,8 @@
 				 ajax: function ( method, url, d, successCallback, errorCallback ) {
 		            if ( d.action === 'create' ) {
 		                $.each( d.data, function (key, value) {
-		                	value.ctId = ${ctId};
-		                	$.ajax({url: "/odm/v1/controlTerminology/${ctId}/customizedCodeList",contentType:'application/json', type:'POST', data: JSON.stringify(value), success: function(result){
+		                	value.ctId = ${ctId?long?c};
+		                	$.ajax({url: "/odm/v1/controlTerminology/${ctId?long?c}/customizedCodeList",contentType:'application/json', type:'POST', data: JSON.stringify(value), success: function(result){
 		                		location.reload();
     						},
 			                error:function(xhr, error, thrown){
@@ -46,7 +46,7 @@
 					    var data = table.row( { selected: true } ).data();
 		            	if(data.customized){
 			                $.each( d.data, function (id, value) {
-			                	$.ajax({url: "/odm/v1/controlTerminology/${ctId}/customizedCodeList/"+id,type:'DELETE', success: function(result){
+			                	$.ajax({url: "/odm/v1/controlTerminology/${ctId?long?c}/customizedCodeList/"+id,type:'DELETE', success: function(result){
 			                		location.reload();
 	    						},
 			                	error:function(xhr, error, thrown){
@@ -56,7 +56,7 @@
 			                } );
 		                }else{
 			                $.each( d.data, function (id, value) {
-			                	$.ajax({url: "/odm/v1/controlTerminology/${ctId}/codeList/"+id,type:'DELETE', success: function(result){
+			                	$.ajax({url: "/odm/v1/controlTerminology/${ctId?long?c}/codeList/"+id,type:'DELETE', success: function(result){
 			                		location.reload();
 	    						},
 			                	error:function(xhr, error, thrown){
@@ -107,7 +107,7 @@
 		        "dom": "Bfrtip",
 		    	"bLengthChange": false,
 		        "ajax": {
-		        	"url":"/odm/v1/codeListForCT?ctId=${ctId}",
+		        	"url":"/odm/v1/codeListForCT?ctId=${ctId?long?c}",
 		        	"dataSrc": ""
 		        },
 		        "columns": [
@@ -124,9 +124,9 @@
 				    "data": "name",
 				    "render": function ( data, type, full, meta ) {
 				      	if(full.customized){
-				      		return '<a href="/ct/${ctId}/customizedCodeList/'+full.id+'">'+data+'</a>';
+				      		return '<a href="/ct/${ctId?long?c}/customizedCodeList/'+full.id+'">'+data+'</a>';
 				      	}
-				      	return '<a href="/ct/${ctId}/codeList/'+full.id+'">'+data+'</a>';
+				      	return '<a href="/ct/${ctId?long?c}/codeList/'+full.id+'">'+data+'</a>';
 				    }
 				  },
 				  {
@@ -185,7 +185,7 @@
 		              extend: "create", 
                 	  text: "Select Code List",
                       action: function ( e, dt, node, config ) {
-                      	window.location='/ct/${ctId}/selectCodeList';
+                      	window.location='/ct/${ctId?long?c}/selectCodeList';
 	                  }
                		},
 		            { extend: "edit",   editor: editor,

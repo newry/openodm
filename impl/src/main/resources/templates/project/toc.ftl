@@ -21,7 +21,7 @@
 		                	if(value.status=='active'){
 		                		type="DELETE";
 		                	}
-		                	$.ajax({url: "/sdtm/v1/project/${prjId}/domain/"+value.sdtmDomain.id,type:type, success: function(result){
+		                	$.ajax({url: "/sdtm/v1/project/${prjId?long?c}/domain/"+value.sdtmDomain.id,type:type, success: function(result){
 		                		location.reload();
     						},
 			                error:function(xhr, error, thrown){
@@ -51,7 +51,7 @@
 		        "dom": "Bfrtip",
 		    	"bLengthChange": false,
 		        "ajax": {
-		        	"url":"/sdtm/v1/project/${prjId}/domain",
+		        	"url":"/sdtm/v1/project/${prjId?long?c}/domain",
 		        	"dataSrc": ""
 		        },
 		        "columns": [
@@ -66,7 +66,7 @@
 				  {
 				    "targets": 1,
 				    "render": function ( data, type, full, meta ) {
-				      return '<a href="/project/${prjId}/domain/'+full.sdtmDomain.id+'/variable">'+data+'</a>';
+				      return '<a href="/project/${prjId?long?c}/domain/'+full.sdtmDomain.id+'/variable">'+data+'</a>';
 				    }				    
 				  },
 				  {
@@ -115,10 +115,18 @@
 		              editor: editor,
                       action: function ( e, dt, node, config ) {
                       	var data = table.row( { selected: true } ).data();
-                      	window.location='/project/${prjId}/domain/'+data.sdtmDomain.id+'/selectKeyVariable';
+                      	window.location='/project/${prjId?long?c}/domain/'+data.sdtmDomain.id+'/selectKeyVariable';
+	                  }
+              		},
+		            { 
+		              extend: "edit", 
+		              text: 'DataSet Initialization',
+		              editor: editor,
+                      action: function ( e, dt, node, config ) {
+                      	var data = table.row( { selected: true } ).data();
+                      	window.location='/project/${prjId?long?c}/domain/'+data.sdtmDomain.id+'/selectKeyVariable';
 	                  }
               		}
-               		
 		        ]
 		    });
 		    table.rowReordering(
@@ -136,7 +144,7 @@
 		    			$("#"+data.id).attr("orderNumber", data.orderNumber);
 		    		});
 		    		if(requestData.length > 0){
-		            	$.ajax({url: "/sdtm/v1/project/${prjId}/domain",contentType:'application/json', type:'POST', data: JSON.stringify(requestData)});
+		            	$.ajax({url: "/sdtm/v1/project/${prjId?long?c}/domain",contentType:'application/json', type:'POST', data: JSON.stringify(requestData)});
 		    		}
 		    	}
 		    });

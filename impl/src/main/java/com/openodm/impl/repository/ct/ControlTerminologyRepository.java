@@ -19,4 +19,7 @@ public interface ControlTerminologyRepository extends CrudRepository<ControlTerm
 	@Query("SELECT codeList FROM ControlTerminology d join d.codeLists as codeList WHERE d.id=:id and codeList.searchTerm like %:q% and codeList.status='active'")
 	public List<CodeList> queryCodeList(@Param("q") String q, @Param("id") Long id);
 
+	@Query("SELECT codeList FROM ControlTerminology d join d.codeLists as codeList WHERE d.id=:id and codeList.status='active'")
+	public List<CodeList> findCodeListById(@Param("id") Long id);
+
 }

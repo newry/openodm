@@ -18,5 +18,6 @@
         
   		<script src="/js/jquery.dataTables.rowReordering.js"></script>
   		<script src="/js/dataTables.editor.js"></script>
+  		<script src="/js/jquery.step.js"></script>
   		<script src="/js/main.js"></script>
     </head>

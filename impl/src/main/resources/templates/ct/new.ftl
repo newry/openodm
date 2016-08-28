@@ -25,7 +25,7 @@
 				<div>
 					<select id="dictionary">
 						<#list ctVersions as ctVersion>
-							<option value="${ctVersion.id}">${ctVersion.name}</option>
+							<option value="${ctVersion.id?long?c}">${ctVersion.name}</option>
 						</#list>
 					</select>
 				</div>
