@@ -13,7 +13,6 @@ import javax.persistence.Table;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.GenericGenerator;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.openodm.impl.entity.PersistentObject;
@@ -42,7 +41,6 @@ public class SDTMProjectDomainDataSet extends PersistentObject {
 
 	@ManyToOne(targetEntity = SDTMProjectLibrary.class, optional = false, fetch = FetchType.LAZY)
 	@JoinColumn(name = "SDTM_PROJECT_LIBRARY_ID", nullable = false)
-	@JsonIgnore
 	private SDTMProjectLibrary sdtmProjectLibrary;
 
 	@ManyToOne(targetEntity = SDTMDomain.class, optional = false, fetch = FetchType.EAGER)

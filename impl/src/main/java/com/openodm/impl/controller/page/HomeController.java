@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -193,6 +195,51 @@ public class HomeController {
 		model.put("prjId", id);
 		model.put("domainId", domainId);
 		return "project/domainVariable";
+	}
+
+	@RequestMapping(path = "/project/{id}/domain/{domainId}/dataSet", method = RequestMethod.GET)
+	public String getProjectDomainDataSetList(@PathVariable Long id, @PathVariable Long domainId, Map<String, Object> model) {
+		model.put("title", "Data Set For " + getDomainName(domainId, sdtmDomainRepository.findOne(domainId)));
+		model.put("selected", "prj");
+		SDTMProject prj = sdtmProjectRepository.findOne(id);
+		addBreadCrumbs(id, model, prj);
+		model.put("prjId", id);
+		model.put("domainId", domainId);
+		return "project/domainDataSetList";
+	}
+
+	@RequestMapping(path = "/project/{id}/domain/{domainId}/dataSet/new", method = { RequestMethod.GET })
+	public String createProjectDomainDataSet(@PathVariable Long id, @PathVariable Long domainId, Map<String, Object> model) {
+		model.put("title", "Data Set For " + getDomainName(domainId, sdtmDomainRepository.findOne(domainId)));
+		model.put("selected", "prj");
+		SDTMProject prj = sdtmProjectRepository.findOne(id);
+		model.put("breadcrumbs",
+				Arrays.asList(Breadcrumb.create("/project", "All Projects"),
+						Breadcrumb.create("/project/" + id + "/toc", prj == null ? "#" + id : prj.getName()),
+						Breadcrumb.create("/project/" + id + "/domain/" + domainId + "/dataSet", "dataSet")));
+		model.put("prjId", id);
+		model.put("domainId", domainId);
+		model.put("libs", this.sdtmProjectLibraryRepository.findByProjectId(id));
+		return "project/newDomainDataSet";
+	}
+
+	@RequestMapping(path = "/project/{id}/domain/{domainId}/dataSet/new", method = { RequestMethod.POST })
+	public String createProjectDomainDataSetWithType(@PathVariable Long id, @PathVariable Long domainId, HttpServletRequest request,
+			Map<String, Object> model) {
+		model.put("title", "Data Set For " + getDomainName(domainId, sdtmDomainRepository.findOne(domainId)));
+		model.put("selected", "prj");
+		SDTMProject prj = sdtmProjectRepository.findOne(id);
+		model.put("breadcrumbs",
+				Arrays.asList(Breadcrumb.create("/project", "All Projects"),
+						Breadcrumb.create("/project/" + id + "/toc", prj == null ? "#" + id : prj.getName()),
+						Breadcrumb.create("/project/" + id + "/domain/" + domainId + "/dataSet", "dataSet")));
+		model.put("prjId", id);
+		model.put("domainId", domainId);
+		for (Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
+			model.put(entry.getKey(), entry.getValue()[0]);
+		}
+		model.put("libs", this.sdtmProjectLibraryRepository.findByProjectId(id));
+		return "project/newDomainDataSet";
 	}
 
 	private void addBreadCrumbs(Long id, Map<String, Object> model, SDTMProject prj) {

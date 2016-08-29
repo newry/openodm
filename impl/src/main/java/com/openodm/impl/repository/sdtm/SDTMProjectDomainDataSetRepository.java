@@ -12,4 +12,7 @@ public interface SDTMProjectDomainDataSetRepository extends CrudRepository<SDTMP
 	@Query("SELECT d FROM SDTMProjectDomainDataSet d WHERE d.sdtmProjectLibrary.sdtmProject.id=:projectId and d.status='active'")
 	public List<SDTMProjectDomainDataSet> findByProjectId(@Param("projectId") Long projectId);
 
+	@Query("SELECT d FROM SDTMProjectDomainDataSet d WHERE d.sdtmProjectLibrary.sdtmProject.id=:projectId and d.sdtmDomain.id=:domainId and d.status='active'")
+	public List<SDTMProjectDomainDataSet> findByProjectIdAndDomainId(@Param("projectId") Long projectId, @Param("domainId") Long domainId);
+
 }

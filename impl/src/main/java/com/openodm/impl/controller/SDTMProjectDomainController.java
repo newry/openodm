@@ -99,6 +99,11 @@ public class SDTMProjectDomainController {
 		return vars;
 	}
 
+	@RequestMapping(value = "/sdtm/v1/project/{id}/domain/{domainId}/dataSet", method = RequestMethod.GET)
+	public List<SDTMProjectDomainDataSet> listAllProjectDomainDataSets(@PathVariable("id") Long id, @PathVariable("domainId") Long domainId) {
+		return this.sdtmProjectDomainDataSetRepository.findByProjectIdAndDomainId(id, domainId);
+	}
+
 	@RequestMapping(value = "/sdtm/v1/project/{id}/domain/{domainId}/keyVariable/{varId}", method = RequestMethod.POST)
 	public ResponseEntity<OperationResponse> addAllProjectDomainKeyVariables(@PathVariable("id") Long id, @PathVariable("domainId") Long domainId,
 			@PathVariable("varId") Long varId) {
@@ -242,26 +247,6 @@ public class SDTMProjectDomainController {
 					List<SDTMProjectKeyVariableXref> list = keyVarMap.get(key);
 					if (!CollectionUtils.isEmpty(list)) {
 						domainXref.getSdtmDomain().setKeyVariables(list);
-					}
-				}
-			}
-			List<SDTMProjectDomainDataSet> dataSets = this.sdtmProjectDomainDataSetRepository.findByProjectId(id);
-
-			if (!CollectionUtils.isEmpty(dataSets)) {
-				Map<Long, List<SDTMProjectDomainDataSet>> keyVarMap = new HashMap<Long, List<SDTMProjectDomainDataSet>>();
-				for (SDTMProjectDomainDataSet dataSet : dataSets) {
-					Long key = dataSet.getSdtmDomain().getId();
-					List<SDTMProjectDomainDataSet> list = keyVarMap.get(key);
-					if (list == null) {
-						list = new ArrayList<SDTMProjectDomainDataSet>();
-						keyVarMap.put(key, list);
-					}
-					list.add(dataSet);
-				}
-				for (SDTMProjectDomainXref domainXref : domainXrefs) {
-					List<SDTMProjectDomainDataSet> list = keyVarMap.get(domainXref.getSdtmDomain().getId());
-					if (!CollectionUtils.isEmpty(list)) {
-						domainXref.getSdtmDomain().setDataSets(list);
 					}
 				}
 			}

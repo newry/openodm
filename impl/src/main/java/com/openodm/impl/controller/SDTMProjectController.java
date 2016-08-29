@@ -451,4 +451,38 @@ public class SDTMProjectController {
 		return libs;
 	}
 
+	@RequestMapping(value = "/sdtm/v1/project/{id}/library/{libraryId}", method = RequestMethod.GET)
+	public List<Map<String, Object>> listProjectLibrariesWorkSet(@PathVariable("id") Long id, @PathVariable("libraryId") Long libraryId) {
+		SDTMProjectLibrary library = sdtmProjectLibraryRepository.findOne(libraryId);
+		List<Map<String, Object>> dataSetList = new ArrayList<>();
+		if (library != null) {
+			Path folder = Paths.get(rootPath + "/" + id + "/" + library.getPath());
+			if (Files.exists(folder) && folder.toFile().isDirectory()) {
+				try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(folder)) {
+					for (Path path : directoryStream) {
+						Map<String, Object> map = new HashMap<String, Object>();
+						dataSetList.add(map);
+						Path fileName = path.getFileName();
+						if (fileName.toString().lastIndexOf(".") > -1) {
+							map.put("name", fileName.toString().substring(0, fileName.toString().lastIndexOf(".")));
+						} else {
+							map.put("name", fileName);
+						}
+						try (InputStream is = new FileInputStream(path.toFile())) {
+							SasFileReader sasFileReader = new SasFileReaderImpl(is);
+							map.put("columnList", sasFileReader.getColumns());
+						} catch (FileNotFoundException e) {
+							LOG.error("Got Exception during reading file, folder={}", folder, e);
+						} catch (IOException e) {
+							LOG.error("Got Exception during reading file, folder={}", folder, e);
+						}
+
+					}
+				} catch (IOException ex) {
+				}
+			}
+		}
+		return dataSetList;
+	}
+
 }

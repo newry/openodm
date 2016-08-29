@@ -15,9 +15,10 @@
 		<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/select/1.2.0/css/select.dataTables.min.css">
 		<link rel="stylesheet" type="text/css" href="/css/editor.dataTables.min.css">
         <link rel="stylesheet" href="/css/main.css">
+        <link rel="stylesheet" href="/css/jquery.steps.css">
         
   		<script src="/js/jquery.dataTables.rowReordering.js"></script>
   		<script src="/js/dataTables.editor.js"></script>
-  		<script src="/js/jquery.step.js"></script>
+  		<script src="/js/jquery.bootstrap.wizard.js"></script>
   		<script src="/js/main.js"></script>
     </head>

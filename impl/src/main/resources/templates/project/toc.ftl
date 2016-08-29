@@ -120,11 +120,11 @@
               		},
 		            { 
 		              extend: "edit", 
-		              text: 'DataSet Initialization',
+		              text: 'DataSets',
 		              editor: editor,
                       action: function ( e, dt, node, config ) {
                       	var data = table.row( { selected: true } ).data();
-                      	window.location='/project/${prjId?long?c}/domain/'+data.sdtmDomain.id+'/selectKeyVariable';
+                      	window.location='/project/${prjId?long?c}/domain/'+data.sdtmDomain.id+'/dataSet';
 	                  }
               		}
 		        ]
