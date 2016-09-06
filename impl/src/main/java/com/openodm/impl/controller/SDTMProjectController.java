@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.epam.parso.Column;
 import com.epam.parso.SasFileReader;
 import com.epam.parso.impl.SasFileReaderImpl;
 import com.openodm.impl.controller.response.OperationResponse;
@@ -426,11 +427,9 @@ public class SDTMProjectController {
 							Map<String, Object> map = new HashMap<String, Object>();
 							dataSetList.add(map);
 							Path fileName = path.getFileName();
-							if (fileName.toString().lastIndexOf(".") > -1) {
-								map.put("name", fileName.toString().substring(0, fileName.toString().lastIndexOf(".")));
-							} else {
-								map.put("name", fileName);
-							}
+							String name = fileName.toString();
+							map.put("name", name);
+							putLabel(map, name);
 							try (InputStream is = new FileInputStream(path.toFile())) {
 								SasFileReader sasFileReader = new SasFileReaderImpl(is);
 								map.put("columnList", sasFileReader.getColumns());
@@ -451,6 +450,14 @@ public class SDTMProjectController {
 		return libs;
 	}
 
+	private void putLabel(Map<String, Object> map, String name) {
+		if (name.indexOf(".") > -1) {
+			map.put("label", name.substring(0, name.lastIndexOf(".")));
+		} else {
+			map.put("label", name);
+		}
+	}
+
 	@RequestMapping(value = "/sdtm/v1/project/{id}/library/{libraryId}", method = RequestMethod.GET)
 	public List<Map<String, Object>> listProjectLibrariesWorkSet(@PathVariable("id") Long id, @PathVariable("libraryId") Long libraryId) {
 		SDTMProjectLibrary library = sdtmProjectLibraryRepository.findOne(libraryId);
@@ -463,26 +470,42 @@ public class SDTMProjectController {
 						Map<String, Object> map = new HashMap<String, Object>();
 						dataSetList.add(map);
 						Path fileName = path.getFileName();
-						if (fileName.toString().lastIndexOf(".") > -1) {
-							map.put("name", fileName.toString().substring(0, fileName.toString().lastIndexOf(".")));
-						} else {
-							map.put("name", fileName);
-						}
-						try (InputStream is = new FileInputStream(path.toFile())) {
-							SasFileReader sasFileReader = new SasFileReaderImpl(is);
-							map.put("columnList", sasFileReader.getColumns());
-						} catch (FileNotFoundException e) {
-							LOG.error("Got Exception during reading file, folder={}", folder, e);
-						} catch (IOException e) {
-							LOG.error("Got Exception during reading file, folder={}", folder, e);
-						}
-
+						String name = fileName.toString();
+						map.put("name", name);
+						putLabel(map, name);
 					}
 				} catch (IOException ex) {
 				}
 			}
 		}
 		return dataSetList;
+	}
+
+	@RequestMapping(value = "/sdtm/v1/project/{id}/library/{libraryId}/fileName/{fileName:.+}", method = RequestMethod.GET)
+	public List<Column> listProjectLibrariesWorkSetColumns(@PathVariable("id") Long id, @PathVariable("libraryId") Long libraryId,
+			@PathVariable("fileName") String fileName) {
+		SDTMProjectLibrary library = sdtmProjectLibraryRepository.findOne(libraryId);
+		if (library != null) {
+			Path folder = Paths.get(rootPath + "/" + id + "/" + library.getPath());
+			if (Files.exists(folder) && folder.toFile().isDirectory()) {
+				try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(folder)) {
+					for (Path path : directoryStream) {
+						if (path.toFile().getName().equals(fileName))
+							try (InputStream is = new FileInputStream(path.toFile())) {
+								SasFileReader sasFileReader = new SasFileReaderImpl(is);
+								return sasFileReader.getColumns();
+							} catch (FileNotFoundException e) {
+								LOG.error("Got Exception during reading file, folder={}", folder, e);
+							} catch (IOException e) {
+								LOG.error("Got Exception during reading file, folder={}", folder, e);
+							}
+					}
+
+				} catch (IOException ex) {
+				}
+			}
+		}
+		return new ArrayList<Column>(0);
 	}
 
 }

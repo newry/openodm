@@ -104,6 +104,19 @@ public class SDTMProjectDomainController {
 		return this.sdtmProjectDomainDataSetRepository.findByProjectIdAndDomainId(id, domainId);
 	}
 
+	@RequestMapping(value = "/sdtm/v1/project/{id}/domain/{domainId}/dataSet", method = RequestMethod.POST)
+	public ResponseEntity<OperationResponse> createProjectDomainDataSets(@PathVariable("id") Long id, @PathVariable("domainId") Long domainId,
+			@RequestBody Map<String, Object> request) {
+		LOG.info("request={}", request);
+
+		OperationResponse or = new OperationResponse();
+		OperationResult result = new OperationResult();
+		result.setSuccess(false);
+		result.setError("Error");
+		or.setResult(result);
+		return new ResponseEntity<OperationResponse>(or, HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+
 	@RequestMapping(value = "/sdtm/v1/project/{id}/domain/{domainId}/keyVariable/{varId}", method = RequestMethod.POST)
 	public ResponseEntity<OperationResponse> addAllProjectDomainKeyVariables(@PathVariable("id") Long id, @PathVariable("domainId") Long domainId,
 			@PathVariable("varId") Long varId) {

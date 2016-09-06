@@ -33,6 +33,9 @@ public class SDTMProjectDomainDataSet extends PersistentObject {
 	@Column(name = "name", nullable = false, length = 256)
 	private String name;
 
+	@Column(name = "join_type", nullable = false, length = 32)
+	private String joinType;
+
 	@Column(name = "meta_data", nullable = false, length = 1024 * 1024)
 	private String metaData;
 
