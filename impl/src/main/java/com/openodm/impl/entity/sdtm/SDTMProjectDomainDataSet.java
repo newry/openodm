@@ -42,11 +42,11 @@ public class SDTMProjectDomainDataSet extends PersistentObject {
 	@Column(name = "sql", nullable = false, length = 1024 * 1024)
 	private String sql;
 
-	@ManyToOne(targetEntity = SDTMProjectLibrary.class, optional = false, fetch = FetchType.LAZY)
+	@ManyToOne(targetEntity = SDTMProjectLibrary.class, optional = false, fetch = FetchType.EAGER)
 	@JoinColumn(name = "SDTM_PROJECT_LIBRARY_ID", nullable = false)
 	private SDTMProjectLibrary sdtmProjectLibrary;
 
-	@ManyToOne(targetEntity = SDTMDomain.class, optional = false, fetch = FetchType.EAGER)
+	@ManyToOne(targetEntity = SDTMDomain.class, optional = false, fetch = FetchType.LAZY)
 	@JoinColumn(name = "SDTM_DOMAIN_ID", nullable = false)
 	private SDTMDomain sdtmDomain;
 
@@ -68,6 +68,38 @@ public class SDTMProjectDomainDataSet extends PersistentObject {
 
 	public void setMetaData(String metaData) {
 		this.metaData = metaData;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getJoinType() {
+		return joinType;
+	}
+
+	public void setJoinType(String joinType) {
+		this.joinType = joinType;
+	}
+
+	public String getSql() {
+		return sql;
+	}
+
+	public void setSql(String sql) {
+		this.sql = sql;
+	}
+
+	public SDTMProjectLibrary getSdtmProjectLibrary() {
+		return sdtmProjectLibrary;
+	}
+
+	public void setSdtmProjectLibrary(SDTMProjectLibrary sdtmProjectLibrary) {
+		this.sdtmProjectLibrary = sdtmProjectLibrary;
 	}
 
 }

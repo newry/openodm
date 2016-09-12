@@ -220,29 +220,50 @@
 			}    		
 		}
 	}
-	createDataSet = function(){
-		var name = $("#name").val();
-		var storelibrary = $("#storeLibrary").val();
-		var joinType = $("#joinType").val();
-		if(!name || name ==''){
-			$("#error").html("Name is required.");
-			return false;
-		}
-		data.name = name;
-		data.storeLibraryId = storelibrary;
-		data.joinType = joinType;
-		generatePreview();
-		data.sql = $("#preview").val();
-		//console.log(data);
-		$.ajax(
-			{url: "/sdtm/v1/project/${prjId?long?c}/domain/${domainId?long?c}/dataSet",contentType:'application/json', type:'POST', data: JSON.stringify(data), success: function(result){
-				window.location='/project/${prjId?long?c}/domain/${domainId?long?c}/dataSet';
-    		},
-			error:function(xhr, error, thrown){
-				$("#error").html(xhr.responseJSON.result.error)
-	    	}
-    	});
-
-	}
+	<#if dataSetId??>
+		updateDataSet = function(){
+			var name = $("#name").val();
+			data.libraryId = $("#library").val();
+			data.dataSet = $("#dataSet").val();
+			generatePreview();
+			data.sql = $("#preview").val();
+			//console.log(data);
+			$.ajax(
+				{url: "/sdtm/v1/project/${prjId?long?c}/domain/${domainId?long?c}/dataSet/${dataSetId?long?c}",contentType:'application/json', type:'PUT', data: JSON.stringify(data), success: function(result){
+					window.location='/project/${prjId?long?c}/domain/${domainId?long?c}/dataSet';
+	    		},
+				error:function(xhr, error, thrown){
+					$("#error").html(xhr.responseJSON.result.error)
+		    	}
+	    	});
 	
+		}
+	<#else>
+		createDataSet = function(){
+			var name = $("#name").val();
+			var storelibrary = $("#storeLibrary").val();
+			var joinType = $("#joinType").val();
+			if(!name || name ==''){
+				$("#error").html("Name is required.");
+				return false;
+			}
+			data.name = name;
+			data.libraryId = $("#library").val();
+			data.dataSet = $("#dataSet").val();
+			data.storeLibraryId = storelibrary;
+			data.joinType = joinType;
+			generatePreview();
+			data.sql = $("#preview").val();
+			//console.log(data);
+			$.ajax(
+				{url: "/sdtm/v1/project/${prjId?long?c}/domain/${domainId?long?c}/dataSet",contentType:'application/json', type:'POST', data: JSON.stringify(data), success: function(result){
+					window.location='/project/${prjId?long?c}/domain/${domainId?long?c}/dataSet';
+	    		},
+				error:function(xhr, error, thrown){
+					$("#error").html(xhr.responseJSON.result.error)
+		    	}
+	    	});
+	
+		}
+	</#if>
 </script>

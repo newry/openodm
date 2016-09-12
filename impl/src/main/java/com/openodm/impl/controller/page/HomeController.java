@@ -27,6 +27,7 @@ import com.openodm.impl.repository.ct.CTVersionRepository;
 import com.openodm.impl.repository.ct.CodeListRepository;
 import com.openodm.impl.repository.ct.ControlTerminologyRepository;
 import com.openodm.impl.repository.sdtm.SDTMDomainRepository;
+import com.openodm.impl.repository.sdtm.SDTMProjectDomainDataSetRepository;
 import com.openodm.impl.repository.sdtm.SDTMProjectLibraryRepository;
 import com.openodm.impl.repository.sdtm.SDTMProjectRepository;
 import com.openodm.impl.repository.sdtm.SDTMVersionRepository;
@@ -47,6 +48,8 @@ public class HomeController {
 	private SDTMProjectLibraryRepository sdtmProjectLibraryRepository;
 	@Autowired
 	private SDTMDomainRepository sdtmDomainRepository;
+	@Autowired
+	private SDTMProjectDomainDataSetRepository sdtmProjectDomainDataSetRepository;
 
 	@RequestMapping(path = "/", method = RequestMethod.GET)
 	public String index(Map<String, Object> model) {
@@ -240,6 +243,23 @@ public class HomeController {
 		}
 		model.put("libs", this.sdtmProjectLibraryRepository.findByProjectId(id));
 		return "project/newDomainDataSet";
+	}
+
+	@RequestMapping(path = "/project/{id}/domain/{domainId}/dataSet/{dataSetId}", method = { RequestMethod.GET })
+	public String getProjectDomainDataSet(@PathVariable Long id, @PathVariable Long domainId, @PathVariable Long dataSetId, Map<String, Object> model) {
+		model.put("title", "Data Set For " + getDomainName(domainId, sdtmDomainRepository.findOne(domainId)));
+		model.put("selected", "prj");
+		SDTMProject prj = sdtmProjectRepository.findOne(id);
+		model.put("breadcrumbs",
+				Arrays.asList(Breadcrumb.create("/project", "All Projects"),
+						Breadcrumb.create("/project/" + id + "/toc", prj == null ? "#" + id : prj.getName()),
+						Breadcrumb.create("/project/" + id + "/domain/" + domainId + "/dataSet", "dataSet")));
+		model.put("prjId", id);
+		model.put("domainId", domainId);
+		model.put("dataSetId", dataSetId);
+		model.put("libs", this.sdtmProjectLibraryRepository.findByProjectId(id));
+		model.put("dataSet", sdtmProjectDomainDataSetRepository.findOne(dataSetId));
+		return "project/editDomainDataSet";
 	}
 
 	private void addBreadCrumbs(Long id, Map<String, Object> model, SDTMProject prj) {

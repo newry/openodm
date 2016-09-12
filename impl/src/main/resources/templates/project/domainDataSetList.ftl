@@ -4,6 +4,7 @@
             <tr>
                 <th>Name</th>
                 <th>Library</th>
+                <th>joinType</th>
                 <th>Creator</th>
                 <th>UpdatedBy</th>
                 <th>CreatedDate</th>
@@ -28,6 +29,7 @@
 		        "columns": [
 		            { "data": "name" },
 		            { "data": "sdtmProjectLibrary.name", "defaultContent": ""},
+		            { "data": "joinType"},
 		            { "data": "creator" },
 		            { "data": "updatedBy" },
 		            { "data": "dateAdded" },

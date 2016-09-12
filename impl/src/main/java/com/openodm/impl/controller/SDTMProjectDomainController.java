@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.openodm.impl.controller.response.OperationResponse;
 import com.openodm.impl.controller.response.OperationResult;
 import com.openodm.impl.entity.ObjectStatus;
@@ -31,17 +35,21 @@ import com.openodm.impl.entity.sdtm.SDTMProject;
 import com.openodm.impl.entity.sdtm.SDTMProjectDomainDataSet;
 import com.openodm.impl.entity.sdtm.SDTMProjectDomainXref;
 import com.openodm.impl.entity.sdtm.SDTMProjectKeyVariableXref;
+import com.openodm.impl.entity.sdtm.SDTMProjectLibrary;
 import com.openodm.impl.entity.sdtm.SDTMProjectVariableXref;
 import com.openodm.impl.entity.sdtm.SDTMVariable;
 import com.openodm.impl.repository.sdtm.SDTMDomainRepository;
 import com.openodm.impl.repository.sdtm.SDTMProjectDomainDataSetRepository;
 import com.openodm.impl.repository.sdtm.SDTMProjectDomainXrefRepository;
 import com.openodm.impl.repository.sdtm.SDTMProjectKeyVariableXrefRepository;
+import com.openodm.impl.repository.sdtm.SDTMProjectLibraryRepository;
 import com.openodm.impl.repository.sdtm.SDTMProjectRepository;
 import com.openodm.impl.repository.sdtm.SDTMProjectVariableXrefRepository;
 import com.openodm.impl.repository.sdtm.SDTMVariableRepository;
+import com.openodm.impl.util.Utils;
 
 @RestController
+@SuppressWarnings("unchecked")
 public class SDTMProjectDomainController {
 	private static final Logger LOG = LoggerFactory.getLogger(SDTMProjectDomainController.class);
 	@Autowired
@@ -58,8 +66,12 @@ public class SDTMProjectDomainController {
 	private SDTMProjectDomainXrefRepository sdtmProjectDomainXrefRepository;
 	@Autowired
 	private SDTMProjectDomainDataSetRepository sdtmProjectDomainDataSetRepository;
+	@Autowired
+	private SDTMProjectLibraryRepository sdtmProjectLibraryRepository;
+
 	@Value("${project.rootPath}")
 	private String rootPath;
+	ObjectMapper om = new ObjectMapper();
 
 	@RequestMapping(value = "/sdtm/v1/project/{id}/domain/{domainId}/allVariable", method = RequestMethod.GET)
 	public List<SDTMProjectVariableXref> listAllProjectDomainVariables(@PathVariable("id") Long id, @PathVariable("domainId") Long domainId) {
@@ -105,16 +117,136 @@ public class SDTMProjectDomainController {
 	}
 
 	@RequestMapping(value = "/sdtm/v1/project/{id}/domain/{domainId}/dataSet", method = RequestMethod.POST)
-	public ResponseEntity<OperationResponse> createProjectDomainDataSets(@PathVariable("id") Long id, @PathVariable("domainId") Long domainId,
+	public ResponseEntity<OperationResponse> createProjectDomainDataSet(@PathVariable("id") Long id, @PathVariable("domainId") Long domainId,
 			@RequestBody Map<String, Object> request) {
-		LOG.info("request={}", request);
-
+		String name = (String) request.get("name");
+		String joinType = (String) request.get("joinType");
+		String storelibraryId = (String) request.get("storeLibraryId");
+		SDTMProjectDomainDataSet entity = new SDTMProjectDomainDataSet();
+		entity.setCreator("admin");
+		entity.setUpdatedBy("admin");
+		entity.setName(name);
+		entity.setJoinType(joinType);
+		SDTMProjectLibrary sdtmProjectLibrary = sdtmProjectLibraryRepository.findOne(Long.valueOf(storelibraryId));
+		entity.setSdtmProjectLibrary(sdtmProjectLibrary);
+		entity.setSdtmDomain(this.sdtmDomainRepository.findOne(domainId));
+		entity.setSql((String) request.get("sql"));
+		ObjectNode node = buildMetadata(joinType, request);
+		entity.setMetaData(node.toString());
+		LOG.debug("request={}", entity.getMetaData());
+		try {
+			sdtmProjectDomainDataSetRepository.save(entity);
+		} catch (Exception e) {
+			LOG.error("Error during create SDTMProjectDomainDataSet", e);
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("Error");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 		OperationResponse or = new OperationResponse();
 		OperationResult result = new OperationResult();
-		result.setSuccess(false);
-		result.setError("Error");
+		result.setSuccess(true);
 		or.setResult(result);
-		return new ResponseEntity<OperationResponse>(or, HttpStatus.INTERNAL_SERVER_ERROR);
+		return new ResponseEntity<OperationResponse>(or, HttpStatus.OK);
+	}
+
+	@RequestMapping(value = "/sdtm/v1/project/{id}/domain/{domainId}/dataSet/{dataSetId}", method = RequestMethod.PUT)
+	public ResponseEntity<OperationResponse> createProjectDomainDataSet(@PathVariable("id") Long id, @PathVariable("domainId") Long domainId,
+			@PathVariable("dataSetId") Long dataSetId, @RequestBody Map<String, Object> request) {
+		SDTMProjectDomainDataSet entity = sdtmProjectDomainDataSetRepository.findOne(dataSetId);
+		if (entity == null) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("Invalid data set id!");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		}
+		Utils.updatePODataLastModified(entity);
+		entity.setUpdatedBy("admin");
+		entity.setSql((String) request.get("sql"));
+		ObjectNode node = buildMetadata(entity.getJoinType(), request);
+		entity.setMetaData(node.toString());
+		LOG.debug("metadata={}", entity.getMetaData());
+		try {
+			sdtmProjectDomainDataSetRepository.save(entity);
+		} catch (Exception e) {
+			LOG.error("Error during update SDTMProjectDomainDataSet", e);
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("Error");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		OperationResponse or = new OperationResponse();
+		OperationResult result = new OperationResult();
+		result.setSuccess(true);
+		or.setResult(result);
+		return new ResponseEntity<OperationResponse>(or, HttpStatus.OK);
+	}
+
+	private ObjectNode buildMetadata(String joinType, Map<String, Object> request) {
+		ObjectNode node = om.createObjectNode();
+		if (StringUtils.equalsIgnoreCase(joinType, "sort")) {
+			List<String> columns = (List<String>) request.get("columns");
+			List<String> aliasColumns = (List<String>) request.get("aliasColumns");
+			List<String> sortColumns = (List<String>) request.get("sortColumns");
+			if (!CollectionUtils.isEmpty(columns)) {
+				ArrayNode columnArray = node.putArray("columns");
+				Map<String, String> aliasMap = new HashMap<String, String>();
+				Map<String, String> sortMap = new HashMap<String, String>();
+				if (!CollectionUtils.isEmpty(aliasColumns)) {
+					for (String aliasColumn : aliasColumns) {
+						int index = aliasColumn.indexOf("=");
+						if (index > -1) {
+							aliasMap.put(aliasColumn.substring(0, index), aliasColumn.substring(index + 1));
+						}
+					}
+				}
+				if (!CollectionUtils.isEmpty(sortColumns)) {
+					for (String sortColumn : sortColumns) {
+						if (sortColumn.startsWith("descending ")) {
+							sortMap.put(sortColumn.substring("descending ".length()), "desc");
+						} else {
+							sortMap.put(sortColumn, "asc");
+						}
+					}
+				}
+				for (String column : columns) {
+					String alias = aliasMap.get(column);
+					String sortOrder = sortMap.get(column);
+					ObjectNode columnNode = om.createObjectNode();
+					if (StringUtils.isNotEmpty(alias)) {
+						columnNode.put("name", alias);
+						columnNode.put("originalName", column);
+					} else {
+						columnNode.put("name", column);
+					}
+					if (StringUtils.isNotEmpty(sortOrder)) {
+						columnNode.put("sortOrder", sortOrder);
+					}
+
+					columnArray.add(columnNode);
+				}
+			}
+			String condition = (String) request.get("condition");
+			if (StringUtils.isNotEmpty(condition)) {
+				node.put("condition", condition);
+			}
+			String libraryId = (String) request.get("libraryId");
+			if (StringUtils.isNotEmpty(libraryId) && StringUtils.isNumeric(libraryId)) {
+				node.put("libraryId", Long.valueOf(libraryId));
+			}
+
+			String dataSet = (String) request.get("dataSet");
+			if (StringUtils.isNotEmpty(dataSet)) {
+				node.put("dataSet", dataSet);
+			}
+		}
+		return node;
 	}
 
 	@RequestMapping(value = "/sdtm/v1/project/{id}/domain/{domainId}/keyVariable/{varId}", method = RequestMethod.POST)
