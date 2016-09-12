@@ -149,7 +149,7 @@ public class HomeController {
 		return "project/new";
 	}
 
-	@RequestMapping(path = "/project/{id}", method = RequestMethod.GET)
+	@RequestMapping(path = "/project/{id}/edit", method = RequestMethod.GET)
 	public String editProject(@PathVariable Long id, Map<String, Object> model) {
 		model.put("title", "Edit Project");
 		model.put("selected", "prj");
@@ -164,6 +164,23 @@ public class HomeController {
 
 		return "project/edit";
 	}
+	
+	@RequestMapping(path = "/project/{id}", method = RequestMethod.GET)
+	public String viewProject(@PathVariable Long id, Map<String, Object> model) {
+		model.put("title", "View Project");
+		model.put("selected", "prj");
+		model.put("breadcrumbs", Arrays.asList(Breadcrumb.create("/project", "All Projects")));
+		model.put("prjId", id);
+		SDTMProject prj = sdtmProjectRepository.findOne(id);
+		if (prj != null) {
+			List<SDTMProjectLibrary> libs = this.sdtmProjectLibraryRepository.findByProjectId(id);
+			prj.setLibraries(libs);
+			model.put("project", prj);
+		}
+
+		return "project/view";
+	}
+
 
 	@RequestMapping(path = "/project/{id}/toc", method = RequestMethod.GET)
 	public String getProjectTOC(@PathVariable Long id, Map<String, Object> model) {

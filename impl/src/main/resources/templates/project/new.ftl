@@ -74,6 +74,7 @@
 				</div>
 			</div>
 			<a class="dt-button buttons-add-library" href="#"><span>Add Library</span></a>
+			<a class="dt-button buttons-cancel" href="/project/"><span>Cancel</span></a>
 			<a class="dt-button buttons-create" href="#"><span>Create</span></a>
 		</div>
 	</form>

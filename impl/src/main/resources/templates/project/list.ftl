@@ -38,7 +38,7 @@
 				    "targets": 0,
 				    "data": "name",
 				    "render": function ( data, type, full, meta ) {
-				      return '<a href="/project/'+full.id+'/toc">'+data+'</a>';
+				      return '<a href="/project/'+full.id+'">'+data+'</a>';
 				    }				    
 				  }
 				],
@@ -59,7 +59,16 @@
 		              editor: editor,
                       action: function ( e, dt, node, config ) {
                        	var data = table.row( { selected: true } ).data();
-                      	window.location='/project/'+data.id;
+                      	window.location='/project/'+data.id+'/edit';
+	                  }
+               		},
+		            { 
+		              extend: "edit", 
+		              editor: editor,
+                	  text: "Go to Domains",
+                      action: function ( e, dt, node, config ) {
+                       	var data = table.row( { selected: true } ).data();
+                      	window.location='/project/'+data.id+'/toc';
 	                  }
                		}
 		        ]

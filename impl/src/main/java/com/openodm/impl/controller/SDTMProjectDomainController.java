@@ -238,7 +238,9 @@ public class SDTMProjectDomainController {
 			}
 			String libraryId = (String) request.get("libraryId");
 			if (StringUtils.isNotEmpty(libraryId) && StringUtils.isNumeric(libraryId)) {
-				node.put("libraryId", Long.valueOf(libraryId));
+				Long libId = Long.valueOf(libraryId);
+				node.put("libraryId", libId);
+				node.put("libraryName", this.sdtmProjectLibraryRepository.findOne(libId).getName());
 			}
 
 			String dataSet = (String) request.get("dataSet");

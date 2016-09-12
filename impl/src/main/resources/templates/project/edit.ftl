@@ -46,6 +46,7 @@
 				</div>
 			</div>
 			<a class="dt-button buttons-add-library" href="#"><span>Add Library</span></a>
+			<a class="dt-button buttons-cancel" href="/project/"><span>Cancel</span></a>
 			<a class="dt-button buttons-edit" href="#"><span>Update</span></a>
 		</div>
 	</form>

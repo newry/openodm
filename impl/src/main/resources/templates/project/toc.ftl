@@ -6,6 +6,7 @@
                 <th>Domain</th>
                 <th>Label</th>
                 <th>Key Variables</th>
+                <th>Dataset Initialization</th>
                 <th>CreatedDate</th>
                 <th>LastModifiedDate</th>
             </tr>
@@ -59,6 +60,7 @@
 		            { "data": "sdtmDomain.name" },
 		            { "data": "sdtmDomain.description", "defaultContent": ""},
 		            { "data": "sdtmDomain.keyVariables", "defaultContent": [] },
+		            { "data": "sdtmDomain.description", "defaultContent": ""},
 		            { "data": "dateAdded" },
 		            { "data": "dateLastModified" }
 		        ],
@@ -85,8 +87,13 @@
 				      }
 				      return result;
 				    },
+				  },
+				  {
+				    "targets": 4,
+				    "render": function ( data, type, full, meta ) {
+				      return '<a href="/project/${prjId?long?c}/domain/'+full.sdtmDomain.id+'/dataSet">View</a>';
+				    }				    
 				  }
-
 				],
 		        select: {
 		            style:    'single',

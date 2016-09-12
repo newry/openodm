@@ -2,13 +2,9 @@
 	<table id="dataSetList" class="display" cellspacing="0" width="100%">
         <thead>
             <tr>
-                <th>Name</th>
-                <th>Library</th>
-                <th>joinType</th>
-                <th>Creator</th>
-                <th>UpdatedBy</th>
-                <th>CreatedDate</th>
-                <th>LastModifiedDate</th>
+                <th>Action</th>
+                <th>Output Dataset</th>
+                <th>Input Dataset(s)</th>
             </tr>
         </thead>
 	</table>
@@ -26,15 +22,29 @@
 		        	"url":"/sdtm/v1/project/${prjId?long?c}/domain/${domainId?long?c}/dataSet",
 		        	"dataSrc": ""
 		        },
-		        "columns": [
-		            { "data": "name" },
-		            { "data": "sdtmProjectLibrary.name", "defaultContent": ""},
-		            { "data": "joinType"},
-		            { "data": "creator" },
-		            { "data": "updatedBy" },
-		            { "data": "dateAdded" },
-		            { "data": "dateLastModified" }
-		        ],
+				"columnDefs": [ 
+				  {
+				    "targets": 0,
+				    "data": "joinType",
+				  },
+				  {
+				    "targets": 1,
+				    "render": function ( data, type, full, meta ) {
+				      return full.sdtmProjectLibrary.name+"."+full.name;
+				    },
+				  },
+				  {
+				    "targets": 2,
+				    "render": function ( data, type, full, meta ) {
+				      var obj = jQuery.parseJSON(full.metaData);
+				      if(full.joinType=='sort'){
+				      	return obj.libraryName+"."+obj.dataSet.substring(0,obj.dataSet.indexOf("."));
+				      }else{
+				      	return "";
+				      }
+				    }				    
+				  }
+				],
 		        select: {
 		            style:    'single'
 		        },
