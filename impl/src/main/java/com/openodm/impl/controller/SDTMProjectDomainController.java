@@ -1,5 +1,6 @@
 package com.openodm.impl.controller;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -51,6 +53,7 @@ import com.openodm.impl.util.Utils;
 @RestController
 @SuppressWarnings("unchecked")
 public class SDTMProjectDomainController {
+	private static final String SORT = "sort";
 	private static final Logger LOG = LoggerFactory.getLogger(SDTMProjectDomainController.class);
 	@Autowired
 	private SDTMDomainRepository sdtmDomainRepository;
@@ -112,8 +115,67 @@ public class SDTMProjectDomainController {
 	}
 
 	@RequestMapping(value = "/sdtm/v1/project/{id}/domain/{domainId}/dataSet", method = RequestMethod.GET)
-	public List<SDTMProjectDomainDataSet> listAllProjectDomainDataSets(@PathVariable("id") Long id, @PathVariable("domainId") Long domainId) {
-		return this.sdtmProjectDomainDataSetRepository.findByProjectIdAndDomainId(id, domainId);
+	public List<Map<String, Object>> listProjectLibrariesDataSet(@PathVariable("id") Long id, @PathVariable("domainId") Long domainId) {
+		List<SDTMProjectDomainDataSet> dataSets = this.sdtmProjectDomainDataSetRepository.findByProjectIdAndDomainId(id, domainId);
+		List<Map<String, Object>> dataSetList = new ArrayList<>();
+		if (!CollectionUtils.isEmpty(dataSets)) {
+			for (SDTMProjectDomainDataSet dataSet : dataSets) {
+				Map<String, Object> map = new HashMap<String, Object>();
+				map.put("name", dataSet.getId());
+				map.put("id", dataSet.getId());
+				map.put("joinType", dataSet.getJoinType());
+				map.put("label", dataSet.getName());
+				map.put("output", dataSet.getName());
+				try {
+					String metaData = dataSet.getMetaData();
+					JsonNode jsonNode = om.reader().readTree(metaData);
+					if (StringUtils.equalsIgnoreCase(dataSet.getJoinType(), SORT)) {
+						JsonNode libNode = jsonNode.get("libraryId");
+						String input = jsonNode.get("dataSet").asText();
+						if (libNode != null && !libNode.isNull()) {
+							Long LibId = libNode.asLong();
+							SDTMProjectLibrary lib = this.sdtmProjectLibraryRepository.findOne(LibId);
+							if (input.indexOf('.') > -1) {
+								input = input.substring(0, input.lastIndexOf('.'));
+							}
+							map.put("input", lib.getName() + "." + input);
+						} else {
+							String name = this.sdtmProjectDomainDataSetRepository.findOne(Long.valueOf(input)).getName();
+							map.put("input", name);
+						}
+					}
+					dataSetList.add(map);
+				} catch (IOException e) {
+					LOG.error("listProjectLibrariesDataSet", e);
+				}
+			}
+		}
+		return dataSetList;
+	}
+
+	@RequestMapping(value = "/sdtm/v1/project/{id}/domain/{domainId}/dataSet/{dataSetId}", method = RequestMethod.GET)
+	public List<Map<String, Object>> listProjectLibrariesDataSetColumns(@PathVariable("id") Long id, @PathVariable("domainId") Long domainId,
+			@PathVariable("dataSetId") Long dataSetId) {
+		SDTMProjectDomainDataSet dataSet = sdtmProjectDomainDataSetRepository.findOne(dataSetId);
+		List<Map<String, Object>> dataSetColumns = new ArrayList<Map<String, Object>>();
+		if (dataSet != null) {
+			try {
+				if (StringUtils.equalsIgnoreCase(dataSet.getJoinType(), SORT)) {
+					String metaData = dataSet.getMetaData();
+					JsonNode jsonNode = om.reader().readTree(metaData);
+					ArrayNode arrayNode = (ArrayNode) jsonNode.get("columns");
+					for (int i = 0; i < arrayNode.size(); i++) {
+						Map<String, Object> map = new HashMap<String, Object>();
+						map.put("name", arrayNode.get(i).get("name").asText());
+						dataSetColumns.add(map);
+					}
+				}
+			} catch (IOException e) {
+				LOG.error("listProjectLibrariesDataSetColumns", e);
+			}
+
+		}
+		return dataSetColumns;
 	}
 
 	@RequestMapping(value = "/sdtm/v1/project/{id}/domain/{domainId}/dataSet", method = RequestMethod.POST)
@@ -121,14 +183,12 @@ public class SDTMProjectDomainController {
 			@RequestBody Map<String, Object> request) {
 		String name = (String) request.get("name");
 		String joinType = (String) request.get("joinType");
-		String storelibraryId = (String) request.get("storeLibraryId");
 		SDTMProjectDomainDataSet entity = new SDTMProjectDomainDataSet();
 		entity.setCreator("admin");
 		entity.setUpdatedBy("admin");
 		entity.setName(name);
 		entity.setJoinType(joinType);
-		SDTMProjectLibrary sdtmProjectLibrary = sdtmProjectLibraryRepository.findOne(Long.valueOf(storelibraryId));
-		entity.setSdtmProjectLibrary(sdtmProjectLibrary);
+		entity.setSdtmProject(this.sdtmProjectRepository.findOne(id));
 		entity.setSdtmDomain(this.sdtmDomainRepository.findOne(domainId));
 		entity.setSql((String) request.get("sql"));
 		ObjectNode node = buildMetadata(joinType, request);
@@ -153,7 +213,7 @@ public class SDTMProjectDomainController {
 	}
 
 	@RequestMapping(value = "/sdtm/v1/project/{id}/domain/{domainId}/dataSet/{dataSetId}", method = RequestMethod.PUT)
-	public ResponseEntity<OperationResponse> createProjectDomainDataSet(@PathVariable("id") Long id, @PathVariable("domainId") Long domainId,
+	public ResponseEntity<OperationResponse> updateProjectDomainDataSet(@PathVariable("id") Long id, @PathVariable("domainId") Long domainId,
 			@PathVariable("dataSetId") Long dataSetId, @RequestBody Map<String, Object> request) {
 		SDTMProjectDomainDataSet entity = sdtmProjectDomainDataSetRepository.findOne(dataSetId);
 		if (entity == null) {
@@ -164,6 +224,8 @@ public class SDTMProjectDomainController {
 			or.setResult(result);
 			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
 		}
+		String name = (String) request.get("name");
+		entity.setName(name);
 		Utils.updatePODataLastModified(entity);
 		entity.setUpdatedBy("admin");
 		entity.setSql((String) request.get("sql"));
@@ -190,7 +252,7 @@ public class SDTMProjectDomainController {
 
 	private ObjectNode buildMetadata(String joinType, Map<String, Object> request) {
 		ObjectNode node = om.createObjectNode();
-		if (StringUtils.equalsIgnoreCase(joinType, "sort")) {
+		if (StringUtils.equalsIgnoreCase(joinType, SORT)) {
 			List<String> columns = (List<String>) request.get("columns");
 			List<String> aliasColumns = (List<String>) request.get("aliasColumns");
 			List<String> sortColumns = (List<String>) request.get("sortColumns");
@@ -240,7 +302,6 @@ public class SDTMProjectDomainController {
 			if (StringUtils.isNotEmpty(libraryId) && StringUtils.isNumeric(libraryId)) {
 				Long libId = Long.valueOf(libraryId);
 				node.put("libraryId", libId);
-				node.put("libraryName", this.sdtmProjectLibraryRepository.findOne(libId).getName());
 			}
 
 			String dataSet = (String) request.get("dataSet");

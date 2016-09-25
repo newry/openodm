@@ -64,11 +64,6 @@
 								<td><input name="name" type="text" value="WORK"></td>
 								<th><input name="path" type="text" value="work"></td>
 							</tr>
-							<tr id="tr_2" data_id="2">
-								<td><a href="javascript:removeLib(2)"><b>Remove</b></a></td>
-								<td><input name="name" type="text" value="SDTM"></td>
-								<th><input name="path" type="text" value="sdtm"></td>
-							</tr>
 						</tbody>
 					</table>
 				</div>

@@ -5,6 +5,8 @@ import java.util.Map;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -33,7 +35,7 @@ public class SDTMProjectLibrary extends PersistentObject {
 	@GeneratedValue(generator = "identity", strategy = GenerationType.IDENTITY)
 	@GenericGenerator(name = "identity", strategy = "identity")
 	@Column(name = "ID", unique = true, nullable = false, precision = 22)
-	private Long id;
+	private Long id = -1L;
 
 	@Column(name = "name", nullable = false, length = 24)
 	private String name;
@@ -45,6 +47,10 @@ public class SDTMProjectLibrary extends PersistentObject {
 	@JoinColumn(name = "SDTM_PROJECT_ID", nullable = false)
 	@JsonIgnore
 	private SDTMProject sdtmProject;
+
+	@Column(name = "type", nullable = false, length = 32)
+	@Enumerated(EnumType.STRING)
+	private SDTMProjectLibraryType type = SDTMProjectLibraryType.file;
 
 	@Transient
 	private List<Map<String, Object>> dataSetList;
@@ -83,6 +89,14 @@ public class SDTMProjectLibrary extends PersistentObject {
 
 	public void setDataSetList(List<Map<String, Object>> dataSetList) {
 		this.dataSetList = dataSetList;
+	}
+
+	public SDTMProjectLibraryType getType() {
+		return type;
+	}
+
+	public void setType(SDTMProjectLibraryType type) {
+		this.type = type;
 	}
 
 }

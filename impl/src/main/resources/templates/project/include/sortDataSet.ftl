@@ -85,7 +85,11 @@
 		$('#library').change(function(e){
 			var library = $('#library').val();
 			if(library){
-				$.ajax({url: "/sdtm/v1/project/${prjId?long?c}/library/"+library, success: function(result){
+				var url = "/sdtm/v1/project/${prjId?long?c}/library/"+library;
+				if(library == "-1"){
+					url = "/sdtm/v1/project/${prjId?long?c}/domain/${domainId?long?c}/dataSet";
+				}
+				$.ajax({url: url, success: function(result){
 					$('#dataSet').children().remove();
 					result.map(function(row){
 						$('#dataSet').append($("<option></option>").attr("value",row.name).text(row.label));
@@ -106,7 +110,11 @@
 			var dataSet = $('#dataSet').val();
 			if(library && dataSet){
 				$('#column').children().remove();
-				$.ajax({url: "/sdtm/v1/project/${prjId?long?c}/library/"+library+"/fileName/"+dataSet, success: function(result){
+				var url = "/sdtm/v1/project/${prjId?long?c}/library/"+library+"/fileName/"+dataSet;
+				if(library == "-1"){
+					url = "/sdtm/v1/project/${prjId?long?c}/domain/${domainId?long?c}/dataSet/"+dataSet;
+				}
+				$.ajax({url: url, success: function(result){
 					if(result.length > 0){
 						result.map(function(row){
 							var val = row.name;
@@ -190,12 +198,7 @@
 		        }
 		    	data.columns = columns;
 		    	data.aliasColumns = aliasColumns;
-		    	<#if dataSetId??>
-		    		var storeLibName = $("#storeLibrary").val();
-				<#else>
-		    		var storeLibName = $("#storeLibrary option:selected").text();
-		    	</#if>
-		    	var sql = "proc sort data=" + tableName + " out=" + storeLibName+"."+$("#name").val() + "(keep=" + columns.join(" ") ;
+		    	var sql = "proc sort data=" + tableName + " out=" + $("#name").val() + "(keep=" + columns.join(" ") ;
 	    	    if(aliasColumns.length > 0){
 	    	    	sql += " rename=(" + aliasColumns.join(" ") + ")";
 	    	    }
@@ -228,6 +231,7 @@
 	<#if dataSetId??>
 		updateDataSet = function(){
 			var name = $("#name").val();
+			data.name = name;
 			data.libraryId = $("#library").val();
 			data.dataSet = $("#dataSet").val();
 			generatePreview();
@@ -246,7 +250,6 @@
 	<#else>
 		createDataSet = function(){
 			var name = $("#name").val();
-			var storelibrary = $("#storeLibrary").val();
 			var joinType = $("#joinType").val();
 			if(!name || name ==''){
 				$("#error").html("Name is required.");
@@ -255,7 +258,6 @@
 			data.name = name;
 			data.libraryId = $("#library").val();
 			data.dataSet = $("#dataSet").val();
-			data.storeLibraryId = storelibrary;
 			data.joinType = joinType;
 			generatePreview();
 			data.sql = $("#preview").val();

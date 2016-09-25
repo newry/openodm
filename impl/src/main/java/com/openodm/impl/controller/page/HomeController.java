@@ -164,7 +164,7 @@ public class HomeController {
 
 		return "project/edit";
 	}
-	
+
 	@RequestMapping(path = "/project/{id}", method = RequestMethod.GET)
 	public String viewProject(@PathVariable Long id, Map<String, Object> model) {
 		model.put("title", "View Project");
@@ -180,7 +180,6 @@ public class HomeController {
 
 		return "project/view";
 	}
-
 
 	@RequestMapping(path = "/project/{id}/toc", method = RequestMethod.GET)
 	public String getProjectTOC(@PathVariable Long id, Map<String, Object> model) {
@@ -230,7 +229,8 @@ public class HomeController {
 
 	@RequestMapping(path = "/project/{id}/domain/{domainId}/dataSet/new", method = { RequestMethod.GET })
 	public String createProjectDomainDataSet(@PathVariable Long id, @PathVariable Long domainId, Map<String, Object> model) {
-		model.put("title", "Data Set For " + getDomainName(domainId, sdtmDomainRepository.findOne(domainId)));
+		String domainName = getDomainName(domainId, sdtmDomainRepository.findOne(domainId));
+		model.put("title", "Data Set For " + domainName);
 		model.put("selected", "prj");
 		SDTMProject prj = sdtmProjectRepository.findOne(id);
 		model.put("breadcrumbs",
@@ -239,14 +239,15 @@ public class HomeController {
 						Breadcrumb.create("/project/" + id + "/domain/" + domainId + "/dataSet", "dataSet")));
 		model.put("prjId", id);
 		model.put("domainId", domainId);
-		model.put("libs", this.sdtmProjectLibraryRepository.findByProjectId(id));
+		addLibs(id, model, domainName);
 		return "project/newDomainDataSet";
 	}
 
 	@RequestMapping(path = "/project/{id}/domain/{domainId}/dataSet/new", method = { RequestMethod.POST })
 	public String createProjectDomainDataSetWithType(@PathVariable Long id, @PathVariable Long domainId, HttpServletRequest request,
 			Map<String, Object> model) {
-		model.put("title", "Data Set For " + getDomainName(domainId, sdtmDomainRepository.findOne(domainId)));
+		String domainName = getDomainName(domainId, sdtmDomainRepository.findOne(domainId));
+		model.put("title", "Data Set For " + domainName);
 		model.put("selected", "prj");
 		SDTMProject prj = sdtmProjectRepository.findOne(id);
 		model.put("breadcrumbs",
@@ -258,13 +259,14 @@ public class HomeController {
 		for (Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
 			model.put(entry.getKey(), entry.getValue()[0]);
 		}
-		model.put("libs", this.sdtmProjectLibraryRepository.findByProjectId(id));
+		addLibs(id, model, domainName);
 		return "project/newDomainDataSet";
 	}
 
 	@RequestMapping(path = "/project/{id}/domain/{domainId}/dataSet/{dataSetId}", method = { RequestMethod.GET })
 	public String getProjectDomainDataSet(@PathVariable Long id, @PathVariable Long domainId, @PathVariable Long dataSetId, Map<String, Object> model) {
-		model.put("title", "Data Set For " + getDomainName(domainId, sdtmDomainRepository.findOne(domainId)));
+		String domainName = getDomainName(domainId, sdtmDomainRepository.findOne(domainId));
+		model.put("title", "Data Set For " + domainName);
 		model.put("selected", "prj");
 		SDTMProject prj = sdtmProjectRepository.findOne(id);
 		model.put("breadcrumbs",
@@ -274,9 +276,17 @@ public class HomeController {
 		model.put("prjId", id);
 		model.put("domainId", domainId);
 		model.put("dataSetId", dataSetId);
-		model.put("libs", this.sdtmProjectLibraryRepository.findByProjectId(id));
+		addLibs(id, model, domainName);
 		model.put("dataSet", sdtmProjectDomainDataSetRepository.findOne(dataSetId));
 		return "project/editDomainDataSet";
+	}
+
+	private void addLibs(Long id, Map<String, Object> model, String domainName) {
+		List<SDTMProjectLibrary> libs = this.sdtmProjectLibraryRepository.findByProjectId(id);
+		SDTMProjectLibrary workLib = new SDTMProjectLibrary();
+		workLib.setName("WORK");
+		libs.add(workLib);
+		model.put("libs", libs);
 	}
 
 	private void addBreadCrumbs(Long id, Map<String, Object> model, SDTMProject prj) {

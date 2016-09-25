@@ -459,7 +459,7 @@ public class SDTMProjectController {
 	}
 
 	@RequestMapping(value = "/sdtm/v1/project/{id}/library/{libraryId}", method = RequestMethod.GET)
-	public List<Map<String, Object>> listProjectLibrariesWorkSet(@PathVariable("id") Long id, @PathVariable("libraryId") Long libraryId) {
+	public List<Map<String, Object>> listProjectLibrariesDataSet(@PathVariable("id") Long id, @PathVariable("libraryId") Long libraryId) {
 		SDTMProjectLibrary library = sdtmProjectLibraryRepository.findOne(libraryId);
 		List<Map<String, Object>> dataSetList = new ArrayList<>();
 		if (library != null) {
@@ -482,9 +482,11 @@ public class SDTMProjectController {
 	}
 
 	@RequestMapping(value = "/sdtm/v1/project/{id}/library/{libraryId}/fileName/{fileName:.+}", method = RequestMethod.GET)
-	public List<Column> listProjectLibrariesWorkSetColumns(@PathVariable("id") Long id, @PathVariable("libraryId") Long libraryId,
+	public List<Map<String, Object>> listProjectLibrariesDataSetColumns(@PathVariable("id") Long id, @PathVariable("libraryId") Long libraryId,
 			@PathVariable("fileName") String fileName) {
 		SDTMProjectLibrary library = sdtmProjectLibraryRepository.findOne(libraryId);
+		List<Map<String, Object>> dataSetColumns = new ArrayList<>();
+
 		if (library != null) {
 			Path folder = Paths.get(rootPath + "/" + id + "/" + library.getPath());
 			if (Files.exists(folder) && folder.toFile().isDirectory()) {
@@ -493,7 +495,12 @@ public class SDTMProjectController {
 						if (path.toFile().getName().equals(fileName))
 							try (InputStream is = new FileInputStream(path.toFile())) {
 								SasFileReader sasFileReader = new SasFileReaderImpl(is);
-								return sasFileReader.getColumns();
+								List<Column> columns = sasFileReader.getColumns();
+								for (Column column : columns) {
+									Map<String, Object> map = new HashMap<String, Object>();
+									map.put("name", column.getName());
+									dataSetColumns.add(map);
+								}
 							} catch (FileNotFoundException e) {
 								LOG.error("Got Exception during reading file, folder={}", folder, e);
 							} catch (IOException e) {
@@ -505,7 +512,7 @@ public class SDTMProjectController {
 				}
 			}
 		}
-		return new ArrayList<Column>(0);
+		return dataSetColumns;
 	}
 
 }

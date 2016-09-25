@@ -22,29 +22,11 @@
 		        	"url":"/sdtm/v1/project/${prjId?long?c}/domain/${domainId?long?c}/dataSet",
 		        	"dataSrc": ""
 		        },
-				"columnDefs": [ 
-				  {
-				    "targets": 0,
-				    "data": "joinType",
-				  },
-				  {
-				    "targets": 1,
-				    "render": function ( data, type, full, meta ) {
-				      return full.sdtmProjectLibrary.name+"."+full.name;
-				    },
-				  },
-				  {
-				    "targets": 2,
-				    "render": function ( data, type, full, meta ) {
-				      var obj = jQuery.parseJSON(full.metaData);
-				      if(full.joinType=='sort'){
-				      	return obj.libraryName+"."+obj.dataSet.substring(0,obj.dataSet.indexOf("."));
-				      }else{
-				      	return "";
-				      }
-				    }				    
-				  }
-				],
+		        "columns": [
+		            { "data": "joinType" },
+		            { "data": "output" },
+		            { "data": "input" }
+		        ],
 		        select: {
 		            style:    'single'
 		        },

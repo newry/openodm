@@ -4,15 +4,8 @@
 			<div id="error" style="color:red"></div>
 			<div id="basic">
 			    Name: <input id="name" name="name" type="text" autofocus="autofocus" onchange="javascript:generatePreview()"/><br/>
-				Library: 
-					<select id="storeLibrary" name="storeLibrary" onchange="javascript:generatePreview()">
-						<#list libs as lib>
-							<option value="${lib.id?long?c}">${lib.name}</option>
-						</#list>
-					</select>
-				<br/>
 				Join Type: 
-				<select id="joinType" name="joinType" onchange="javascript:generatePreview()">
+				<select id="joinType" name="joinType">
 					<option value="">please select</option>
 					<option>sort</option>
 					<option>merge</option>

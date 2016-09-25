@@ -2,8 +2,7 @@
 	<div>
 		<div id="error" style="color:red"></div>
 		<div id="basic">
-		    Name: ${dataSet.name} <input id="name" type="hidden" value="${dataSet.name}"/><br/>
-			Library: ${dataSet.sdtmProjectLibrary.name} <input id="storeLibrary" type="hidden" value="${dataSet.sdtmProjectLibrary.name}"/><br/>
+		    Name:<input id="name" value="${dataSet.name}" onchange="javascript:generatePreview()"/><br/>
 			Join Type: ${dataSet.joinType}<br/>
 		</div>
 		<#if dataSet.joinType??>
@@ -43,9 +42,16 @@
 			<#if dataSet.joinType == 'sort'>
 				var metaData = ${dataSet.metaData};
 				//console.log(metaData);
+				if(!metaData.libraryId){
+					metaData.libraryId = "-1";
+				}
 				if(metaData.libraryId){
 					$('#library').val(metaData.libraryId);
-					$.ajax({url: "/sdtm/v1/project/${prjId?long?c}/library/"+metaData.libraryId, success: function(result){
+					var url = "/sdtm/v1/project/${prjId?long?c}/library/"+metaData.libraryId;
+					if(metaData.libraryId == "-1"){
+						url = "/sdtm/v1/project/${prjId?long?c}/domain/${domainId?long?c}/dataSet";
+					}
+					$.ajax({url: url, success: function(result){
 						result.map(function(row){
 							$('#dataSet').append($("<option></option>").attr("value",row.name).text(row.label));
 		    			});
@@ -75,7 +81,12 @@
 									}
 								}
 							}
-							$.ajax({url: "/sdtm/v1/project/${prjId?long?c}/library/"+metaData.libraryId+"/fileName/"+metaData.dataSet, success: function(result){
+							var columnUrl = "/sdtm/v1/project/${prjId?long?c}/library/"+metaData.libraryId+"/fileName/"+metaData.dataSet;
+							if(metaData.libraryId == "-1"){
+								columnUrl = "/sdtm/v1/project/${prjId?long?c}/domain/${domainId?long?c}/dataSet/"+metaData.dataSet;
+							}
+							
+							$.ajax({url: columnUrl, success: function(result){
 								if(result.length > 0){
 									result.map(function(row){
 										var val = row.name;

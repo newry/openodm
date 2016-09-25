@@ -362,6 +362,7 @@
         UPDATED_BY varchar(255) not null,
         name varchar(24) not null,
         path varchar(4096),
+        type varchar(32) not null,
         SDTM_PROJECT_ID int8 not null,
         primary key (ID)
     );
@@ -444,7 +445,7 @@
         name varchar(256) not null,
         sql varchar(1048576) not null,
         SDTM_DOMAIN_ID int8 not null,
-        SDTM_PROJECT_LIBRARY_ID int8 not null,
+        SDTM_PROJECT_ID int8 not null,
         primary key (ID)
     );
     
@@ -454,6 +455,7 @@
         references SDTM_DOMAIN;
 
     alter table SDTM_PROJECT_DOMAIN_DATASET 
-        add constraint FK_pvka34l6svnxeuisrg6s1bfxw 
-        foreign key (SDTM_PROJECT_LIBRARY_ID) 
-        references SDTM_PROJECT_LIBRARY;
+        add constraint FK_9iqj8iv6ft4kej3d25qx6yg6k 
+        foreign key (SDTM_PROJECT_ID) 
+        references SDTM_PROJECT;
+
