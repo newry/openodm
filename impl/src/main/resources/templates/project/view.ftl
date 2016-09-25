@@ -42,6 +42,7 @@
 					</table>
 				</div>
 			</div>
+			<a class="dt-button buttons-cancel" href="/project/"><span>Cancel</span></a>
 		</div>
 	</form>
 </@layout>

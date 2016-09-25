@@ -190,7 +190,12 @@
 		        }
 		    	data.columns = columns;
 		    	data.aliasColumns = aliasColumns;
-	    	    var sql = "proc sort data=" + tableName + " out=" + $("#storeLibrary option:selected").text()+"."+$("#name").val() + "(keep=" + columns.join(" ") ;
+		    	<#if dataSetId??>
+		    		var storeLibName = $("#storeLibrary").val();
+				<#else>
+		    		var storeLibName = $("#storeLibrary option:selected").text();
+		    	</#if>
+		    	var sql = "proc sort data=" + tableName + " out=" + storeLibName+"."+$("#name").val() + "(keep=" + columns.join(" ") ;
 	    	    if(aliasColumns.length > 0){
 	    	    	sql += " rename=(" + aliasColumns.join(" ") + ")";
 	    	    }

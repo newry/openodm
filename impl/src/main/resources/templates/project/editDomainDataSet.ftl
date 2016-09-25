@@ -2,8 +2,8 @@
 	<div>
 		<div id="error" style="color:red"></div>
 		<div id="basic">
-		    Name: ${dataSet.name}<br/>
-			Library: ${dataSet.sdtmProjectLibrary.name}<br/>
+		    Name: ${dataSet.name} <input id="name" type="hidden" value="${dataSet.name}"/><br/>
+			Library: ${dataSet.sdtmProjectLibrary.name} <input id="storeLibrary" type="hidden" value="${dataSet.sdtmProjectLibrary.name}"/><br/>
 			Join Type: ${dataSet.joinType}<br/>
 		</div>
 		<#if dataSet.joinType??>
