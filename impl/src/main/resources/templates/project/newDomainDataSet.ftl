@@ -3,7 +3,7 @@
 		<div>
 			<div id="error" style="color:red"></div>
 			<div id="basic">
-			    Name: <input id="name" name="name" type="text" autofocus="autofocus" onchange="javascript:generatePreview()"/><br/>
+			    Name: <input id="name" name="name" type="text" autofocus="autofocus" <#if joinType??> onchange="javascript:generatePreview()" </#if>/><br/>
 				Join Type: 
 				<select id="joinType" name="joinType">
 					<option value="">please select</option>

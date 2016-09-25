@@ -11,6 +11,20 @@
 	<script>
 		$(document).ready(function() {
 			editor = new $.fn.dataTable.Editor( {
+				ajax: function ( method, url, d, successCallback, errorCallback ) {
+		            var output = { data: [] };
+		 
+		            if ( d.action === 'remove' ) {
+		                $.each( d.data, function (id, value) {
+		                	$.ajax({url: "/sdtm/v1/project/${prjId?long?c}/domain/${domainId?long?c}/dataSet/" +id,type:'DELETE', success: function(result){
+		                		location.reload();
+    						},
+			                error:function(xhr, error, thrown){
+			                	errorHandler(editor, xhr, error, thrown, d.action);
+	    					}});
+		                } );
+		            }
+        	   },
         	   idSrc:  'id',
 			   table: "#dataSetList"
 			} );
@@ -45,6 +59,14 @@
                        	var data = table.row( { selected: true } ).data();
                       	window.location='/project/${prjId?long?c}/domain/${domainId?long?c}/dataSet/'+data.id;
 	                  }
+               		},
+		            { 
+		              extend: "remove", 
+		              editor: editor,
+		              formButtons: [
+                    	'Remove',
+                    	{ label: 'Cancel', fn: function () { this.close(); } }
+               		  ]
                		}
 		        ]
 		    });

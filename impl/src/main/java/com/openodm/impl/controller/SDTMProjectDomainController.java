@@ -182,6 +182,23 @@ public class SDTMProjectDomainController {
 	public ResponseEntity<OperationResponse> createProjectDomainDataSet(@PathVariable("id") Long id, @PathVariable("domainId") Long domainId,
 			@RequestBody Map<String, Object> request) {
 		String name = (String) request.get("name");
+		if (StringUtils.isEmpty(name)) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("Name is required");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		}
+		SDTMProjectDomainDataSet existingOne = sdtmProjectDomainDataSetRepository.findByProjectIdAndDomainIdAndName(id, domainId, name);
+		if (existingOne != null) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("DataSet with same name existed!");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		}
 		String joinType = (String) request.get("joinType");
 		SDTMProjectDomainDataSet entity = new SDTMProjectDomainDataSet();
 		entity.setCreator("admin");
@@ -191,7 +208,7 @@ public class SDTMProjectDomainController {
 		entity.setSdtmProject(this.sdtmProjectRepository.findOne(id));
 		entity.setSdtmDomain(this.sdtmDomainRepository.findOne(domainId));
 		entity.setSql((String) request.get("sql"));
-		ObjectNode node = buildMetadata(joinType, request);
+		ObjectNode node = buildMetadata(entity, request);
 		entity.setMetaData(node.toString());
 		LOG.debug("request={}", entity.getMetaData());
 		try {
@@ -225,11 +242,29 @@ public class SDTMProjectDomainController {
 			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
 		}
 		String name = (String) request.get("name");
+		if (StringUtils.isEmpty(name)) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("Name is required");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		}
+		SDTMProjectDomainDataSet existingOne = sdtmProjectDomainDataSetRepository.findByProjectIdAndDomainIdAndName(id, domainId, name);
+		if (existingOne != null) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("DataSet with same name existed!");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		}
+
 		entity.setName(name);
 		Utils.updatePODataLastModified(entity);
 		entity.setUpdatedBy("admin");
 		entity.setSql((String) request.get("sql"));
-		ObjectNode node = buildMetadata(entity.getJoinType(), request);
+		ObjectNode node = buildMetadata(entity, request);
 		entity.setMetaData(node.toString());
 		LOG.debug("metadata={}", entity.getMetaData());
 		try {
@@ -250,9 +285,51 @@ public class SDTMProjectDomainController {
 		return new ResponseEntity<OperationResponse>(or, HttpStatus.OK);
 	}
 
-	private ObjectNode buildMetadata(String joinType, Map<String, Object> request) {
+	@RequestMapping(value = "/sdtm/v1/project/{id}/domain/{domainId}/dataSet/{dataSetId}", method = RequestMethod.DELETE)
+	public ResponseEntity<OperationResponse> deleteProjectDomainDataSet(@PathVariable("id") Long id, @PathVariable("domainId") Long domainId,
+			@PathVariable("dataSetId") Long dataSetId) {
+		SDTMProjectDomainDataSet entity = sdtmProjectDomainDataSetRepository.findOne(dataSetId);
+		if (entity == null) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("Invalid data set id!");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		}
+		List<SDTMProjectDomainDataSet> entities = sdtmProjectDomainDataSetRepository.findByUsedDataSetId(dataSetId);
+		if (!CollectionUtils.isEmpty(entities)) {
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("Data set is still used, cannot be removed!");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
+		}
+		Utils.updatePODataLastModified(entity);
+		entity.setUpdatedBy("admin");
+		entity.setStatus(ObjectStatus.deleted);
+		try {
+			sdtmProjectDomainDataSetRepository.save(entity);
+		} catch (Exception e) {
+			LOG.error("Error during update SDTMProjectDomainDataSet", e);
+			OperationResponse or = new OperationResponse();
+			OperationResult result = new OperationResult();
+			result.setSuccess(false);
+			result.setError("Error");
+			or.setResult(result);
+			return new ResponseEntity<OperationResponse>(or, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		OperationResponse or = new OperationResponse();
+		OperationResult result = new OperationResult();
+		result.setSuccess(true);
+		or.setResult(result);
+		return new ResponseEntity<OperationResponse>(or, HttpStatus.OK);
+	}
+
+	private ObjectNode buildMetadata(SDTMProjectDomainDataSet entity, Map<String, Object> request) {
 		ObjectNode node = om.createObjectNode();
-		if (StringUtils.equalsIgnoreCase(joinType, SORT)) {
+		if (StringUtils.equalsIgnoreCase(entity.getJoinType(), SORT)) {
 			List<String> columns = (List<String>) request.get("columns");
 			List<String> aliasColumns = (List<String>) request.get("aliasColumns");
 			List<String> sortColumns = (List<String>) request.get("sortColumns");
@@ -298,15 +375,23 @@ public class SDTMProjectDomainController {
 			if (StringUtils.isNotEmpty(condition)) {
 				node.put("condition", condition);
 			}
+			boolean hadlibId = false;
 			String libraryId = (String) request.get("libraryId");
 			if (StringUtils.isNotEmpty(libraryId) && StringUtils.isNumeric(libraryId)) {
 				Long libId = Long.valueOf(libraryId);
 				node.put("libraryId", libId);
+				hadlibId = true;
 			}
 
 			String dataSet = (String) request.get("dataSet");
 			if (StringUtils.isNotEmpty(dataSet)) {
 				node.put("dataSet", dataSet);
+				if (!hadlibId && StringUtils.isNumeric(dataSet)) {
+					// store used dataset ids
+					List<SDTMProjectDomainDataSet> usedDataSets = new ArrayList<>(1);
+					usedDataSets.add(this.sdtmProjectDomainDataSetRepository.findOne(Long.valueOf(dataSet)));
+					entity.setUsedDataSets(usedDataSets);
+				}
 			}
 		}
 		return node;
@@ -627,50 +712,5 @@ public class SDTMProjectDomainController {
 	private ResponseEntity<OperationResponse> updateProjectDomainXref(SDTMProjectDomainXref domainXref) {
 		return this.updateProjectDomainXrefs(Arrays.asList(domainXref));
 	}
-
-	// @RequestMapping(value =
-	// "/sdtm/v1/project/{projectId}/domain/{domainId}/workDataSet", method =
-	// RequestMethod.POST)
-	// public List<SDTMProjectLibrary>
-	// createDomainDataSet(@PathVariable("projectId") Long projectId,
-	// @PathVariable("domainId") Long domainId) {
-	// List<SDTMProjectLibrary> libs =
-	// sdtmProjectLibraryRepository.findByProjectId(projectId);
-	// for (SDTMProjectLibrary library : libs) {
-	// List<Map<String, Object>> dataSetList = new ArrayList<>();
-	// if (library != null) {
-	// Path folder = Paths.get(rootPath + "/" + id + "/" + library.getPath());
-	// if (Files.exists(folder) && folder.toFile().isDirectory()) {
-	// try (DirectoryStream<Path> directoryStream =
-	// Files.newDirectoryStream(folder)) {
-	// for (Path path : directoryStream) {
-	// Map<String, Object> map = new HashMap<String, Object>();
-	// dataSetList.add(map);
-	// Path fileName = path.getFileName();
-	// if (fileName.toString().lastIndexOf(".") > -1) {
-	// map.put("name", fileName.toString().substring(0,
-	// fileName.toString().lastIndexOf(".")));
-	// } else {
-	// map.put("name", fileName);
-	// }
-	// try (InputStream is = new FileInputStream(path.toFile())) {
-	// SasFileReader sasFileReader = new SasFileReaderImpl(is);
-	// map.put("columnList", sasFileReader.getColumns());
-	// } catch (FileNotFoundException e) {
-	// LOG.error("Got Exception during reading file, folder={}", folder, e);
-	// } catch (IOException e) {
-	// LOG.error("Got Exception during reading file, folder={}", folder, e);
-	// }
-	//
-	// }
-	// } catch (IOException ex) {
-	// }
-	// }
-	// }
-	// library.setDataSetList(dataSetList);
-	//
-	// }
-	// return libs;
-	// }
 
 }

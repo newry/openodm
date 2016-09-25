@@ -1,5 +1,7 @@
 package com.openodm.impl.entity.sdtm;
 
+import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -7,6 +9,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
@@ -51,6 +55,12 @@ public class SDTMProjectDomainDataSet extends PersistentObject {
 	@ManyToOne(targetEntity = SDTMDomain.class, optional = false, fetch = FetchType.LAZY)
 	@JoinColumn(name = "SDTM_DOMAIN_ID", nullable = false)
 	private SDTMDomain sdtmDomain;
+
+	@ManyToMany(targetEntity = SDTMProjectDomainDataSet.class)
+	@JoinTable(name = "SDTM_PROJECT_DOMAIN_DATASET_XREF", joinColumns = { @JoinColumn(name = "DATASET_ID") }, inverseJoinColumns = {
+			@JoinColumn(name = "USED_DATASET_ID") })
+	@JsonIgnore
+	private List<SDTMProjectDomainDataSet> usedDataSets;
 
 	public SDTMDomain getSdtmDomain() {
 		return sdtmDomain;
@@ -102,6 +112,14 @@ public class SDTMProjectDomainDataSet extends PersistentObject {
 
 	public void setSdtmProject(SDTMProject sdtmProject) {
 		this.sdtmProject = sdtmProject;
+	}
+
+	public List<SDTMProjectDomainDataSet> getUsedDataSets() {
+		return usedDataSets;
+	}
+
+	public void setUsedDataSets(List<SDTMProjectDomainDataSet> usedDataSets) {
+		this.usedDataSets = usedDataSets;
 	}
 
 }

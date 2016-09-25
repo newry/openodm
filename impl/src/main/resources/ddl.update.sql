@@ -459,3 +459,20 @@
         foreign key (SDTM_PROJECT_ID) 
         references SDTM_PROJECT;
 
+    CREATE INDEX SDTM_PROJECT_DOMAIN_DATASET_NAME_IDX ON SDTM_PROJECT_DOMAIN_DATASET (SDTM_PROJECT_ID, SDTM_DOMAIN_ID, NAME);
+
+    create table SDTM_PROJECT_DOMAIN_DATASET_XREF (
+        DATASET_ID int8 not null,
+        USED_DATASET_ID int8 not null
+    );
+
+    alter table SDTM_PROJECT_DOMAIN_DATASET_XREF 
+        add constraint FK_5wp811t2pd4bhliat7loc2ano 
+        foreign key (USED_DATASET_ID) 
+        references SDTM_PROJECT_DOMAIN_DATASET;
+
+    alter table SDTM_PROJECT_DOMAIN_DATASET_XREF 
+        add constraint FK_bomv6ek0tpb98pl1b0ubjt30f 
+        foreign key (DATASET_ID) 
+        references SDTM_PROJECT_DOMAIN_DATASET;
+    
