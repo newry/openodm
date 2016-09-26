@@ -21,4 +21,5 @@
   		<script src="/js/dataTables.editor.js"></script>
   		<script src="/js/jquery.bootstrap.wizard.js"></script>
   		<script src="/js/main.js"></script>
+  		<script src="/js/multiselect.js"></script>
     </head>

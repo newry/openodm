@@ -3,7 +3,7 @@
 		<div id="error" style="color:red"></div>
 		<div id="basic">
 		    Name:<input id="name" value="${dataSet.name}" onchange="javascript:generatePreview()"/><br/>
-			Join Type: ${dataSet.joinType}<br/>
+			Action: ${dataSet.joinType}<br/>
 		</div>
 		<#if dataSet.joinType??>
 			<#if dataSet.joinType == 'sort'>
@@ -132,7 +132,9 @@
 					
 				}
 			<#elseif dataSet.joinType == 'merge'>
+				generatePreview();
 			<#else>
+				generatePreview();
 			</#if>
 		</#if>
 		

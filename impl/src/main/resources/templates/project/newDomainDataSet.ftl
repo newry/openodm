@@ -4,7 +4,7 @@
 			<div id="error" style="color:red"></div>
 			<div id="basic">
 			    Name: <input id="name" name="name" type="text" autofocus="autofocus" <#if joinType??> onchange="javascript:generatePreview()" </#if>/><br/>
-				Join Type: 
+				Action: 
 				<select id="joinType" name="joinType">
 					<option value="">please select</option>
 					<option>sort</option>
@@ -37,6 +37,11 @@
 						$('#'+item).find('.pager .finish').show();
 						$('#'+item).find('.pager .finish').removeClass('disabled');
 					} else {
+						if($current == 1){
+							$('#'+item).find('.pager .previous').hide();
+						}else{
+							$('#'+item).find('.pager .previous').show();
+						}
 						$('#'+item).find('.pager .next').show();
 						$('#'+item).find('.pager .finish').hide();
 					}

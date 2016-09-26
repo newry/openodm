@@ -461,6 +461,10 @@ public class SDTMProjectController {
 	@RequestMapping(value = "/sdtm/v1/project/{id}/library/{libraryId}", method = RequestMethod.GET)
 	public List<Map<String, Object>> listProjectLibrariesDataSet(@PathVariable("id") Long id, @PathVariable("libraryId") Long libraryId) {
 		SDTMProjectLibrary library = sdtmProjectLibraryRepository.findOne(libraryId);
+		return this.listProjectLibrariesDataSet(id, library);
+	}
+
+	public List<Map<String, Object>> listProjectLibrariesDataSet(Long id, SDTMProjectLibrary library) {
 		List<Map<String, Object>> dataSetList = new ArrayList<>();
 		if (library != null) {
 			Path folder = Paths.get(rootPath + "/" + id + "/" + library.getPath());
@@ -513,6 +517,10 @@ public class SDTMProjectController {
 			}
 		}
 		return dataSetColumns;
+	}
+
+	public String getRootPath() {
+		return rootPath;
 	}
 
 }

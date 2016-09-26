@@ -54,6 +54,7 @@ import com.openodm.impl.util.Utils;
 @SuppressWarnings("unchecked")
 public class SDTMProjectDomainController {
 	private static final String SORT = "sort";
+	private static final String SET = "set";
 	private static final Logger LOG = LoggerFactory.getLogger(SDTMProjectDomainController.class);
 	@Autowired
 	private SDTMDomainRepository sdtmDomainRepository;
@@ -114,17 +115,15 @@ public class SDTMProjectDomainController {
 		return vars;
 	}
 
-	@RequestMapping(value = "/sdtm/v1/project/{id}/domain/{domainId}/dataSet", method = RequestMethod.GET)
-	public List<Map<String, Object>> listProjectLibrariesDataSet(@PathVariable("id") Long id, @PathVariable("domainId") Long domainId) {
+	@RequestMapping(value = "/sdtm/v1/project/{id}/domain/{domainId}/dataSet/all", method = RequestMethod.GET)
+	public List<Map<String, Object>> listProjectDomainDataSet(@PathVariable("id") Long id, @PathVariable("domainId") Long domainId) {
 		List<SDTMProjectDomainDataSet> dataSets = this.sdtmProjectDomainDataSetRepository.findByProjectIdAndDomainId(id, domainId);
 		List<Map<String, Object>> dataSetList = new ArrayList<>();
 		if (!CollectionUtils.isEmpty(dataSets)) {
 			for (SDTMProjectDomainDataSet dataSet : dataSets) {
 				Map<String, Object> map = new HashMap<String, Object>();
-				map.put("name", dataSet.getId());
 				map.put("id", dataSet.getId());
 				map.put("joinType", dataSet.getJoinType());
-				map.put("label", dataSet.getName());
 				map.put("output", dataSet.getName());
 				try {
 					String metaData = dataSet.getMetaData();
@@ -143,6 +142,27 @@ public class SDTMProjectDomainController {
 							String name = this.sdtmProjectDomainDataSetRepository.findOne(Long.valueOf(input)).getName();
 							map.put("input", name);
 						}
+					} else if (StringUtils.equalsIgnoreCase(dataSet.getJoinType(), SET)) {
+						ArrayNode dataSetArrayNode = (ArrayNode) jsonNode.get("dataSets");
+						if (dataSetArrayNode != null && dataSetArrayNode.size() > 0) {
+							List<String> names = new ArrayList<String>();
+							for (int i = 0; i < dataSetArrayNode.size(); i++) {
+								JsonNode dataSetNode = dataSetArrayNode.get(i);
+								JsonNode libIdNode = dataSetNode.get("libId");
+								String input = dataSetNode.get("dataSet").asText();
+								if (libIdNode != null && !libIdNode.isNull()) {
+									SDTMProjectLibrary lib = this.sdtmProjectLibraryRepository.findOne(Long.valueOf(libIdNode.asText()));
+									if (input.indexOf('.') > -1) {
+										input = input.substring(0, input.lastIndexOf('.'));
+									}
+									names.add(lib.getName() + "." + input);
+								} else {
+									String name = this.sdtmProjectDomainDataSetRepository.findOne(Long.valueOf(input)).getName();
+									names.add(name);
+								}
+							}
+							map.put("input", StringUtils.join(names, ","));
+						}
 					}
 					dataSetList.add(map);
 				} catch (IOException e) {
@@ -153,8 +173,23 @@ public class SDTMProjectDomainController {
 		return dataSetList;
 	}
 
+	@RequestMapping(value = "/sdtm/v1/project/{id}/domain/{domainId}/dataSet", method = RequestMethod.GET)
+	public List<Map<String, Object>> listProjectDomainDataSetShort(@PathVariable("id") Long id, @PathVariable("domainId") Long domainId) {
+		List<SDTMProjectDomainDataSet> dataSets = this.sdtmProjectDomainDataSetRepository.findByProjectIdAndDomainId(id, domainId);
+		List<Map<String, Object>> dataSetList = new ArrayList<>();
+		if (!CollectionUtils.isEmpty(dataSets)) {
+			for (SDTMProjectDomainDataSet dataSet : dataSets) {
+				Map<String, Object> map = new HashMap<String, Object>();
+				map.put("name", dataSet.getId());
+				map.put("label", dataSet.getName());
+				dataSetList.add(map);
+			}
+		}
+		return dataSetList;
+	}
+
 	@RequestMapping(value = "/sdtm/v1/project/{id}/domain/{domainId}/dataSet/{dataSetId}", method = RequestMethod.GET)
-	public List<Map<String, Object>> listProjectLibrariesDataSetColumns(@PathVariable("id") Long id, @PathVariable("domainId") Long domainId,
+	public List<Map<String, Object>> listProjectDomainDataSetColumns(@PathVariable("id") Long id, @PathVariable("domainId") Long domainId,
 			@PathVariable("dataSetId") Long dataSetId) {
 		SDTMProjectDomainDataSet dataSet = sdtmProjectDomainDataSetRepository.findOne(dataSetId);
 		List<Map<String, Object>> dataSetColumns = new ArrayList<Map<String, Object>>();
@@ -181,6 +216,7 @@ public class SDTMProjectDomainController {
 	@RequestMapping(value = "/sdtm/v1/project/{id}/domain/{domainId}/dataSet", method = RequestMethod.POST)
 	public ResponseEntity<OperationResponse> createProjectDomainDataSet(@PathVariable("id") Long id, @PathVariable("domainId") Long domainId,
 			@RequestBody Map<String, Object> request) {
+		LOG.info("request={}", request);
 		String name = (String) request.get("name");
 		if (StringUtils.isEmpty(name)) {
 			OperationResponse or = new OperationResponse();
@@ -251,7 +287,7 @@ public class SDTMProjectDomainController {
 			return new ResponseEntity<OperationResponse>(or, HttpStatus.BAD_REQUEST);
 		}
 		SDTMProjectDomainDataSet existingOne = sdtmProjectDomainDataSetRepository.findByProjectIdAndDomainIdAndName(id, domainId, name);
-		if (existingOne != null) {
+		if (existingOne != null && !existingOne.getId().equals(dataSetId)) {
 			OperationResponse or = new OperationResponse();
 			OperationResult result = new OperationResult();
 			result.setSuccess(false);
@@ -393,6 +429,24 @@ public class SDTMProjectDomainController {
 					entity.setUsedDataSets(usedDataSets);
 				}
 			}
+		} else if (StringUtils.equalsIgnoreCase(entity.getJoinType(), SET)) {
+			List<Map<String, String>> dataSetList = (List<Map<String, String>>) request.get("dataSetList");
+			ArrayNode dataSetArray = node.putArray("dataSets");
+			List<SDTMProjectDomainDataSet> usedDataSets = new ArrayList<>();
+			entity.setUsedDataSets(usedDataSets);
+			for (Map<String, String> dataSet : dataSetList) {
+				ObjectNode dataSetNode = om.createObjectNode();
+				String dataSetStr = dataSet.get("dataSet");
+				dataSetNode.put("dataSet", dataSetStr);
+				String libId = dataSet.get("libId");
+				if (libId != null) {
+					dataSetNode.put("libId", libId);
+				} else {
+					usedDataSets.add(this.sdtmProjectDomainDataSetRepository.findOne(Long.valueOf(dataSetStr)));
+				}
+				dataSetArray.add(dataSetNode);
+			}
+
 		}
 		return node;
 	}

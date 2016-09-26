@@ -1,8 +1,11 @@
 package com.openodm.impl.controller.page;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -12,15 +15,22 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.openodm.impl.controller.SDTMProjectController;
+import com.openodm.impl.controller.SDTMProjectDomainController;
 import com.openodm.impl.controller.response.Breadcrumb;
 import com.openodm.impl.entity.ct.CodeList;
 import com.openodm.impl.entity.ct.ControlTerminology;
 import com.openodm.impl.entity.sdtm.SDTMDomain;
 import com.openodm.impl.entity.sdtm.SDTMProject;
+import com.openodm.impl.entity.sdtm.SDTMProjectDomainDataSet;
 import com.openodm.impl.entity.sdtm.SDTMProjectLibrary;
 import com.openodm.impl.entity.sdtm.SDTMVersion;
 import com.openodm.impl.repository.ct.CTVersionRepository;
@@ -34,6 +44,7 @@ import com.openodm.impl.repository.sdtm.SDTMVersionRepository;
 
 @Controller
 public class HomeController {
+	private static final String SPECIAL_SEPARATOR = "$$$";
 	@Autowired
 	private ControlTerminologyRepository controlTerminologyRepository;
 	@Autowired
@@ -50,6 +61,11 @@ public class HomeController {
 	private SDTMDomainRepository sdtmDomainRepository;
 	@Autowired
 	private SDTMProjectDomainDataSetRepository sdtmProjectDomainDataSetRepository;
+	@Autowired
+	private SDTMProjectController sdtmProjectController;
+	@Autowired
+	private SDTMProjectDomainController sdtmProjectDomainController;
+	ObjectMapper om = new ObjectMapper();
 
 	@RequestMapping(path = "/", method = RequestMethod.GET)
 	public String index(Map<String, Object> model) {
@@ -259,6 +275,7 @@ public class HomeController {
 		for (Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
 			model.put(entry.getKey(), entry.getValue()[0]);
 		}
+		buildMap(id, domainId, request.getParameter("joinType"), model, null);
 		addLibs(id, model, domainName);
 		return "project/newDomainDataSet";
 	}
@@ -277,8 +294,102 @@ public class HomeController {
 		model.put("domainId", domainId);
 		model.put("dataSetId", dataSetId);
 		addLibs(id, model, domainName);
-		model.put("dataSet", sdtmProjectDomainDataSetRepository.findOne(dataSetId));
+		SDTMProjectDomainDataSet dataSet = sdtmProjectDomainDataSetRepository.findOne(dataSetId);
+		model.put("dataSet", dataSet);
+		buildMap(id, domainId, dataSet.getJoinType(), model, dataSet);
 		return "project/editDomainDataSet";
+	}
+
+	private void buildMap(Long id, Long domainId, String joinType, Map<String, Object> model, SDTMProjectDomainDataSet dataSet) {
+		if (StringUtils.equalsIgnoreCase(joinType, "set")) {
+			List<String> names = new ArrayList<>();
+			if (dataSet != null) {
+				String metaData = dataSet.getMetaData();
+				try {
+					JsonNode jsonNode = om.reader().readTree(metaData);
+					ArrayNode dataSetArrayNode = (ArrayNode) jsonNode.get("dataSets");
+					if (dataSetArrayNode != null && dataSetArrayNode.size() > 0) {
+						for (int i = 0; i < dataSetArrayNode.size(); i++) {
+							JsonNode dataSetNode = dataSetArrayNode.get(i);
+							JsonNode libIdNode = dataSetNode.get("libId");
+							String dataSetStr = dataSetNode.get("dataSet").asText();
+							if (libIdNode != null && !libIdNode.isNull()) {
+								Map<String, Object> m = new HashMap<>();
+								names.add(libIdNode.asText() + SPECIAL_SEPARATOR + dataSetStr);
+							} else {
+								names.add(SPECIAL_SEPARATOR + dataSetStr);
+							}
+						}
+
+					}
+				} catch (IOException e) {
+				}
+			}
+			Map<String, String> map = new LinkedHashMap<>();
+			Map<String, String> selectedMap = new LinkedHashMap<>();
+			List<SDTMProjectLibrary> libs = sdtmProjectLibraryRepository.findByProjectId(id);
+			for (SDTMProjectLibrary lib : libs) {
+				List<Map<String, Object>> dataSets = sdtmProjectController.listProjectLibrariesDataSet(id, lib);
+				if (!CollectionUtils.isEmpty(dataSets)) {
+					map.put(lib.getName(), buildOptions(dataSets, lib, null).toString());
+					if (!CollectionUtils.isEmpty(names)) {
+						List<Map<String, Object>> selectedDataSets = new ArrayList<>();
+						for (Map<String, Object> dataSetToUse : dataSets) {
+							if (names.contains(lib.getId() + SPECIAL_SEPARATOR + dataSetToUse.get("name"))) {
+								selectedDataSets.add(dataSetToUse);
+							}
+						}
+						if (!CollectionUtils.isEmpty(selectedDataSets)) {
+							selectedMap.put(lib.getName(), buildOptions(selectedDataSets, lib, null).toString());
+						}
+					}
+				}
+			}
+			List<Map<String, Object>> dataSets = this.sdtmProjectDomainController.listProjectDomainDataSetShort(id, domainId);
+			if (!CollectionUtils.isEmpty(dataSets)) {
+				SDTMProjectLibrary lib = new SDTMProjectLibrary();
+				lib.setName("WORK");
+				map.put(lib.getName(), buildOptions(dataSets, lib, dataSet).toString());
+				if (!CollectionUtils.isEmpty(names)) {
+					List<Map<String, Object>> selectedDataSets = new ArrayList<>();
+					for (Map<String, Object> dataSetToUse : dataSets) {
+						if (names.contains(SPECIAL_SEPARATOR + dataSetToUse.get("name"))) {
+							selectedDataSets.add(dataSetToUse);
+						}
+					}
+					if (!CollectionUtils.isEmpty(selectedDataSets)) {
+						selectedMap.put(lib.getName(), buildOptions(selectedDataSets, lib, dataSet).toString());
+					}
+				}
+
+			}
+			if (!CollectionUtils.isEmpty(map)) {
+				model.put("availableDataSetMap", map);
+			}
+			if (!CollectionUtils.isEmpty(selectedMap)) {
+				model.put("selectedDataSetMap", selectedMap);
+			}
+		}
+	}
+
+	private StringBuilder buildOptions(List<Map<String, Object>> dataSets, SDTMProjectLibrary lib, SDTMProjectDomainDataSet existingDataSet) {
+		StringBuilder sb = new StringBuilder();
+		for (Map<String, Object> dataSet : dataSets) {
+			if (lib.getId() < 0 && existingDataSet.getId().equals(dataSet.get("name"))) {
+				continue;
+			}
+			sb.append("<option value=\"").append(dataSet.get("name")).append("\"");
+			if (lib != null) {
+				if (lib.getId() != null && lib.getId() > 0) {
+					sb.append(" LibraryId=\"").append(lib.getId()).append("\"");
+				}
+				if (lib.getName() != null) {
+					sb.append(" LibraryName=\"").append(lib.getName()).append("\"");
+				}
+			}
+			sb.append(">").append(dataSet.get("label")).append("</option>");
+		}
+		return sb;
 	}
 
 	private void addLibs(Long id, Map<String, Object> model, String domainName) {

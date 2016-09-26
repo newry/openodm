@@ -33,7 +33,7 @@
 		        "dom": "Bfrtip",
 		    	"bLengthChange": false,
 		        "ajax": {
-		        	"url":"/sdtm/v1/project/${prjId?long?c}/domain/${domainId?long?c}/dataSet",
+		        	"url":"/sdtm/v1/project/${prjId?long?c}/domain/${domainId?long?c}/dataSet/all",
 		        	"dataSrc": ""
 		        },
 		        "columns": [
